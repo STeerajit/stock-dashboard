@@ -11,6 +11,15 @@ import pandas as pd
 SET50_CSV = Path(__file__).resolve().parent.parent / "data" / "set50.csv"
 SET50_PERIOD = "1 Jul – 31 Dec 2026"
 
+# Sector names exactly as SET prints them in its index-constituent documents.
+SET_SECTORS = frozenset({
+    "Agribusiness", "Banking", "Commerce", "Construction Materials", "Construction Services",
+    "Electronic Components", "Energy & Utilities", "Fashion", "Finance & Securities", "Food & Beverage",
+    "Health Care Services", "Information & Communication Technology", "Insurance", "Media & Publishing",
+    "Packaging", "Personal Products & Pharmaceuticals", "Petrochemicals & Chemicals", "Professional Services",
+    "Property Development", "Tourism & Leisure", "Transportation & Logistics",
+})
+
 
 def load_set50() -> pd.DataFrame:
     """Columns: symbol, name, sector (sector names as used by SET)."""

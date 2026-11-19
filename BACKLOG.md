@@ -61,12 +61,14 @@ so a 10-second network blip leaves blank rows for 15 minutes.
 
 ## 3. Verify the SET50 list and validate the CSV — P0 · S
 
+> **Partly blocked** — the official H2/2026 file needs a SET login. See [BLOCKED.md](BLOCKED.md).
+
 **Why:** `data/set50.csv` was built from SET's H1/2026 official list plus H2/2026 changes reported by a news site.
 It was never checked against SET's own H2/2026 document. A wrong list undermines the whole screener.
 
 **Acceptance criteria**
 - [ ] The 50 symbols are checked against SET's official H2/2026 SET50 constituent list. The source URL and check date are written in the README.
-- [ ] New test `tests/test_universe.py`:
+- [x] New test `tests/test_universe.py`:
   - exactly 50 rows, 50 unique symbols, no blanks in `symbol`/`name`/`sector`;
   - every `sector` value belongs to a fixed allowed list (the SET sector names already used).
 - [ ] `SET50_PERIOD` in `src/universe.py` matches the period printed in the official document.
