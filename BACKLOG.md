@@ -97,11 +97,12 @@ to the screener, the old row selection could still be active and redirect them a
 by running the app. Tests must not need the internet, so they stay fast and stable in CI.
 
 **Acceptance criteria**
-- [ ] `tests/test_pages.py` uses `streamlit.testing.v1.AppTest` with the `src.cache` loaders replaced by fixtures (small fake snapshots, prices, financials).
-- [ ] Screener test: renders with no exception, table has as many rows as the fake universe, the sector filter reduces the row count.
-- [ ] Stock page test: opening with `symbol=PTT` shows the title "PTT · ..." and each of the 6 tabs renders with no exception.
-- [ ] Stock page test with financials returning an empty DataFrame → shows the "No data" warning and no exception.
-- [ ] `pytest` passes with networking disabled (e.g. `pytest -p no:cacheprovider` on a machine with Wi-Fi off).
+- [x] `tests/test_pages.py` uses `streamlit.testing.v1.AppTest` with the `src.cache` loaders replaced by fixtures (small fake snapshots, prices, financials).
+- [x] Screener test: renders with no exception, table has as many rows as the fake universe, the sector filter reduces the row count.
+- [x] Stock page test: opening with `symbol=PTT` shows the title "PTT · ..." and each of the 6 tabs renders with no exception.
+- [x] Stock page test with financials returning an empty DataFrame → shows the "No data" warning and no exception.
+- [x] `pytest` passes with networking disabled (e.g. `pytest -p no:cacheprovider` on a machine with Wi-Fi off).
+  *Done via `tests/conftest.py`, which blocks every socket connection during tests (turning off Wi-Fi is a system setting, so it wasn't touched).*
 
 ---
 
