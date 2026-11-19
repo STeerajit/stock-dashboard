@@ -2,6 +2,7 @@ import streamlit as st
 
 from src import cache
 from src.fundamentals import SnapshotError, sector_medians
+from src.screener import selected_symbol
 from src.universe import SET50_PERIOD
 
 st.title("SET50 screener")
@@ -26,10 +27,11 @@ with table_slot.skeleton():
     df["pe_vs_sector"] = df["pe"] / df["sector"].map(medians["pe"]) - 1
     if picked:
         df = df[df["sector"].isin(picked)]
+    shown = df.sort_values("market_cap", ascending=False)  # the exact rows, in the exact order, on screen
 
     nc = st.column_config.NumberColumn
     event = table_slot.dataframe(
-        df.sort_values("market_cap", ascending=False),
+        shown,
         hide_index=True,
         key="screener",
         on_select="rerun",
@@ -61,10 +63,9 @@ with table_slot.skeleton():
         alt="SET50 stocks with price, valuation and profitability metrics",
     )
 
-rows = event.selection.rows
-if rows:
-    symbol = df.sort_values("market_cap", ascending=False).iloc[rows[0]]["symbol"]
-    st.session_state["symbol"] = symbol
+symbol = selected_symbol(shown, event.selection.rows)
+if symbol:
+    st.session_state["symbol"] = symbol  # the stock page's selectbox key (also bound to ?symbol=)
     st.switch_page("app_pages/stock.py")
 
 with st.expander("Sector medians"):

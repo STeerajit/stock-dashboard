@@ -77,6 +77,8 @@ It was never checked against SET's own H2/2026 document. A wrong list undermines
 
 ## 4. Verify screener row → stock page navigation — P0 · S
 
+> **Partly blocked** — logic covered by `tests/test_navigation.py`; the real-browser click check is still to do. See [BLOCKED.md](BLOCKED.md).
+
 **Why:** Selecting a row calls `st.session_state["symbol"] = ...` then `st.switch_page(...)`.
 This path was never tested (the agent API cannot select dataframe rows). One risk: when the user comes back
 to the screener, the old row selection could still be active and redirect them again immediately.

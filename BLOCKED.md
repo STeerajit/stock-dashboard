@@ -30,3 +30,22 @@ may not include that revision.
 **What you need to do:** log in to set.or.th, download the *revise* file above, and either paste its
 SET50 table to Claude, or edit `data/set50.csv` by hand (`pytest tests/test_universe.py` checks the format).
 Then set `SET50_PERIOD` in `src/universe.py` to the period printed in that document.
+
+## Backlog #4 — verify screener row → stock page in a real browser
+
+**Status:** covered by tests as far as possible without a browser. The real-browser check is **blocked**:
+the Claude in Chrome extension was not connected (2026-11-20), and AppTest cannot click dataframe rows.
+
+**What is tested now** (`tests/test_navigation.py`, offline):
+- The row → symbol mapping (`src/screener.py:selected_symbol`) uses the table **exactly as shown**. With the
+  Banking filter on, the 3rd row is the 3rd visible bank, not the 3rd stock overall.
+- When the screener sets `st.session_state["symbol"]` and switches page, the stock page opens that symbol.
+- `/stock?symbol=SCB` opens SCB.
+
+**Still to check by hand (about 2 minutes):** run `streamlit run app.py`, then:
+1. Click the **PTT** row → the stock page shows "PTT · PTT", and the address bar contains `?symbol=PTT`.
+2. Click **SET50 screener** in the sidebar → you stay on the screener (no automatic jump back to PTT).
+3. Choose **Banking** in the Sector filter, click the 3rd row → the stock page shows that 3rd bank.
+
+If step 2 jumps back to the stock page, the old row selection is being kept between pages. The fix is to clear
+`st.session_state["screener"]` before calling `st.switch_page`.
