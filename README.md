@@ -8,9 +8,12 @@ dividends — plus an honestly-evaluated price prediction model.
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # app + test tools (use requirements.txt for the app only)
 streamlit run app.py
 ```
+
+Dependencies are pinned to exact versions: `requirements.txt` holds what the app needs at runtime,
+`requirements-dev.txt` adds the test tools.
 
 Then open http://localhost:8501 in your browser. Share a stock directly with `http://localhost:8501/stock?symbol=PTT`.
 

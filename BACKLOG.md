@@ -36,10 +36,10 @@ because current yfinance returns percent, and `st.tabs(on_change=...)` / `bind="
 `pytest` is a dev-only tool but is installed in production.
 
 **Acceptance criteria**
-- [ ] `requirements.txt` lists runtime packages only, each pinned with `==` to the versions in `.venv` today.
-- [ ] `requirements-dev.txt` starts with `-r requirements.txt` and adds `pytest` (pinned).
-- [ ] In a brand-new venv: `pip install -r requirements-dev.txt && pytest` → all tests pass.
-- [ ] README "How to run" mentions both files.
+- [x] `requirements.txt` lists runtime packages only, each pinned with `==` to the versions in `.venv` today.
+- [x] `requirements-dev.txt` starts with `-r requirements.txt` and adds `pytest` (pinned).
+- [x] In a brand-new venv: `pip install -r requirements-dev.txt && pytest` → all tests pass.
+- [x] README "How to run" mentions both files.
 
 ---
 

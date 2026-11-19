@@ -1,7 +1,9 @@
-streamlit
-yfinance
-pandas
-plotly
-scikit-learn
-pytest
-thaifin
+# Runtime dependencies (what the app needs to run). Pinned so installs are reproducible.
+# Dev/test tools live in requirements-dev.txt.
+numpy==2.4.6
+pandas==3.1.1
+plotly==7.1.0
+scikit-learn==1.9.1
+streamlit==1.67.0
+thaifin==1.1.0
+yfinance==1.8.0

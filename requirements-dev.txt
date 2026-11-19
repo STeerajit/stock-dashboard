@@ -1,0 +1,3 @@
+# Everything needed to develop and test: runtime deps + test tools.
+-r requirements.txt
+pytest==9.2.0
