@@ -1,7 +1,12 @@
-"""Trading snapshot, financial statements, valuation and dividends from Yahoo Finance.
+"""Trading snapshot, financial statements, valuation and dividends.
 
-Yahoo covers Thai stocks with a delay (~15 min) and keeps about 4-5 years of
-annual statements. Fields Yahoo lacks for a stock (e.g. D/E for banks) are NaN.
+Data sources:
+- Yahoo Finance (yfinance): current trading snapshot and valuation (delayed ~15 min),
+  dividends, and a fallback of about 4 years of annual statements.
+- thaifin: annual financial history from 2010 plus yearly P/E and P/BV (preferred source
+  for get_financials).
+
+Fields a source lacks for a stock (e.g. Yahoo's D/E for banks) are NaN.
 """
 
 from concurrent.futures import ThreadPoolExecutor

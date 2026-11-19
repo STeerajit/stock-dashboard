@@ -57,7 +57,9 @@ with table_slot.skeleton():
             "pbv": nc("P/BV", format="%.2f"),
             "div_yield": nc("Div. yield", format="percent"),
             "roe": nc("ROE", format="percent"),
-            "de": nc("D/E", format="%.2f", help="Debt to equity. Not reported by Yahoo for banks."),
+            "de": nc("D/E", format="%.2f", help="Yahoo Finance: interest-bearing debt / shareholders' equity. "
+                                               "Not reported for banks. (The Financials tab may use thaifin's "
+                                               "total liabilities / equity instead.)"),
             "net_margin": nc("Net margin", format="percent"),
         },
         alt="SET50 stocks with price, valuation and profitability metrics",

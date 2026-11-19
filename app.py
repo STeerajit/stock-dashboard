@@ -20,6 +20,7 @@ page = st.navigation(
 )
 
 with st.sidebar:
-    st.caption("Data: Yahoo Finance (delayed ~15 min). For learning only — not investment advice.")
+    st.caption("Data: Yahoo Finance (prices, delayed ~15 min) and thaifin (financial history). "
+               "For learning only — not investment advice.")
 
 page.run()

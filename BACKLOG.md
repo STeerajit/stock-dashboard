@@ -153,10 +153,10 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 **Why:** Some text is out of date after adding thaifin.
 
 **Acceptance criteria**
-- [ ] `src/fundamentals.py` module docstring mentions both data sources (it still says "Yahoo … 4-5 years" only).
-- [ ] The sidebar caption in `app.py` names both Yahoo Finance and thaifin.
-- [ ] The screener's D/E column help says it is Yahoo's *interest-bearing debt / equity* (the detail page may show thaifin's *total liabilities / equity*).
-- [ ] The README project-structure block lists every file in `src/`, `app_pages/`, `tests/` (checked against `git ls-files`).
+- [x] `src/fundamentals.py` module docstring mentions both data sources (it still says "Yahoo … 4-5 years" only).
+- [x] The sidebar caption in `app.py` names both Yahoo Finance and thaifin.
+- [x] The screener's D/E column help says it is Yahoo's *interest-bearing debt / equity* (the detail page may show thaifin's *total liabilities / equity*).
+- [x] The README project-structure block lists every file in `src/`, `app_pages/`, `tests/` (checked against `git ls-files`).
 
 ---
 

@@ -55,18 +55,33 @@ scripts/check.sh
 ## Project structure
 
 ```
-app.py                  # entry point + navigation
-app_pages/screener.py   # SET50 table
-app_pages/stock.py      # one-stock detail page (6 tabs)
-src/universe.py         # SET50 list
-src/data.py             # daily prices
-src/fundamentals.py     # snapshot, financials, dividends, P/E history, sector medians
-src/indicators.py       # SMA, RSI, volatility, support/resistance
-src/charts.py           # Plotly price chart
-src/model.py            # prediction model + backtest
-src/cache.py            # Streamlit caching of all loaders
-data/set50.csv
-tests/
+app.py                         # entry point + navigation
+app_pages/screener.py          # SET50 table
+app_pages/stock.py             # one-stock detail page (6 tabs)
+src/__init__.py
+src/universe.py                # SET50 list + official SET sector names
+src/data.py                    # daily prices
+src/fundamentals.py            # snapshot, financials, dividends, P/E history, sector medians
+src/indicators.py              # SMA, RSI, volatility, support/resistance
+src/charts.py                  # Plotly price chart
+src/model.py                   # prediction model + backtest
+src/screener.py                # screener helpers (selected row -> symbol)
+src/cache.py                   # Streamlit caching of all loaders
+data/set50.csv                 # SET50 constituents
+scripts/check.sh               # all checks (pytest + ty); CI runs the same script
+.github/workflows/ci.yml       # GitHub Actions CI
+tests/conftest.py              # blocks network access; fake Yahoo fixture
+tests/fakes.py                 # offline fakes for yfinance
+tests/test_model.py            # features, target, leakage, backtest split
+tests/test_fundamentals.py     # S/R levels, P/E history, sector medians, thaifin fallback
+tests/test_normalization.py    # unit conversions from thaifin and Yahoo
+tests/test_outage.py           # behaviour when Yahoo is down
+tests/test_pages.py            # AppTest smoke tests for both pages
+tests/test_navigation.py       # screener row -> stock page
+tests/test_universe.py         # SET50 CSV format
+tests/test_requirements.py     # pinned dependencies
+tests/test_ci.py               # CI workflow and check script
+tests/test_docs.py             # README and in-app text stay in sync with the code
 ```
 
 ## Results of the prediction model (honest)
