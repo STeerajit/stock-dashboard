@@ -112,12 +112,12 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 `0` → NaN for P/E and P/BV, Yahoo `debtToEquity / 100`, `dividendYield / 100`, and the thaifin-vs-Yahoo D/E definitions.
 
 **Acceptance criteria**
-- [ ] Test for `_financials_thaifin` with a fake `yearly_dataframe` (monkeypatched `thaifin.Stock`):
+- [x] Test for `_financials_thaifin` with a fake `yearly_dataframe` (monkeypatched `thaifin.Stock`):
   `gpm=50` → `Gross margin == 0.5`; `price_earning_ratio=0` → `P/E` is NaN; `None` cells → NaN (no exception);
   `attrs["source"] == "thaifin"`.
-- [ ] Test for `get_snapshot` with a fake `info` dict: `dividendYield=4.78` → `div_yield == 0.0478`;
+- [x] Test for `get_snapshot` with a fake `info` dict: `dividendYield=4.78` → `div_yield == 0.0478`;
   `debtToEquity=57.4` → `de == 0.574`; `pos_52w` is 0 at the low and 1 at the high.
-- [ ] Test that `get_financials` falls back to Yahoo when thaifin returns fewer than 2 years.
+- [x] Test that `get_financials` falls back to Yahoo when thaifin returns fewer than 2 years.
 
 ---
 
