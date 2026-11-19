@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src import cache
-from src.fundamentals import sector_medians
+from src.fundamentals import SnapshotError, sector_medians
 from src.universe import SET50_PERIOD
 
 st.title("SET50 screener")
@@ -13,7 +13,12 @@ picked = st.multiselect("Sector", sectors, placeholder="All sectors", key="secto
 
 table_slot = st.container()
 with table_slot.skeleton():
-    snaps = cache.snapshots()
+    try:
+        snaps = cache.snapshots()
+    except SnapshotError as e:
+        table_slot.error(str(e), title="Market data unavailable")
+        table_slot.button("Try again", icon=":material/refresh:", key="retry")
+        st.stop()
 
     medians = sector_medians(snaps, universe)
     df = universe.merge(snaps, on="symbol")

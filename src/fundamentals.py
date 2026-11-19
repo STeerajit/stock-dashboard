@@ -54,8 +54,21 @@ def get_snapshot(symbol: str) -> dict:
     }
 
 
+SNAPSHOT_COLUMNS = ["symbol", "price", "change_pct", "volume", "avg_volume", "value_traded", "bid", "ask",
+                    "high_52w", "low_52w", "pos_52w", "market_cap", "pe", "pbv", "div_yield", "roe", "de",
+                    "net_margin", "ex_div_date", "earnings_date"]
+
+
+class SnapshotError(RuntimeError):
+    """Too many symbols failed to load — the data source is probably down."""
+
+
 def get_snapshots(symbols: list[str], workers: int = 8) -> pd.DataFrame:
-    """Snapshots for many symbols, fetched in parallel. Failed symbols get NaN rows."""
+    """Snapshots for many symbols, fetched in parallel.
+
+    Always returns every column in SNAPSHOT_COLUMNS, one row per symbol. A symbol whose
+    fetch fails gets NaN values (its `price` is NaN), so callers never hit a KeyError.
+    """
 
     def safe(sym: str) -> dict:
         try:
@@ -65,7 +78,20 @@ def get_snapshots(symbols: list[str], workers: int = 8) -> pd.DataFrame:
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         rows = list(pool.map(safe, symbols))
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows).reindex(columns=SNAPSHOT_COLUMNS)
+    df[["ex_div_date", "earnings_date"]] = df[["ex_div_date", "earnings_date"]].apply(pd.to_datetime)
+    return df
+
+
+def check_snapshot_coverage(snapshots: pd.DataFrame, max_failed: float = 0.2) -> pd.DataFrame:
+    """Raise SnapshotError if more than `max_failed` of the symbols have no price; else return them unchanged."""
+    failed = snapshots["price"].isna().mean() if len(snapshots) else 1.0
+    if failed > max_failed:
+        raise SnapshotError(
+            f"Could not load market data for {failed:.0%} of stocks — Yahoo Finance may be down. "
+            "Please try again in a minute."
+        )
+    return snapshots
 
 
 def _row(df: pd.DataFrame, name: str) -> pd.Series:

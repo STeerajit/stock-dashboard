@@ -4,7 +4,7 @@ import streamlit as st
 
 from src import cache
 from src.charts import price_chart
-from src.fundamentals import pe_history, sector_medians
+from src.fundamentals import SnapshotError, pe_history, sector_medians
 from src.indicators import support_resistance
 
 
@@ -34,9 +34,23 @@ row = universe.set_index("symbol").loc[symbol]
 st.title(f"{symbol} · {row['name']}")
 st.caption(row["sector"])
 
-snaps = cache.snapshots()
-snap = snaps.set_index("symbol").loc[symbol]
-medians = sector_medians(snaps, universe).loc[row["sector"]]
+try:
+    snaps = cache.snapshots()
+    snapshot_error = None
+except SnapshotError as e:
+    snaps, snapshot_error = None, str(e)
+if snaps is not None:
+    snap = snaps.set_index("symbol").loc[symbol]
+    medians = sector_medians(snaps, universe).loc[row["sector"]]
+    if pd.isna(snap["price"]):
+        snapshot_error = f"Could not load current market data for {symbol}. Please try again in a minute."
+
+
+def need_snapshot() -> None:
+    """Inside a tab that needs live market data: show a warning and stop if it is unavailable."""
+    if snapshot_error:
+        st.warning(snapshot_error, title="Market data unavailable")
+        st.stop()
 
 tabs = st.tabs(
     [":material/swap_vert: Trading", ":material/candlestick_chart: Chart", ":material/account_balance: Financials",
@@ -48,6 +62,7 @@ t_trade, t_chart, t_fin, t_val, t_div, t_pred = tabs
 # ============ 1. Trading: how much is the market paying attention? ============
 if t_trade.open:
     with t_trade:
+        need_snapshot()
         vol_ratio = snap["volume"] / snap["avg_volume"] if snap["avg_volume"] else np.nan
         with st.container(horizontal=True):
             st.metric("Price", num(snap["price"]), pct(snap["change_pct"], 2), border=True, height="stretch")
@@ -134,6 +149,7 @@ if t_fin.open:
 # ============ 3. Valuation: expensive or cheap? ============
 if t_val.open:
     with t_val:
+        need_snapshot()
         st.caption(f"Compared with the median of SET50 stocks in {row['sector']}.")
 
         def vs(value, median):
@@ -181,6 +197,7 @@ if t_val.open:
 # ============ 8 (partly). Dividends & calendar ============
 if t_div.open:
     with t_div:
+        need_snapshot()
         with st.container(horizontal=True):
             st.metric("Next / last XD date", snap["ex_div_date"].strftime("%d %b %Y") if pd.notna(snap["ex_div_date"])
                       else "–", border=True, height="stretch")

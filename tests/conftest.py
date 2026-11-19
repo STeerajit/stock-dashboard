@@ -23,3 +23,29 @@ def _block_network(monkeypatch):
     monkeypatch.setattr(socket.socket, "connect_ex", guard)
     monkeypatch.setattr(socket, "create_connection", guard)
     monkeypatch.setattr(socket, "getaddrinfo", guard)
+
+
+@pytest.fixture
+def fake_yahoo(monkeypatch):
+    """Replace yfinance with offline fakes and start every test with empty Streamlit caches.
+
+    Also makes thaifin unavailable, so financials come from the fake Yahoo statements.
+    """
+    import streamlit as st
+    import yfinance
+
+    import src.fundamentals as fd
+    from tests.fakes import FakeTicker, fake_download
+
+    FakeTicker.failing = set()
+    FakeTicker.down = False
+    monkeypatch.setattr(yfinance, "Ticker", FakeTicker)
+    monkeypatch.setattr(yfinance, "download", fake_download)
+
+    def no_thaifin(symbol):
+        raise ConnectionError("thaifin disabled in tests")
+
+    monkeypatch.setattr(fd, "_financials_thaifin", no_thaifin)
+    st.cache_data.clear()
+    yield FakeTicker
+    st.cache_data.clear()

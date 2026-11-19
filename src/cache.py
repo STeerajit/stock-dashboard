@@ -10,14 +10,16 @@ from src.model import BacktestResult, train_and_backtest
 from src.universe import load_set50, yahoo_symbol
 
 
-@st.cache_data(ttl="1d")
+@st.cache_data(ttl="24h")
 def set50() -> pd.DataFrame:
     return load_set50()
 
 
 @st.cache_data(ttl="15m", show_spinner="Loading SET50 prices and valuations...")
 def snapshots() -> pd.DataFrame:
-    return fd.get_snapshots(set50()["symbol"].tolist())
+    # Raises fd.SnapshotError when too many symbols fail. st.cache_data does not cache
+    # exceptions, so a short outage is retried on the next rerun instead of sticking for 15 min.
+    return fd.check_snapshot_coverage(fd.get_snapshots(set50()["symbol"].tolist()))
 
 
 class NoPriceData(RuntimeError):
@@ -33,16 +35,16 @@ def prices(symbol: str, period: str = "5y") -> pd.DataFrame:
     return add_indicators(df)
 
 
-@st.cache_data(ttl="1d", max_entries=100)
+@st.cache_data(ttl="24h", max_entries=100)
 def financials(symbol: str) -> pd.DataFrame:
     return fd.get_financials(symbol)
 
 
-@st.cache_data(ttl="1d", max_entries=100)
+@st.cache_data(ttl="24h", max_entries=100)
 def dividends(symbol: str) -> pd.Series:
     return fd.get_dividends_per_year(symbol)
 
 
-@st.cache_data(ttl="1d", max_entries=50)
+@st.cache_data(ttl="24h", max_entries=50)
 def backtest(symbol: str) -> BacktestResult:
     return train_and_backtest(prices(symbol, "5y"))

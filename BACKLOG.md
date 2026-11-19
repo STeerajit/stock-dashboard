@@ -51,11 +51,11 @@ and the user sees a traceback. Partial failures are also cached for 15 minutes (
 so a 10-second network blip leaves blank rows for 15 minutes.
 
 **Acceptance criteria**
-- [ ] `get_snapshots` always returns every snapshot column, even when all fetches fail (NaN values). Unit test with `yf.Ticker` monkeypatched to raise.
-- [ ] If more than 20% of symbols fail, `cache.snapshots()` raises instead of returning, so the result is **not** cached. Unit test asserts the raise.
-- [ ] With Yahoo unreachable, the screener shows one `st.error` with a "try again" message and no traceback (verified with AppTest from #5).
-- [ ] With Yahoo unreachable, the stock page Trading tab shows a warning instead of crashing.
-- [ ] When one symbol fails, the other 49 rows still render.
+- [x] `get_snapshots` always returns every snapshot column, even when all fetches fail (NaN values). Unit test with `yf.Ticker` monkeypatched to raise.
+- [x] If more than 20% of symbols fail, `cache.snapshots()` raises instead of returning, so the result is **not** cached. Unit test asserts the raise.
+- [x] With Yahoo unreachable, the screener shows one `st.error` with a "try again" message and no traceback (verified with AppTest from #5).
+- [x] With Yahoo unreachable, the stock page Trading tab shows a warning instead of crashing.
+- [x] When one symbol fails, the other 49 rows still render.
 
 ---
 
