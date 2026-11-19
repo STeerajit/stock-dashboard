@@ -1,5 +1,7 @@
 # SET50 Dashboard
 
+[![CI](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml)
+
 Interactive dashboard for the 50 largest Thai stocks (SET50): a screener to compare all of them,
 and a detail page per stock covering trading activity, chart, financials, valuation vs. peers,
 dividends — plus an honestly-evaluated price prediction model.
@@ -17,10 +19,11 @@ Dependencies are pinned to exact versions: `requirements.txt` holds what the app
 
 Then open http://localhost:8501 in your browser. Share a stock directly with `http://localhost:8501/stock?symbol=PTT`.
 
-Run the tests (offline, including a data-leakage check):
+Run all checks — tests (offline, including a data-leakage check) and the type checker.
+CI runs this same script on every push and pull request:
 
 ```bash
-pytest
+scripts/check.sh
 ```
 
 ## What each part answers

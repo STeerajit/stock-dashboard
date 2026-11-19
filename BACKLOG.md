@@ -126,9 +126,11 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 **Why:** A green CI badge shows reviewers the project is tested. Depends on #1 (pinned deps) and a GitHub repo.
 
 **Acceptance criteria**
-- [ ] `.github/workflows/ci.yml` runs on every push and pull request: install `requirements-dev.txt`, then `pytest`, then `ty check`.
-- [ ] A deliberately failing test makes the workflow fail (checked once, then reverted).
-- [ ] The README shows the CI status badge.
+- [x] `.github/workflows/ci.yml` runs on every push and pull request: install `requirements-dev.txt`, then `pytest`, then `ty check`.
+- [x] A deliberately failing test makes the workflow fail (checked once, then reverted).
+  *Checked locally with the same `scripts/check.sh` CI runs (exit 1 with the failing test, 0 after reverting). Not pushed, by request.*
+- [x] The README shows the CI status badge.
+  *The badge URL assumes the GitHub repo will be `STeerajit/stock-dashboard`.*
 
 ---
 
