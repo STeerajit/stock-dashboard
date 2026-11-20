@@ -12,3 +12,6 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# Full local pip freeze, used only to rebuild .venv on this machine (see the file header)
+requirements-frozen.txt
