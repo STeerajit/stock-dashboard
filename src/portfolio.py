@@ -3,6 +3,8 @@
 Saved to data/portfolio.csv, which is gitignored: real holdings must never be committed.
 """
 
+import os
+from collections.abc import Mapping
 from pathlib import Path
 
 import pandas as pd
@@ -12,6 +14,12 @@ from src.universe import is_valid_symbol
 
 PORTFOLIO_CSV = Path(__file__).resolve().parent.parent / "data" / "portfolio.csv"
 COLUMNS = ["symbol", "shares", "avg_cost"]
+
+
+def public_mode(env: Mapping[str, str] | None = None) -> bool:
+    """True when the app runs as a public demo (environment variable STOCKS_PUBLIC=1, set on the hosting service).
+    Then holdings must never be written to the server: every visitor would see and change the same file."""
+    return (os.environ if env is None else env).get("STOCKS_PUBLIC") == "1"
 
 
 def empty() -> pd.DataFrame:

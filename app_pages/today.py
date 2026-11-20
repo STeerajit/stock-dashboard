@@ -10,7 +10,8 @@ from src.today import price_levels, reasons
 st.title(t("today.title"))
 st.caption(t("today.caption"))
 
-holdings = portfolio.load()
+holdings = (st.session_state.get("demo_holdings", portfolio.empty()) if portfolio.public_mode()
+            else portfolio.load())
 if holdings.empty:
     st.info(t("today.empty"), title=t("today.empty_title"))
     st.page_link("app_pages/portfolio.py", label=t("today.go_portfolio"), icon=":material/account_balance_wallet:")

@@ -11,7 +11,11 @@ from src.universe import describe
 st.title(t("port.title"))
 st.caption(t("port.caption"))
 
-saved = portfolio.load()
+# Public demo: holdings stay in this visitor's session, never in a file on the server (see portfolio.public_mode).
+public = portfolio.public_mode()
+if public:
+    st.info(t("port.public"), title=t("port.public_title"), icon=":material/public:")
+saved = st.session_state.get("demo_holdings", portfolio.empty()) if public else portfolio.load()
 last_year = date.today().year - 1
 
 
@@ -103,7 +107,10 @@ if submitted:
     if problems:
         st.error(t("port.not_saved") + "\n" + "\n".join(f"- {p}" for p in problems), title=t("port.check_title"))
     else:
-        portfolio.save(holdings)
+        if public:
+            st.session_state["demo_holdings"] = holdings
+        else:
+            portfolio.save(holdings)
         # The editor's state holds edits relative to the old table; drop it so the saved file is shown as-is
         # (otherwise added rows would be added a second time on top of the reloaded file).
         st.session_state.pop("holdings", None)

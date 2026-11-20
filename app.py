@@ -3,7 +3,7 @@
 import duckdb
 import streamlit as st
 
-from src import store
+from src import portfolio, store
 from src.i18n import DEFAULT, LANGS, t
 from src.universe import load_set100
 
@@ -43,7 +43,8 @@ with st.sidebar:
         st.caption(t("app.as_of", when=f"{as_of:%d %b %Y %H:%M}"))
     else:
         st.caption(t("app.live"))
-    if st.button(t("app.update"), icon=":material/sync:", help=t("app.update_help")):
+    # Not on the public demo: one visitor's click would make every visitor wait for the download.
+    if not portfolio.public_mode() and st.button(t("app.update"), icon=":material/sync:", help=t("app.update_help")):
         with st.spinner(t("app.updating")):
             try:
                 report = store.update_store(store.STORE_PATH, load_set100()["symbol"].tolist(), store.live_fetchers())

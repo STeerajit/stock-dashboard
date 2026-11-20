@@ -51,3 +51,15 @@ Publishing needs your own Medium, LinkedIn or dev.to account, and the "Live app"
 **What you need to do:** paste `docs/article.md` into your platform (upload the two PNGs from `docs/img/`), add
 the live-app link once #8 is done, publish, and put the article's URL in the README. Then tick the two open
 boxes in BACKLOG.md #12.
+
+## Backlog #8 — deploy to Streamlit Community Cloud
+
+**Status:** ready to deploy, not deployed. The repo is not on GitHub yet, and Streamlit Cloud needs your own
+login. Before the repo goes public, note that **every commit carries the author email from your git config**.
+
+**What you need to do:**
+1. Put the repo on GitHub as **public** (Streamlit's free plan needs it) and push `main`.
+2. Open https://share.streamlit.io, sign in with GitHub → **Create app** → repo, branch `main`, file `app.py`,
+   Python 3.11 → **Advanced settings → Secrets**: `STOCKS_PUBLIC = "1"` → **Deploy**.
+3. Check: the screener shows 100 rows within 30 s, and `<url>/stock?symbol=KBANK` opens KBANK.
+4. Put the URL at the top of the README and in docs/article.md ("Live app"), then tick the boxes in BACKLOG #8.

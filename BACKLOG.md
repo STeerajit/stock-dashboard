@@ -150,6 +150,10 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 
 ## 8. Deploy to Streamlit Community Cloud — P1 · M
 
+> **Prepared** on 2026-11-21: public-demo mode (`STOCKS_PUBLIC=1`: portfolio per browser tab, no update
+> button), screenshots and deploy steps in the README, secrets check clean. The live deploy needs the repo on
+> GitHub and your Streamlit Cloud login (see BLOCKED.md).
+
 **Why:** The biggest portfolio win is a live link reviewers can click. Requires a **public** GitHub repo
 (the user must explicitly choose to make it public). Depends on #1 and #2.
 
@@ -157,8 +161,8 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 - [ ] The app is live at a public `*.streamlit.app` URL, and the README links to it at the top.
 - [ ] Opening the live URL shows the screener with 50 rows within 30 seconds on a cold start.
 - [ ] `<live-url>/stock?symbol=KBANK` opens KBANK directly.
-- [ ] The README has at least 2 screenshots (screener, stock chart tab) stored in `docs/`.
-- [ ] No secrets in the repo (`git grep -i "api_key\|token"` returns nothing).
+- [x] The README has at least 2 screenshots (screener, stock chart tab) stored in `docs/`.
+- [x] No secrets in the repo (`git grep -i "api_key\|token"` returns nothing).
 
 ---
 

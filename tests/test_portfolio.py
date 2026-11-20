@@ -211,3 +211,22 @@ def test_page_does_not_save_bad_input(csv_path, fake_market, monkeypatch):
 def test_clean_rejects_a_symbol_that_is_not_a_set_symbol():
     _, problems = portfolio.clean(table([("PTT](https://evil.example)", 100, 30.0)]))
     assert len(problems) == 1 and "is not a SET symbol" in problems[0]
+
+
+# ---------- public (deployed) mode: holdings live only in the visitor's session ----------
+
+def test_public_mode_keeps_holdings_in_the_session_not_on_disk(csv_path, fake_market, monkeypatch):
+    monkeypatch.setenv("STOCKS_PUBLIC", "1")
+    at = run_page_with_edits(monkeypatch, table([("PTT", 100, 30.0)]))
+    assert not at.exception and not at.error
+    assert not csv_path.exists()
+    assert at.session_state["demo_holdings"]["symbol"].tolist() == ["PTT"]
+    assert any("this browser tab" in i.value for i in at.info)
+
+
+def test_public_mode_flag():
+    import os
+
+    assert portfolio.public_mode({"STOCKS_PUBLIC": "1"}) is True
+    assert portfolio.public_mode({}) is False
+    assert portfolio.public_mode(dict(os.environ, STOCKS_PUBLIC="0")) is False

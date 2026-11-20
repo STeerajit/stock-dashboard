@@ -122,6 +122,11 @@ TEXT: dict[str, dict[str, str]] = {
                            "Saved on this Mac only (data/portfolio.csv, never committed to git).",
                      "th": "หุ้นที่คุณถือ และรายการเฝ้าดู: ใส่ 0 หุ้นสำหรับหุ้นที่แค่อยากติดตาม "
                            "บันทึกไว้ใน Mac เครื่องนี้เท่านั้น (data/portfolio.csv ไม่เคยถูก commit เข้า git)"},
+    "port.public_title": {"en": "Demo", "th": "เดโม"},
+    "port.public": {"en": "This is a public demo: your portfolio lives only in this browser tab and disappears when "
+                          "you close it. Nothing is saved on the server.",
+                    "th": "นี่คือเดโมสาธารณะ: พอร์ตของคุณอยู่แค่ในแท็บเบราว์เซอร์นี้ และจะหายไปเมื่อปิดแท็บ "
+                          "ไม่มีอะไรถูกบันทึกบน server"},
     "port.empty_title": {"en": "Empty portfolio", "th": "พอร์ตว่าง"},
     "port.empty": {"en": "No stocks yet. Add them in the table below, then press Save.",
                    "th": "ยังไม่มีหุ้น เพิ่มหุ้นในตารางด้านล่าง แล้วกด บันทึก"},

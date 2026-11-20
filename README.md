@@ -8,6 +8,10 @@ portfolio page to track your holdings and watchlist — plus an honestly-evaluat
 
 What it is for, the decisions behind it and the status of each part: [docs/SPEC.md](docs/SPEC.md).
 
+![SET100 screener](docs/img/screenshot-screener.png)
+
+![Stock page, chart tab](docs/img/screenshot-chart.png)
+
 ## How to run
 
 One-time setup:
@@ -50,6 +54,16 @@ CI runs this same script on every push and pull request:
 ```bash
 scripts/check.sh
 ```
+
+## Public demo (Streamlit Community Cloud)
+
+The same code can run as a public demo. Set the environment variable / secret `STOCKS_PUBLIC = "1"` on the
+host: then each visitor's portfolio stays only in their own browser tab (nothing is written on the server, so
+visitors never see each other's holdings) and the "Update data" button is hidden. Without a local store the demo
+fetches live data, so the first screener load takes about 15 seconds.
+
+Deploy: push the repo to GitHub, open https://share.streamlit.io → **Create app** → pick the repo, branch `main`,
+main file `app.py`, Python 3.11 → **Advanced settings → Secrets**: `STOCKS_PUBLIC = "1"` → **Deploy**.
 
 ## What each part answers
 
