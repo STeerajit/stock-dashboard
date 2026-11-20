@@ -259,14 +259,17 @@ well-known scores show finance knowledge and set the project apart from generic 
 
 ## 15. Growth & quality columns in the screener — P2 · M
 
+> **Done** on 2026-11-21. In a real browser the screener's first load took 10 s (financials for 100 stocks,
+> 8 in parallel, cached 1 day), and clicking the "5y revenue CAGR" header sorts by it.
+
 **Why:** The screener shows only "now" numbers. Long-term quality (steady growth, steady ROE) is what the
 financial history is for, and comparing it across 50 stocks is the screener's job.
 
 **Acceptance criteria**
-- [ ] New columns: 5-year revenue CAGR, 5-year net-income CAGR, 5-year average ROE (from `get_financials`).
-- [ ] CAGR is blank (not an error) when there are fewer than 5 years or the start value is ≤ 0. Unit-tested.
-- [ ] The financials for all 50 stocks are fetched in parallel and cached for 1 day; the screener's first load stays under 30 seconds.
-- [ ] Sorting by "5y revenue CAGR" works in the UI.
+- [x] New columns: 5-year revenue CAGR, 5-year net-income CAGR, 5-year average ROE (from `get_financials`).
+- [x] CAGR is blank (not an error) when there are fewer than 5 years or the start value is ≤ 0. Unit-tested.
+- [x] The financials for all 50 stocks are fetched in parallel and cached for 1 day; the screener's first load stays under 30 seconds.
+- [x] Sorting by "5y revenue CAGR" works in the UI.
 
 ---
 

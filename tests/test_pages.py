@@ -61,6 +61,9 @@ def fake_cache(monkeypatch):
     state = {"financials": financials(), "snapshot": snapshots}
     monkeypatch.setattr(cache, "set100", lambda: UNIVERSE.copy())
     monkeypatch.setattr(cache, "snapshots", snapshots)
+    monkeypatch.setattr(cache, "growth", lambda: pd.DataFrame({
+        "symbol": UNIVERSE["symbol"], "rev_cagr5": np.linspace(0.02, 0.12, len(UNIVERSE)),
+        "ni_cagr5": np.nan, "roe_avg5": 0.1}))
     monkeypatch.setattr(cache, "snapshot", lambda symbol: state["snapshot"]([symbol]))
     monkeypatch.setattr(cache, "prices", lambda symbol, period="5y": PRICES)
     monkeypatch.setattr(cache, "financials", lambda symbol: state["financials"])
@@ -207,3 +210,11 @@ def test_symbol_with_markdown_in_the_url_is_rejected(fake_cache):
     assert not at.exception
     assert at.error[0].value.startswith("A SET symbol has only")
     assert not at.title and "evil.example" not in " ".join(m.value for m in at.markdown)
+
+
+def test_screener_has_growth_columns_and_sorts_by_them(fake_cache):
+    at = AppTest.from_file(ROOT / "app_pages/screener.py", default_timeout=30).run()
+    assert not at.exception
+    table = at.dataframe[0].value
+    assert {"rev_cagr5", "ni_cagr5", "roe_avg5"} <= set(table.columns)
+    assert table.sort_values("rev_cagr5", ascending=False)["symbol"].iloc[0] == "AOT"  # highest fake CAGR

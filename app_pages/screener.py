@@ -26,7 +26,7 @@ with table_slot.skeleton():
         st.stop()
 
     medians = sector_medians(snaps, universe)
-    df = universe.merge(snaps, on="symbol")
+    df = universe.merge(snaps, on="symbol").merge(cache.growth(), on="symbol", how="left")
     # How expensive vs. sector peers: +0.20 = P/E 20% above the sector median.
     df["pe_vs_sector"] = df["pe"] / df["sector"].map(medians["pe"]) - 1
     if picked:
@@ -42,7 +42,8 @@ with table_slot.skeleton():
         selection_mode="single-row",
         height=640,
         column_order=["symbol", "name", "sector", "in_set50", "price", "change_pct", "pos_52w", "value_traded", "market_cap",
-                      "pe", "pe_vs_sector", "pbv", "div_yield", "roe", "de", "net_margin"],
+                      "pe", "pe_vs_sector", "pbv", "div_yield", "roe", "de", "net_margin",
+                      "rev_cagr5", "ni_cagr5", "roe_avg5"],
         column_config={
             "symbol": st.column_config.TextColumn("Symbol", pinned=True),
             "name": "Company",
@@ -66,6 +67,13 @@ with table_slot.skeleton():
                                                "Not reported for banks. (The Financials tab may use thaifin's "
                                                "total liabilities / equity instead.)"),
             "net_margin": nc("Net margin", format="percent"),
+            "rev_cagr5": nc("5y revenue CAGR", format="percent",
+                            help="Yearly revenue growth over the last 5 full years. Blank with fewer years of "
+                                 "data or a zero/negative start."),
+            "ni_cagr5": nc("5y profit CAGR", format="percent",
+                           help="Yearly net-income growth over the last 5 full years. Blank when either end "
+                                "is a loss."),
+            "roe_avg5": nc("5y avg ROE", format="percent", help="Average return on equity of the last 5 years."),
         },
         alt="SET100 stocks with price, valuation and profitability metrics",
     )

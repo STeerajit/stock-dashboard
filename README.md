@@ -45,7 +45,7 @@ scripts/check.sh
 | Section | Shows | Question it answers |
 |---|---|---|
 | Today (start page) | Your portfolio and watchlist stocks that are near support, broke resistance, have RSI < 30 or > 70, an XD or earnings date within 14 days, or a P/E > 20% below their own median | Which of my stocks should I look at today? |
-| Screener | All SET100 (SET50 marked): price, 52-week position, value traded, P/E (vs. sector), P/BV, yield, ROE, D/E | Which stocks deserve a closer look? |
+| Screener | All SET100 (SET50 marked): price, 52-week position, value traded, P/E (vs. sector), P/BV, yield, ROE, D/E, 5-year revenue/profit CAGR and average ROE | Which stocks deserve a closer look? |
 | Trading | Price, volume vs. average, value traded, bid/offer, 52-week range, market cap, free float (Yahoo estimate) | How much attention is the market paying? |
 | Chart | Adjusted candlesticks, SMA20/50, support/resistance, volume, RSI | Where is the trend; where might price react? |
 | Financials | Up to 16 years: revenue & profit growth, margins, ROE, D/E, free cash flow | Is the business good and strong? |
@@ -116,6 +116,7 @@ tests/test_pages.py            # AppTest smoke tests for both pages
 tests/test_navigation.py       # screener row -> stock page
 tests/test_portfolio.py        # holdings: input checks, saving, Portfolio page
 tests/test_today.py            # Today rules at their boundaries
+tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_set_links.py        # SET links and free float
 tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies

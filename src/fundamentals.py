@@ -229,6 +229,26 @@ def pe_history(prices: pd.DataFrame, financials: pd.DataFrame) -> pd.Series:
     return (year_end / eps).dropna()
 
 
+def _cagr(series: pd.Series, years: int) -> float:
+    """Yearly growth rate from `years` before the last year to the last year; NaN without both values,
+    or when either is zero or negative (growth rates mean nothing across losses)."""
+    s = series.dropna()
+    if s.empty or (s.index[-1] - years) not in s.index:
+        return float("nan")
+    start, end = s.loc[s.index[-1] - years], s.iloc[-1]
+    return float((end / start) ** (1 / years) - 1) if start > 0 and end > 0 else float("nan")
+
+
+def growth_quality(financials: pd.DataFrame, years: int = 5) -> dict[str, float]:
+    """5-year revenue CAGR, net-income CAGR and average ROE from yearly financials (NaN when not computable)."""
+    roe = financials["ROE"].dropna() if "ROE" in financials else pd.Series(dtype=float)
+    return {
+        "rev_cagr5": _cagr(financials["Revenue"], years) if not financials.empty else float("nan"),
+        "ni_cagr5": _cagr(financials["Net income"], years) if not financials.empty else float("nan"),
+        "roe_avg5": float(roe.tail(years).mean()) if len(roe) >= years else float("nan"),
+    }
+
+
 def yield_history(dividends_per_year: pd.Series, close: pd.Series, this_year: int) -> pd.Series:
     """Yearly dividend yield (0.05 = 5%) for complete years: dividends per share with XD dates in year Y
     divided by the **unadjusted** close on the last trading day of Y.

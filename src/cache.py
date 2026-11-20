@@ -1,5 +1,7 @@
 """Cached data loaders shared by all pages (one cache for the whole app)."""
 
+from concurrent.futures import ThreadPoolExecutor
+
 import pandas as pd
 import streamlit as st
 
@@ -54,6 +56,20 @@ def unadjusted_close(symbol: str) -> pd.Series:
 @st.cache_data(ttl="24h", max_entries=100)
 def financials(symbol: str) -> pd.DataFrame:
     return fd.get_financials(symbol)
+
+
+@st.cache_data(ttl="24h", show_spinner="Loading 5-year growth for SET100 (about 10 seconds, once a day)...")
+def growth() -> pd.DataFrame:
+    """5-year revenue / net-income CAGR and average ROE for every SET100 stock (columns: symbol + growth_quality)."""
+    def one(symbol: str) -> dict:
+        try:
+            fin = fd.get_financials(symbol)
+        except Exception:  # both sources down for this stock: blank figures, the screener still shows it
+            fin = pd.DataFrame(columns=fd.FIN_COLUMNS)
+        return {"symbol": symbol, **fd.growth_quality(fin)}
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        return pd.DataFrame(list(pool.map(one, set100()["symbol"].tolist())))
 
 
 @st.cache_data(ttl="24h", max_entries=100)
