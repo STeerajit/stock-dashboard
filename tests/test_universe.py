@@ -11,6 +11,7 @@ from src.universe import (
     SET100_PERIOD_END,
     SET_SECTORS,
     describe,
+    is_valid_symbol,
     load_set100,
     set100_expiry_warning,
     yahoo_symbol,
@@ -88,3 +89,14 @@ def test_no_expiry_warning_on_the_last_day_of_the_period():
 def test_expiry_warning_from_the_day_after_the_period():
     msg = set100_expiry_warning(date(2027, 1, 1), period_end=date(2026, 12, 31))
     assert msg and "data/set100.csv" in msg
+
+
+def test_valid_symbols():
+    for sym in ["PTT", "M", "PR9", "BH", "KTB-R", "NER.R", "S&J"]:
+        assert is_valid_symbol(sym), sym
+    for sym in ["", "PTT)[x](https://evil.example", "A B", "<b>", "ptt", "X" * 16, "-PTT"]:
+        assert not is_valid_symbol(sym), sym
+
+
+def test_every_listed_symbol_is_valid():
+    assert all(is_valid_symbol(s) for s in load_set100()["symbol"])

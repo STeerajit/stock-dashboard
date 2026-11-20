@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.universe import is_valid_symbol
+
 PORTFOLIO_CSV = Path(__file__).resolve().parent.parent / "data" / "portfolio.csv"
 COLUMNS = ["symbol", "shares", "avg_cost"]
 
@@ -38,6 +40,8 @@ def clean(table: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     for n, (symbol, shares, avg_cost) in enumerate(df.itertuples(index=False), start=1):
         if symbol == "":
             problems.append(f"Row {n}: the symbol is empty.")
+        elif not is_valid_symbol(symbol):
+            problems.append(f"Row {n}: {symbol[:20]!r} is not a SET symbol (letters, digits and . & - only).")
         if pd.isna(shares):
             problems.append(f"Row {n}: shares is empty (use 0 for a watchlist stock).")
         elif shares < 0:

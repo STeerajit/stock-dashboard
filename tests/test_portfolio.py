@@ -206,3 +206,8 @@ def test_page_does_not_save_bad_input(csv_path, fake_market, monkeypatch):
     assert not csv_path.exists()
     assert len(at.error) == 1
     assert "symbol is empty" in at.error[0].value and "can't be negative" in at.error[0].value
+
+
+def test_clean_rejects_a_symbol_that_is_not_a_set_symbol():
+    _, problems = portfolio.clean(table([("PTT](https://evil.example)", 100, 30.0)]))
+    assert len(problems) == 1 and "is not a SET symbol" in problems[0]

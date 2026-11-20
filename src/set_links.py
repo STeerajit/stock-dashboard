@@ -5,6 +5,7 @@ short sales or warning lists, so those links go to the all-stocks page (`market_
 """
 
 from typing import NamedTuple
+from urllib.parse import quote as url_quote
 
 import pandas as pd
 
@@ -20,7 +21,7 @@ class Link(NamedTuple):
 
 def set_links(symbol: str) -> list[Link]:
     def quote(label: str, page: str) -> Link:
-        return Link(label, QUOTE.format(symbol=symbol, page=page), False)
+        return Link(label, QUOTE.format(symbol=url_quote(symbol, safe=""), page=page), False)
 
     def market(label: str, path: str) -> Link:
         return Link(label, MARKET + path, True)

@@ -10,7 +10,7 @@ from src.charts import price_chart
 from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for, yield_history
 from src.indicators import support_resistance
 from src.set_links import set_links
-from src.universe import OUTSIDE_SET100, describe, set100_expiry_warning
+from src.universe import OUTSIDE_SET100, describe, is_valid_symbol, set100_expiry_warning
 
 
 def baht(x: float | None) -> str:
@@ -38,6 +38,10 @@ universe = cache.set100()
 symbol = st.selectbox("Stock", universe["symbol"].tolist(), key="symbol", bind="query-params",
                       accept_new_options=True, help="Pick a SET100 stock, or type any SET symbol and press Enter.")
 symbol = symbol.strip().upper()
+if not is_valid_symbol(symbol):
+    st.error("A SET symbol has only letters, digits and . & - (up to 15 characters), e.g. PTT.",
+             title="Not a valid symbol")
+    st.stop()
 name, sector = describe(universe, symbol)
 in_set100 = sector != OUTSIDE_SET100
 st.title(f"{symbol} · {name}")

@@ -200,3 +200,10 @@ def test_stock_page_links_to_the_set_website_and_shows_free_float(fake_cache):
     text = " ".join(m.value for m in at.markdown)
     assert "https://www.set.or.th/en/market/product/stock/quote/PTT/major-shareholders" in text
     assert {m.label: m.value for m in at.metric}["Free float (Yahoo estimate)"] == "40%"
+
+
+def test_symbol_with_markdown_in_the_url_is_rejected(fake_cache):
+    at = open_stock("PTT)[Click me](https://evil.example")
+    assert not at.exception
+    assert at.error[0].value.startswith("A SET symbol has only")
+    assert not at.title and "evil.example" not in " ".join(m.value for m in at.markdown)

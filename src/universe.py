@@ -4,6 +4,7 @@ SET reviews the index every 6 months (effective 1 Jan and 1 Jul), so the list
 lives in a CSV that is easy to update, not in code.
 """
 
+import re
 from datetime import date
 from pathlib import Path
 
@@ -39,6 +40,12 @@ def describe(universe: pd.DataFrame, symbol: str) -> tuple[str, str]:
     if match.empty:
         return symbol, OUTSIDE_SET100
     return str(match["name"].iloc[0]), str(match["sector"].iloc[0])
+
+
+def is_valid_symbol(symbol: str) -> bool:
+    """True for a plausible SET symbol (e.g. PTT, BH, SCB, KTB-R, NER.R). Anything else is rejected before it is
+    shown or put into a link: symbols come from the URL and from typing, so they must not carry markdown or URLs."""
+    return re.fullmatch(r"[A-Z0-9][A-Z0-9.&-]{0,14}", symbol) is not None
 
 
 def yahoo_symbol(symbol: str) -> str:
