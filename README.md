@@ -79,6 +79,7 @@ scripts/check.sh
 app.py                         # entry point + navigation
 app_pages/screener.py          # SET100 table
 app_pages/stock.py             # one-stock detail page (6 tabs)
+app_pages/portfolio.py         # holdings + watchlist editor
 src/__init__.py
 src/universe.py                # SET100 list + the SET sector names in use
 src/data.py                    # daily prices
@@ -87,6 +88,7 @@ src/indicators.py              # SMA, RSI, volatility, support/resistance
 src/charts.py                  # Plotly price chart
 src/model.py                   # prediction model + backtest
 src/screener.py                # screener helpers (selected row -> symbol)
+src/portfolio.py               # load, check and save holdings (data/portfolio.csv)
 src/cache.py                   # Streamlit caching of all loaders
 data/set100.csv                # SET100 constituents (with an in_set50 flag)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
@@ -100,6 +102,7 @@ tests/test_normalization.py    # unit conversions from thaifin and Yahoo
 tests/test_outage.py           # behaviour when Yahoo is down
 tests/test_pages.py            # AppTest smoke tests for both pages
 tests/test_navigation.py       # screener row -> stock page
+tests/test_portfolio.py        # holdings: input checks, saving, Portfolio page
 tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies
 tests/test_ci.py               # CI workflow and check script

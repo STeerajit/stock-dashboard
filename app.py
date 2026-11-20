@@ -16,6 +16,10 @@ page = st.navigation(
             help="One stock in depth: trading, chart with support/resistance, financials, valuation vs. "
                  "peers, dividends, and a prediction model.",
         ),
+        st.Page(
+            "app_pages/portfolio.py", title="Portfolio", icon=":material/account_balance_wallet:",
+            url_path="portfolio", help="The stocks you own and your watchlist, saved on this Mac.",
+        ),
     ]
 )
 
