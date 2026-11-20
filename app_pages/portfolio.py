@@ -78,7 +78,8 @@ else:
         alloc = portfolio.allocation(pos)
         if not alloc.empty:
             st.subheader("Allocation by sector")
-            st.bar_chart(alloc.rename("Share of value"), horizontal=True, x_label="Share of market value",
+            st.bar_chart((alloc * 100).round(1).rename("% of value"), horizontal=True,
+                         x_label="% of market value",
                          alt="Share of the portfolio's market value in each sector")
         st.caption(f"No trading fees, VAT or dividend tax are included. Estimated dividend uses the dividends per "
                    f"share paid in {last_year} (the last complete year, by XD date); future dividends may differ. "

@@ -310,17 +310,20 @@ Form 59, C-sign / cash balance / turnover list) have no free official API. **Blo
 
 ## 19. Portfolio: SET100 list, any symbol, holdings and their numbers — P1 · L
 
+> **Done** on 2026-11-21 (Goal A). Checked in a real browser (headless Chromium): 100 screener rows,
+> `/stock?symbol=MAJOR` opens with live data, a portfolio row survives a reload and can be deleted again.
+
 **Why:** The app is for real investing ([docs/SPEC.md](docs/SPEC.md)). Owned stocks must be tracked, and they
 may be outside SET50.
 
 **Acceptance criteria**
-- [ ] `data/set100.csv` holds SET's official H2/2026 SET100 list (100 rows, sectors as SET prints them, a column
+- [x] `data/set100.csv` holds SET's official H2/2026 SET100 list (100 rows, sectors as SET prints them, a column
   saying which are in SET50); the screener shows all 100.
-- [ ] The stock page opens any Thai symbol (e.g. `/stock?symbol=MAJOR`); stocks outside SET100 show the sector
+- [x] The stock page opens any Thai symbol (e.g. `/stock?symbol=MAJOR`); stocks outside SET100 show the sector
   `Outside SET100`; if Yahoo has no data the page warns instead of failing.
-- [ ] A Portfolio page with an editable table (symbol, shares, average cost; `shares = 0` = watchlist), saved to
+- [x] A Portfolio page with an editable table (symbol, shares, average cost; `shares = 0` = watchlist), saved to
   `data/portfolio.csv`, which is gitignored. Bad input (empty symbol, negative numbers) is rejected with a message.
-- [ ] Numbers: P&L per stock and in total (THB and %), allocation by sector, estimated dividend (dividend per share
+- [x] Numbers: P&L per stock and in total (THB and %), allocation by sector, estimated dividend (dividend per share
   of the last complete calendar year × shares) and yield on cost. No fees or taxes, and the page says so.
   Unit-tested with hand-computed examples.
 

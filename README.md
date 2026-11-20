@@ -1,10 +1,10 @@
-# SET50 Dashboard
+# SET100 Dashboard
 
 [![CI](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml)
 
-Interactive dashboard for the 50 largest Thai stocks (SET50): a screener to compare all of them,
-and a detail page per stock covering trading activity, chart, financials, valuation vs. peers,
-dividends — plus an honestly-evaluated price prediction model.
+Personal dashboard for Thai stocks: a screener to compare the 100 largest (SET100), a detail page for
+any Thai stock covering trading activity, chart, financials, valuation vs. peers and dividends, and a
+portfolio page to track your holdings and watchlist — plus an honestly-evaluated price prediction model.
 
 What it is for, the decisions behind it and the status of each part: [docs/SPEC.md](docs/SPEC.md).
 
@@ -31,7 +31,7 @@ It keeps running after you close the terminal; its output goes to `stocks.log`. 
 `alias stocks='<path to repo>/scripts/stocks.sh'` to `~/.zshrc` to type just `stocks`.
 To run it in the foreground instead: `.venv/bin/streamlit run app.py`.
 
-Share a stock directly with `http://localhost:8501/stock?symbol=PTT`.
+Share a stock directly with `http://localhost:8501/stock?symbol=PTT` (any SET symbol works, e.g. `?symbol=MAJOR`).
 
 Run all checks — tests (offline, including a data-leakage check) and the type checker.
 CI runs this same script on every push and pull request:
@@ -44,12 +44,13 @@ scripts/check.sh
 
 | Section | Shows | Question it answers |
 |---|---|---|
-| Screener | All SET50: price, 52-week position, value traded, P/E (vs. sector), P/BV, yield, ROE, D/E | Which stocks deserve a closer look? |
+| Screener | All SET100 (SET50 marked): price, 52-week position, value traded, P/E (vs. sector), P/BV, yield, ROE, D/E | Which stocks deserve a closer look? |
 | Trading | Price, volume vs. average, value traded, bid/offer, 52-week range, market cap | How much attention is the market paying? |
 | Chart | Adjusted candlesticks, SMA20/50, support/resistance, volume, RSI | Where is the trend; where might price react? |
 | Financials | Up to 16 years: revenue & profit growth, margins, ROE, D/E, free cash flow | Is the business good and strong? |
 | Valuation | P/E, P/BV, yield vs. sector median; P/E and P/BV vs. their own 16-year median | Is the price expensive or cheap? |
 | Dividends & calendar | Dividend per share by year, XD date, earnings date | What events may move the price? |
+| Portfolio | Your holdings and watchlist: value, P&L, estimated dividend, yield on cost, allocation by sector | How is my money doing? |
 | Prediction | Random Forest next-day direction, time-based split, baseline & backtest | Can a simple model beat guessing? (Usually not.) |
 
 ## Data sources and limits
@@ -70,6 +71,9 @@ scripts/check.sh
   and July, together with `SET100_PERIOD` and `SET100_PERIOD_END` in `src/universe.py`. After
   `SET100_PERIOD_END`, both pages warn that the list may be out of date.
   The stock page also opens stocks outside SET100 (`?symbol=MAJOR`); their sector shows as "Outside SET100".
+- **Your portfolio:** `data/portfolio.csv`, written by the Portfolio page. It is in `.gitignore`, so your real
+  holdings are never committed. Numbers ignore trading fees, VAT and dividend tax; the estimated dividend is
+  last complete year's dividend per share × shares.
 - **Not included yet** (no free official API): investor-type flows, NVDR, short sales, top-10 shareholders,
   Form 59, C-sign / cash balance / turnover list, SET news.
 
