@@ -11,6 +11,7 @@ import pandas as pd
 
 QUOTE = "https://www.set.or.th/en/market/product/stock/quote/{symbol}/{page}"
 MARKET = "https://www.set.or.th/en/market/"
+FORM_59 = "https://market.sec.or.th/public/idisc/en/r59"
 
 
 class Link(NamedTuple):
@@ -38,6 +39,8 @@ def set_links(symbol: str) -> list[Link]:
         market("Cash balance and turnover list",
                "news-and-alert/surveillance-c-sign-temporary-trading/market-surveillance-measure-list"),
         market("Auto Pause", "news-and-alert/trading-halt-suspension-pause"),
+        # Form 59 is published by the SEC, not SET. The user opened this page in their browser on 2026-11-21.
+        Link("Form 59 (executives' trades, SEC website)", FORM_59, True),
     ]
 
 

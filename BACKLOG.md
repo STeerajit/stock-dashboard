@@ -351,8 +351,7 @@ may be outside SET50.
 
 ## 21. Links to the SET website, free float and XR dates — P2 · M
 
-> **Done** on 2026-11-21 (Goal B), except a Form 59 link (the SEC page refused the automated check; see
-> [BLOCKED.md](BLOCKED.md)). XR dates have no free feed, so they are covered by the "Rights & benefits" link.
+> **Done** on 2026-11-21 (Goal B). The Form 59 link (SEC website) was added after the user opened it in their browser. XR dates have no free feed, so they are covered by the "Rights & benefits" link.
 
 **Why:** Categories 5–8 of the spec have no free data source (#16). A link to the right SET page is the cheap
 way to cover them; free float and XR dates may be available for free.

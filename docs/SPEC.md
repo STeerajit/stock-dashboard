@@ -74,7 +74,7 @@ The first request was "ต้องการทำสำหรับหุ้น
 | 3 | Valuation | Done | Valuation tab: P/E, P/BV, yield vs. sector median and vs. own history (yield from dividends ÷ unadjusted year-end price) |
 | 4 | Chart | Done | Chart tab: adjusted candles, SMA20/50, support/resistance, volume, RSI |
 | 5 | Money flows | Partial | Links only: SET's all-stock pages for investor types, NVDR, short sales ("See on the SET website"). No per-stock free data (#16) |
-| 6 | Shareholders | Partial | Free float (Yahoo estimate) on the Trading tab; link to SET's major shareholders page. Form 59 is on the SEC website, not linked (could not be verified) |
+| 6 | Shareholders | Partial | Free float (Yahoo estimate) on the Trading tab; link to SET's major shareholders page. link to Form 59 on the SEC website |
 | 7 | Warning signs | Partial | Links only: SET's caution signs, cash balance / turnover list and Auto Pause pages (all stocks) |
 | 8 | News & calendar | Partial | Earnings and XD dates in the app; XR dates and news via links to the stock's SET pages. News sentiment cancelled |
 

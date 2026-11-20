@@ -20,7 +20,13 @@ def test_market_wide_links_name_no_other_stock():
     assert {link.label for link in market} >= {"Investor types", "NVDR", "Short sales", "Caution signs (C)",
                                                "Cash balance and turnover list", "Auto Pause"}
     for link in market:
-        assert link.url.startswith("https://www.set.or.th/en/market/") and "/quote/" not in link.url, link
+        assert link.url.startswith(("https://www.set.or.th/en/market/", "https://market.sec.or.th/")), link
+        assert "/quote/" not in link.url, link
+
+
+def test_form_59_links_to_the_sec_search():
+    form59 = [link for link in set_links("PTT") if "Form 59" in link.label]
+    assert [link.url for link in form59] == ["https://market.sec.or.th/public/idisc/en/r59"]
 
 
 def test_every_link_is_https_and_unique():

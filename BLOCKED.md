@@ -33,12 +33,3 @@ the year-end price used.
 **What you need to do** (optional): log in to set.or.th (or open SETSMART if you have it), find PTT and ADVANC
 dividend yield at year-end 2022 and 2023, and check they are within ±1 pp of the app (PTT 6.32%, 4.20%;
 ADVANC 3.94%, 3.80%). Then tick the spot-check box in BACKLOG.md #14.
-
-## Backlog #21 — link to Form 59 (executives' trades)
-
-**Status:** not linked. Form 59 is published by the SEC, not SET. The SEC page
-`https://market.sec.or.th/public/idisc/en/r59` answered **403 Forbidden** to the automated browser (2026-11-21), so
-it could not be verified, and the app only names the SEC website in the "See on the SET website" popover.
-
-**What you need to do:** open that URL in your own browser. If it shows the Form 59 search, add it to
-`set_links()` in `src/set_links.py` as a market-wide link (label "Form 59 (executives' trades)").

@@ -77,8 +77,8 @@ scripts/check.sh
   last complete year's dividend per share × shares.
 - **Linked, not shown** (no free official API): the stock page's "See on the SET website" button links to the
   stock's SET pages (trading signs, major shareholders, XD/XR, news) and to SET's all-stock pages for investor
-  types, NVDR, short sales, caution signs, cash balance / turnover list and Auto Pause. Form 59 is on the SEC
-  website and is not linked yet (see BLOCKED.md).
+  types, NVDR, short sales, caution signs, cash balance / turnover list and Auto Pause, plus Form 59 on the SEC
+  website.
 - **Dividend yield history:** dividends per share (Yahoo, by XD year) ÷ the year's last close as traded, last 15
   years (Yahoo returns nothing for longer periods of some stocks).
 
