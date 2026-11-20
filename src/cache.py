@@ -9,6 +9,7 @@ from src import fundamentals as fd
 from src.data import load_prices
 from src.indicators import add_indicators
 from src.model import BacktestResult, train_and_backtest
+from src.scoring import piotroski
 from src.universe import load_set100, yahoo_symbol
 
 
@@ -60,13 +61,14 @@ def financials(symbol: str) -> pd.DataFrame:
 
 @st.cache_data(ttl="24h", show_spinner="Loading 5-year growth for SET100 (about 10 seconds, once a day)...")
 def growth() -> pd.DataFrame:
-    """5-year revenue / net-income CAGR and average ROE for every SET100 stock (columns: symbol + growth_quality)."""
+    """Per SET100 stock: 5-year revenue / net-income CAGR, average ROE and the Piotroski F-score (points, available)."""
     def one(symbol: str) -> dict:
         try:
             fin = fd.get_financials(symbol)
         except Exception:  # both sources down for this stock: blank figures, the screener still shows it
             fin = pd.DataFrame(columns=fd.FIN_COLUMNS)
-        return {"symbol": symbol, **fd.growth_quality(fin)}
+        score = piotroski(fin)
+        return {"symbol": symbol, **fd.growth_quality(fin), "fscore": score.points, "fscore_available": score.available}
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         return pd.DataFrame(list(pool.map(one, set100()["symbol"].tolist())))

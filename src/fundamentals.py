@@ -121,8 +121,10 @@ def _row(df: pd.DataFrame, name: str) -> pd.Series:
     return cast(pd.Series, df.loc[name]) if name in df.index else pd.Series(np.nan, index=df.columns)
 
 
+# Extra yearly figures used only for scoring and fair value (src/scoring.py, src/valuation.py), not shown as a table.
+SCORE_COLUMNS = ["ROA", "Operating cash flow", "Total assets", "Total debt", "Cash", "Shares"]
 FIN_COLUMNS = ["Revenue", "Net income", "EPS", "Revenue growth", "Net income growth", "Gross margin",
-               "Net margin", "ROE", "D/E", "Free cash flow", "P/E", "P/BV"]
+               "Net margin", "ROE", "D/E", "Free cash flow", "P/E", "P/BV", *SCORE_COLUMNS]
 
 
 def get_financials(symbol: str) -> pd.DataFrame:
@@ -172,6 +174,12 @@ def _financials_thaifin(symbol: str) -> pd.DataFrame:
             "Free cash flow": num["operating_activities"] + num["investing_activities"],
             "P/E": num["price_earning_ratio"],
             "P/BV": num["price_book_value"],
+            "ROA": pct("roa"),
+            "Operating cash flow": num["operating_activities"],
+            "Total assets": num["asset"],
+            "Total debt": num["total_debt"],
+            "Cash": num["cash"],
+            "Shares": num["mkt_cap"] / num["close"],  # year-end market cap = shares × year-end close
             # thaifin's dividend_yield mixes units across years (e.g. PTT: 0.13 in 2010, 3.1 in 2013),
             # so it is not used. Dividend history comes from Yahoo instead (get_dividends_per_year).
         }
@@ -201,6 +209,12 @@ def _financials_yahoo(symbol: str) -> pd.DataFrame:
             "ROE": net_income / equity,
             "D/E": _row(bal, "Total Debt").reindex(inc.columns) / equity,
             "Free cash flow": _row(cf, "Free Cash Flow").reindex(inc.columns),
+            "ROA": net_income / _row(bal, "Total Assets").reindex(inc.columns),
+            "Operating cash flow": _row(cf, "Operating Cash Flow").reindex(inc.columns),
+            "Total assets": _row(bal, "Total Assets").reindex(inc.columns),
+            "Total debt": _row(bal, "Total Debt").reindex(inc.columns),
+            "Cash": _row(bal, "Cash And Cash Equivalents").reindex(inc.columns),
+            "Shares": _row(bal, "Ordinary Shares Number").reindex(inc.columns),
         }
     )
     fin.index = [c.year for c in fin.index]

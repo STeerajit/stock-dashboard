@@ -52,6 +52,7 @@ scripts/check.sh
 | Valuation | P/E, P/BV, yield vs. sector median; P/E, P/BV and dividend yield vs. their own history | Is the price expensive or cheap? |
 | Dividends & calendar | Dividend per share by year, XD date, earnings date | What events may move the price? |
 | Portfolio | Your holdings and watchlist: value, P&L, estimated dividend, yield on cost, allocation by sector | How is my money doing? |
+| Fair value | Dividend discount model and discounted cash flow with your assumptions, 3×3 sensitivity tables, Piotroski F-score check by check | What could it be worth, and is the business improving? |
 | Prediction | Random Forest next-day direction, time-based split, baseline & backtest | Can a simple model beat guessing? (Usually not.) |
 
 ## Data sources and limits
@@ -88,7 +89,7 @@ scripts/check.sh
 app.py                         # entry point + navigation
 app_pages/today.py             # default page: portfolio stocks to look at today
 app_pages/screener.py          # SET100 table
-app_pages/stock.py             # one-stock detail page (6 tabs)
+app_pages/stock.py             # one-stock detail page (7 tabs)
 app_pages/portfolio.py         # holdings + watchlist editor
 src/__init__.py
 src/universe.py                # SET100 list + the SET sector names in use
@@ -101,6 +102,8 @@ src/screener.py                # screener helpers (selected row -> symbol)
 src/portfolio.py               # load, check and save holdings (data/portfolio.csv)
 src/today.py                   # rules that flag a stock on the Today page
 src/set_links.py               # links to the SET website + free float
+src/valuation.py               # fair value: DDM, DCF, sensitivity table
+src/scoring.py                 # Piotroski F-score, Magic Formula rank
 src/cache.py                   # Streamlit caching of all loaders
 data/set100.csv                # SET100 constituents (with an in_set50 flag)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
@@ -117,6 +120,8 @@ tests/test_navigation.py       # screener row -> stock page
 tests/test_portfolio.py        # holdings: input checks, saving, Portfolio page
 tests/test_today.py            # Today rules at their boundaries
 tests/test_growth.py           # 5-year CAGR and average ROE
+tests/test_valuation.py        # DDM / DCF hand-computed examples
+tests/test_scoring.py          # F-score checks, Magic Formula rank
 tests/test_set_links.py        # SET links and free float
 tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies

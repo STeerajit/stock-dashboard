@@ -11,7 +11,7 @@ from tests.fakes import fake_info
 
 THAIFIN_COLS = ["revenue", "net_profit", "earning_per_share", "revenue_yoy", "net_profit_yoy", "gpm", "npm", "roe",
                 "debt_to_equity", "operating_activities", "investing_activities", "price_earning_ratio",
-                "price_book_value", "dividend_yield"]
+                "price_book_value", "dividend_yield", "roa", "asset", "total_debt", "cash", "mkt_cap", "close"]
 
 
 def thaifin_frame(rows: dict[int, dict]) -> pd.DataFrame:
@@ -61,6 +61,13 @@ def test_thaifin_none_cells_become_nan_without_error(fake_thaifin):
     assert math.isnan(fin.loc[2024, "EPS"]) and math.isnan(fin.loc[2024, "Free cash flow"])
     assert fin.loc[2025, "Free cash flow"] == 3.0  # operating + investing
 
+
+def test_thaifin_scoring_figures(fake_thaifin):
+    fake_thaifin.frame = thaifin_frame({2024: {}, 2025: {"roa": 5, "mkt_cap": 900.0, "close": 30.0, "asset": 7.0}})
+    fin = fd._financials_thaifin("PTT")
+    assert fin.loc[2025, "ROA"] == 0.05
+    assert fin.loc[2025, "Shares"] == 30.0  # 900 / 30
+    assert fin.loc[2025, "Total assets"] == 7.0
 
 def test_thaifin_metadata_and_shape(fake_thaifin):
     fake_thaifin.frame = thaifin_frame({2025: {}, 2023: {}, 2024: {}})

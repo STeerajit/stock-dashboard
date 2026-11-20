@@ -6,10 +6,13 @@ import pandas as pd
 import streamlit as st
 
 from src import cache
+from src.portfolio import last_full_year_dps
+from src.scoring import piotroski
 from src.charts import price_chart
-from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for, yield_history
+from src.fundamentals import SCORE_COLUMNS, SnapshotError, growth_quality, pe_history, sector_medians, snapshot_for, yield_history
 from src.indicators import support_resistance
 from src.set_links import set_links
+from src.valuation import DEFAULT_REQUIRED_RETURN, dcf_value, ddm_value, default_ddm_growth, sensitivity
 from src.universe import OUTSIDE_SET100, describe, is_valid_symbol, set100_expiry_warning
 
 
@@ -75,10 +78,11 @@ def need_snapshot() -> None:
 
 tabs = st.tabs(
     [":material/swap_vert: Trading", ":material/candlestick_chart: Chart", ":material/account_balance: Financials",
-     ":material/sell: Valuation", ":material/event: Dividends & calendar", ":material/online_prediction: Prediction"],
+     ":material/sell: Valuation", ":material/event: Dividends & calendar", ":material/balance: Fair value",
+     ":material/online_prediction: Prediction"],
     key="tab", on_change="rerun",
 )
-t_trade, t_chart, t_fin, t_val, t_div, t_pred = tabs
+t_trade, t_chart, t_fin, t_val, t_div, t_fair, t_pred = tabs
 
 # ============ 1. Trading: how much is the market paying attention? ============
 if t_trade.open:
@@ -166,7 +170,7 @@ if t_fin.open:
                 st.caption("For banks, lenders and insurers, lending and investing are the business itself, "
                            "so free cash flow swings widely and is not a useful health measure.")
 
-            table = fin.drop(columns=["P/E", "P/BV"]).T
+            table = fin.drop(columns=["P/E", "P/BV", *SCORE_COLUMNS]).T
             table.columns = [str(c) for c in table.columns]
             fmt = {"Revenue": baht, "Net income": baht, "Free cash flow": baht, "EPS": num, "D/E": num}
             shown = table.apply(lambda r: r.map(fmt.get(r.name, pct)), axis=1)
@@ -259,6 +263,112 @@ if t_div.open:
             st.subheader("Dividend per share by year (THB)")
             st.bar_chart(div.tail(15).rename(index=str), alt=f"{symbol} dividend per share by year")
             st.caption("Grouped by XD date. The current year may be incomplete.")
+
+# ============ Fair value and F-score (backlog #13) ============
+FINANCIAL_SECTORS = ("Banking", "Finance & Securities", "Insurance")
+
+
+def pct_slider(label: str, low: float, high: float, default: float, key: str, help: str) -> float:
+    """A slider in percent (e.g. 8.0) that returns a fraction (0.08)."""
+    value = st.slider(label, low, high, float(min(max(round(default * 100 * 2) / 2, low), high)), step=0.5,
+                      format="%.1f%%", key=key, help=help)
+    return value / 100
+
+
+def show_fair_value(name: str, fair: float, price: float) -> None:
+    if fair <= 0:
+        st.info(f"The {name} result is zero or negative: with these assumptions, net debt is larger than the value "
+                "of the future cash flows. The model says little about this stock.", title="No meaningful value")
+        return
+    with st.container(horizontal=True):
+        st.metric(f"Fair value ({name})", num(fair), border=True, height="stretch")
+        st.metric("Price now", num(price), border=True, height="stretch")
+        st.metric("Margin of safety", pct(fair / price - 1, 0), border=True, height="stretch",
+                  help="How far the fair value is above (+) or below (−) today's price.")
+
+
+def show_sensitivity(table: pd.DataFrame, r_label: str, g_label: str, alt: str) -> None:
+    shown = table.copy()
+    shown.index = [f"{r_label} {r:.1%}" for r in shown.index]
+    shown.columns = [f"{g_label} {g:.1%}" for g in shown.columns]
+    st.dataframe(shown.map(lambda v: num(v)), alt=alt)
+
+
+if t_fair.open:
+    with t_fair:
+        need_snapshot()
+        price = snap["price"]
+        st.info("An estimate based on your assumptions — not investment advice. Small changes in the "
+                "assumptions move the result a lot; see the tables.", title="Estimate only", icon=":material/info:")
+        this_year = date.today().year
+
+        st.subheader("Dividend discount model (DDM)")
+        div = cache.dividends(symbol)
+        last_dps = last_full_year_dps(div, this_year)
+        if pd.isna(last_dps) or last_dps <= 0:
+            st.info(f"{symbol} paid no dividend in {this_year - 1}, so the dividend model can't value it.",
+                    title="No dividend")
+        else:
+            c1, c2 = st.columns(2)
+            with c1:
+                g = pct_slider("Dividend growth per year", -5.0, 10.0, default_ddm_growth(div, this_year), "ddm_g",
+                               "Growth forever. Default: growth of dividends per share over the last 5 full years, "
+                               "at most 6% (it must stay below the required return).")
+            with c2:
+                r = pct_slider("Required return", 4.0, 15.0, DEFAULT_REQUIRED_RETURN, "ddm_r",
+                               "The yearly return you want for the risk. Default 8%.")
+            st.caption(f"Dividend per share paid in {this_year - 1}: {num(last_dps)} THB → next year "
+                       f"{num(last_dps * (1 + g))} THB at {g:.1%} growth.")
+            try:
+                show_fair_value("DDM", ddm_value(last_dps * (1 + g), g, r), price)
+            except ValueError as e:
+                st.error(str(e), title="Can't compute")
+            show_sensitivity(sensitivity(lambda rr, gg: ddm_value(last_dps * (1 + gg), gg, rr),
+                                         [r - 0.01, r, r + 0.01], [g - 0.01, g, g + 0.01]),
+                             "r", "g", f"{symbol} DDM fair value for required return and growth ±1 point")
+
+        st.subheader("Discounted cash flow (DCF)")
+        fin = cache.financials(symbol)
+        last = fin.iloc[-1] if not fin.empty else pd.Series(dtype=float)
+        if sector in FINANCIAL_SECTORS:
+            st.info("Not used for banks, lenders and insurers: lending and investing are their business, so "
+                    "their free cash flow says little about their value. Use the dividend model above.",
+                    title="DCF not shown")
+        elif last.empty or not last.get("Free cash flow", 0) > 0 or not last.get("Shares", 0) > 0:
+            st.info("Needs a positive free cash flow and the number of shares for the last year.",
+                    title="Not enough data")
+        else:
+            rev_cagr = growth_quality(fin)["rev_cagr5"]
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                g = pct_slider("Cash-flow growth, next 5 years", -5.0, 15.0,
+                               min(max(0.0 if pd.isna(rev_cagr) else rev_cagr, 0.0), 0.10), "dcf_g",
+                               "Default: revenue growth over the last 5 years, between 0% and 10%.")
+            with c2:
+                tg = pct_slider("Growth after that", 0.0, 4.0, 0.02, "dcf_tg", "Long-run growth forever. Default 2%.")
+            with c3:
+                r = pct_slider("Discount rate", 5.0, 15.0, 0.09, "dcf_r", "The yearly return you want. Default 9%.")
+            net_debt = float(np.nan_to_num(last.get("Total debt", 0.0)) - np.nan_to_num(last.get("Cash", 0.0)))
+            st.caption(f"Free cash flow {fin.index[-1]}: {baht(last['Free cash flow'])} THB; net debt "
+                       f"{baht(net_debt)} THB; shares {baht(last['Shares'])}.")
+            dcf = lambda rr, gg: dcf_value(last["Free cash flow"], gg, 5, tg, rr, net_debt, last["Shares"])  # noqa: E731
+            try:
+                show_fair_value("DCF", dcf(r, g), price)
+            except ValueError as e:
+                st.error(str(e), title="Can't compute")
+            show_sensitivity(sensitivity(dcf, [r - 0.01, r, r + 0.01], [g - 0.01, g, g + 0.01]),
+                             "r", "g", f"{symbol} DCF fair value for discount rate and growth ±1 point")
+
+        st.subheader("Piotroski F-score")
+        score = piotroski(fin)
+        if not score.available:
+            st.info("No yearly financials to score.", title="No data")
+        else:
+            st.metric("F-score", f"{score.points} / {score.available}", border=True, width="content",
+                      help="One point per check passed (last year vs. the year before). Checks without free "
+                           "data are left out, so the maximum is the number available.")
+            st.markdown("\n".join(f"- {'✅' if ok else '❌' if ok is False else '➖'} {name}"
+                                   + (" (no data)" if ok is None else "") for name, ok in score.checks.items()))
 
 # ============ Prediction (from step 2) ============
 if t_pred.open:

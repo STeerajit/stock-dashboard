@@ -107,7 +107,7 @@ def test_screener_sector_filter_reduces_rows(fake_cache):
 
 def test_every_stock_tab_renders(fake_cache):
     labels = stock_tab_labels()
-    assert len(labels) == 6
+    assert len(labels) == 7
     for label in labels:
         at = open_stock("PTT", label)
         assert not at.exception, (label, at.exception)
@@ -218,3 +218,21 @@ def test_screener_has_growth_columns_and_sorts_by_them(fake_cache):
     table = at.dataframe[0].value
     assert {"rev_cagr5", "ni_cagr5", "roe_avg5"} <= set(table.columns)
     assert table.sort_values("rev_cagr5", ascending=False)["symbol"].iloc[0] == "AOT"  # highest fake CAGR
+
+
+def test_fair_value_tab_shows_ddm_dcf_and_f_score(fake_cache):
+    at = open_stock("PTT", tab_label("Fair value"))
+    assert not at.exception and not at.error
+    labels = {m.label for m in at.metric}
+    assert {"Fair value (DDM)", "Fair value (DCF)", "Margin of safety", "F-score"} <= labels
+    assert len(at.dataframe) == 2  # one 3×3 sensitivity table per model
+    assert all(df.value.shape == (3, 3) for df in at.dataframe)
+    assert any("not investment advice" in i.value for i in at.info)
+
+
+def test_fair_value_tab_skips_dcf_for_banks(fake_cache):
+    at = open_stock("KBANK", tab_label("Fair value"))
+    assert not at.exception
+    labels = {m.label for m in at.metric}
+    assert "Fair value (DDM)" in labels and "Fair value (DCF)" not in labels
+    assert any("banks" in i.value for i in at.info)

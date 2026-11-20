@@ -222,22 +222,27 @@ readers than a link alone. Needs the live app (#8) and the realistic backtest (#
 
 ## 13. Fair value and stock scoring — P2 · L
 
+> **Done** on 2026-11-21. Two deviations, both found with live data: the default DDM growth is also kept
+> 2 points under the default required return (at most 6%), because PTT's 5-year dividend growth hit the 10% cap,
+> above r = 8%, where Gordon growth has no answer; and the F-score's current-ratio check is always n/a
+> (no free data), so most stocks are scored out of 8.
+
 **Why:** Comparing P/E with peers says "cheaper or dearer than others", not "worth how much". Fair-value models and
 well-known scores show finance knowledge and set the project apart from generic dashboards.
 
 **Acceptance criteria**
-- [ ] `src/valuation.py` contains:
+- [x] `src/valuation.py` contains:
   - `ddm_value(dps, growth, required_return)` (Gordon growth). It raises `ValueError` when `required_return <= growth`.
   - `dcf_value(fcf, growth, years, terminal_growth, discount_rate, net_debt, shares)`.
-- [ ] Unit tests use hand-computed examples, e.g. DDM with next dividend 2.00, r = 8%, g = 3% → **40.00**.
-- [ ] A new "Fair value" tab on the stock page:
+- [x] Unit tests use hand-computed examples, e.g. DDM with next dividend 2.00, r = 8%, g = 3% → **40.00**.
+- [x] A new "Fair value" tab on the stock page:
   - sliders for the assumptions, with defaults taken from the data (last dividend per share, 5-year dividend growth capped at 10%, r = 8%);
   - shows the fair value and the margin of safety vs. the current price;
   - shows a 3×3 sensitivity table (r × g).
-- [ ] For Banking / Finance & Securities / Insurance, DCF is disabled with a one-line reason, and DDM is still shown.
-- [ ] `src/scoring.py` computes the Piotroski F-score (9 checks) from yearly financials. Checks without data (e.g. current ratio) count as "n/a", and the score is shown as "x / available". A unit test with a fixture that passes every available check returns the maximum.
-- [ ] The screener gets two sortable columns: "F-score" and "Magic Formula rank". The rank combines earnings yield with ROE as a stand-in for return on capital, and that stand-in is noted in the column help.
-- [ ] Every fair-value view shows "estimate based on your assumptions — not investment advice".
+- [x] For Banking / Finance & Securities / Insurance, DCF is disabled with a one-line reason, and DDM is still shown.
+- [x] `src/scoring.py` computes the Piotroski F-score (9 checks) from yearly financials. Checks without data (e.g. current ratio) count as "n/a", and the score is shown as "x / available". A unit test with a fixture that passes every available check returns the maximum.
+- [x] The screener gets two sortable columns: "F-score" and "Magic Formula rank". The rank combines earnings yield with ROE as a stand-in for return on capital, and that stand-in is noted in the column help.
+- [x] Every fair-value view shows "estimate based on your assumptions — not investment advice".
 
 ---
 

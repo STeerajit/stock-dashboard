@@ -4,6 +4,7 @@ import streamlit as st
 
 from src import cache
 from src.fundamentals import SnapshotError, sector_medians
+from src.scoring import magic_formula_rank
 from src.screener import selected_symbol
 from src.universe import SET100_PERIOD, set100_expiry_warning
 
@@ -29,6 +30,7 @@ with table_slot.skeleton():
     df = universe.merge(snaps, on="symbol").merge(cache.growth(), on="symbol", how="left")
     # How expensive vs. sector peers: +0.20 = P/E 20% above the sector median.
     df["pe_vs_sector"] = df["pe"] / df["sector"].map(medians["pe"]) - 1
+    df["magic_rank"] = magic_formula_rank(df)  # ranked across all SET100, before the sector filter
     if picked:
         df = df[df["sector"].isin(picked)]
     shown = df.sort_values("market_cap", ascending=False)  # the exact rows, in the exact order, on screen
@@ -43,7 +45,7 @@ with table_slot.skeleton():
         height=640,
         column_order=["symbol", "name", "sector", "in_set50", "price", "change_pct", "pos_52w", "value_traded", "market_cap",
                       "pe", "pe_vs_sector", "pbv", "div_yield", "roe", "de", "net_margin",
-                      "rev_cagr5", "ni_cagr5", "roe_avg5"],
+                      "rev_cagr5", "ni_cagr5", "roe_avg5", "fscore", "magic_rank"],
         column_config={
             "symbol": st.column_config.TextColumn("Symbol", pinned=True),
             "name": "Company",
@@ -74,6 +76,13 @@ with table_slot.skeleton():
                            help="Yearly net-income growth over the last 5 full years. Blank when either end "
                                 "is a loss."),
             "roe_avg5": nc("5y avg ROE", format="percent", help="Average return on equity of the last 5 years."),
+            "fscore": nc("F-score", format="%d", help="Piotroski F-score: checks passed out of those with data "
+                                                      "(8 for most stocks; the current ratio has no free data). "
+                                                      "Details on the stock's Fair value tab."),
+            "magic_rank": nc("Magic Formula rank", format="%d",
+                             help="Greenblatt's Magic Formula across SET100: rank by earnings yield (1 / P/E) plus "
+                                  "rank by ROE, which stands in for return on capital. 1 = best. Blank for "
+                                  "loss-making stocks."),
         },
         alt="SET100 stocks with price, valuation and profitability metrics",
     )
