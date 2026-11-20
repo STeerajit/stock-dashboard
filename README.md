@@ -8,16 +8,28 @@ dividends — plus an honestly-evaluated price prediction model.
 
 ## How to run
 
+One-time setup:
+
 ```bash
-source .venv/bin/activate
-pip install -r requirements-dev.txt   # app + test tools (use requirements.txt for the app only)
-streamlit run app.py
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt   # app + test tools (use requirements.txt for the app only)
 ```
 
 Dependencies are pinned to exact versions: `requirements.txt` holds what the app needs at runtime,
 `requirements-dev.txt` adds the test tools.
 
-Then open http://localhost:8501 in your browser. Share a stock directly with `http://localhost:8501/stock?symbol=PTT`.
+Every day, start the app in the background and open it in the browser (macOS):
+
+```bash
+scripts/stocks.sh        # starts it on http://localhost:8501 if needed, then opens the browser
+scripts/stocks.sh stop   # stops it
+```
+
+It keeps running after you close the terminal; its output goes to `stocks.log`. Tip: add
+`alias stocks='<path to repo>/scripts/stocks.sh'` to `~/.zshrc` to type just `stocks`.
+To run it in the foreground instead: `.venv/bin/streamlit run app.py`.
+
+Share a stock directly with `http://localhost:8501/stock?symbol=PTT`.
 
 Run all checks — tests (offline, including a data-leakage check) and the type checker.
 CI runs this same script on every push and pull request:
@@ -73,6 +85,7 @@ src/screener.py                # screener helpers (selected row -> symbol)
 src/cache.py                   # Streamlit caching of all loaders
 data/set50.csv                 # SET50 constituents
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
+scripts/stocks.sh              # start/stop the app in the background (macOS)
 .github/workflows/ci.yml       # GitHub Actions CI
 tests/conftest.py              # blocks network access; fake Yahoo fixture
 tests/fakes.py                 # offline fakes for yfinance
