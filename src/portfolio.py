@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.i18n import text
 from src.universe import is_valid_symbol
 
 PORTFOLIO_CSV = Path(__file__).resolve().parent.parent / "data" / "portfolio.csv"
@@ -26,7 +27,7 @@ def load(path: Path | None = None) -> pd.DataFrame:
     return pd.read_csv(path, dtype={"symbol": str, "shares": float, "avg_cost": float})[COLUMNS]
 
 
-def clean(table: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+def clean(table: pd.DataFrame, lang: str = "en") -> tuple[pd.DataFrame, list[str]]:
     """Check an edited table. Returns (holdings ready to save, problems to show the user).
 
     Symbols are trimmed and upper-cased; fully blank rows (e.g. a row added but never filled) are dropped.
@@ -39,20 +40,20 @@ def clean(table: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     problems = []
     for n, (symbol, shares, avg_cost) in enumerate(df.itertuples(index=False), start=1):
         if symbol == "":
-            problems.append(f"Row {n}: the symbol is empty.")
+            problems.append(text("problem.empty_symbol", lang, n=n))
         elif not is_valid_symbol(symbol):
-            problems.append(f"Row {n}: {symbol[:20]!r} is not a SET symbol (letters, digits and . & - only).")
+            problems.append(text("problem.bad_symbol", lang, n=n, symbol=symbol[:20]))
         if pd.isna(shares):
-            problems.append(f"Row {n}: shares is empty (use 0 for a watchlist stock).")
+            problems.append(text("problem.empty_shares", lang, n=n))
         elif shares < 0:
-            problems.append(f"Row {n}: shares can't be negative.")
+            problems.append(text("problem.negative_shares", lang, n=n))
         if pd.notna(avg_cost) and avg_cost < 0:
-            problems.append(f"Row {n}: average cost can't be negative.")
+            problems.append(text("problem.negative_cost", lang, n=n))
         elif pd.isna(avg_cost) and pd.notna(shares) and shares > 0:
-            problems.append(f"Row {n}: average cost is empty.")
+            problems.append(text("problem.empty_cost", lang, n=n))
     dupes = sorted(set(df.loc[df["symbol"].duplicated() & (df["symbol"] != ""), "symbol"]))
     if dupes:
-        problems.append(f"Each stock can appear only once: {', '.join(dupes)}.")
+        problems.append(text("problem.duplicates", lang, symbols=", ".join(dupes)))
     return df, problems
 
 

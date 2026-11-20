@@ -4,8 +4,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from src.i18n import text
 
-def price_chart(df: pd.DataFrame, symbol: str, supports: list[float], resistances: list[float]) -> go.Figure:
+
+def price_chart(df: pd.DataFrame, symbol: str, supports: list[float], resistances: list[float],
+                lang: str = "en") -> go.Figure:
     """Candlestick + moving averages + S/R lines, with Volume and RSI panels below."""
     fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.6, 0.2, 0.2], vertical_spacing=0.03)
 
@@ -24,7 +27,7 @@ def price_chart(df: pd.DataFrame, symbol: str, supports: list[float], resistance
 
     up = df["Close"] >= df["Open"]
     fig.add_trace(
-        go.Bar(x=df.index, y=df["Volume"], name="Volume", marker_color=up.map({True: "#2e9e6b", False: "#d6455d"})),
+        go.Bar(x=df.index, y=df["Volume"], name=text("chart.volume", lang), marker_color=up.map({True: "#2e9e6b", False: "#d6455d"})),
         row=2, col=1,
     )
 
@@ -34,7 +37,7 @@ def price_chart(df: pd.DataFrame, symbol: str, supports: list[float], resistance
 
     fig.update_layout(height=700, xaxis_rangeslider_visible=False, margin=dict(t=10, b=10), showlegend=True,
                       legend=dict(orientation="h", y=1.02, x=0))
-    fig.update_yaxes(title_text="Price (THB)", row=1, col=1)
-    fig.update_yaxes(title_text="Volume", row=2, col=1)
+    fig.update_yaxes(title_text=text("chart.price_axis", lang), row=1, col=1)
+    fig.update_yaxes(title_text=text("chart.volume", lang), row=2, col=1)
     fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
     return fig

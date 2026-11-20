@@ -9,6 +9,8 @@ from urllib.parse import quote as url_quote
 
 import pandas as pd
 
+from src.i18n import text
+
 QUOTE = "https://www.set.or.th/en/market/product/stock/quote/{symbol}/{page}"
 MARKET = "https://www.set.or.th/en/market/"
 FORM_59 = "https://market.sec.or.th/public/idisc/en/r59"
@@ -20,27 +22,27 @@ class Link(NamedTuple):
     market_wide: bool  # True: a page for all stocks, where the user looks the symbol up
 
 
-def set_links(symbol: str) -> list[Link]:
+def set_links(symbol: str, lang: str = "en") -> list[Link]:
     def quote(label: str, page: str) -> Link:
-        return Link(label, QUOTE.format(symbol=url_quote(symbol, safe=""), page=page), False)
+        return Link(text(label, lang), QUOTE.format(symbol=url_quote(symbol, safe=""), page=page), False)
 
     def market(label: str, path: str) -> Link:
-        return Link(label, MARKET + path, True)
+        return Link(text(label, lang), MARKET + path, True)
 
     return [
-        quote("Price and trading signs", "price"),
-        quote("Major shareholders and free float", "major-shareholders"),
-        quote("Rights & benefits (XD, XR)", "rights-benefits"),
-        quote("News", "news"),
-        market("Investor types", "statistics/investor-type"),
-        market("NVDR", "statistics/nvdr/main"),
-        market("Short sales", "statistics/short-sales/total-short-sales"),
-        market("Caution signs (C)", "news-and-alert/surveillance-c-sign-temporary-trading/c-sign"),
-        market("Cash balance and turnover list",
+        quote("link.price", "price"),
+        quote("link.shareholders", "major-shareholders"),
+        quote("link.rights", "rights-benefits"),
+        quote("link.news", "news"),
+        market("link.investor_types", "statistics/investor-type"),
+        market("link.nvdr", "statistics/nvdr/main"),
+        market("link.short_sales", "statistics/short-sales/total-short-sales"),
+        market("link.c_sign", "news-and-alert/surveillance-c-sign-temporary-trading/c-sign"),
+        market("link.surveillance",
                "news-and-alert/surveillance-c-sign-temporary-trading/market-surveillance-measure-list"),
-        market("Auto Pause", "news-and-alert/trading-halt-suspension-pause"),
+        market("link.auto_pause", "news-and-alert/trading-halt-suspension-pause"),
         # Form 59 is published by the SEC, not SET. The user opened this page in their browser on 2026-11-21.
-        Link("Form 59 (executives' trades, SEC website)", FORM_59, True),
+        Link(text("link.form59", lang), FORM_59, True),
     ]
 
 

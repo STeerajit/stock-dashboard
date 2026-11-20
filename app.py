@@ -4,55 +4,56 @@ import duckdb
 import streamlit as st
 
 from src import store
+from src.i18n import DEFAULT, LANGS, t
 from src.universe import load_set100
 
-st.set_page_config(page_title="SET100 dashboard", page_icon=":material/candlestick_chart:", layout="wide")
+# Language: chosen in the sidebar and kept in the URL as ?lang=th, so a link or reload keeps it.
+# (A widget bound to the URL would put the label "ไทย" there instead of "th".)
+if "lang_choice" not in st.session_state:
+    url_lang = st.query_params.get("lang", DEFAULT)
+    st.session_state["lang_choice"] = url_lang if url_lang in LANGS else DEFAULT
+
+st.set_page_config(page_title=t("app.page_title"), page_icon=":material/candlestick_chart:", layout="wide")
 
 page = st.navigation(
     [
-        st.Page(
-            "app_pages/today.py", title="Today", icon=":material/today:", default=True,
-            help="Stocks in your portfolio and watchlist that may deserve a look today, and why.",
-        ),
-        st.Page(
-            "app_pages/screener.py", title="SET100 screener", icon=":material/table_chart:", url_path="screener",
-            help="All SET100 stocks in one table: price, valuation and quality. Sort, filter by sector, "
-                 "and open any stock for details.",
-        ),
-        st.Page(
-            "app_pages/stock.py", title="Stock detail", icon=":material/candlestick_chart:", url_path="stock",
-            help="One stock in depth: trading, chart with support/resistance, financials, valuation vs. "
-                 "peers, dividends, and a prediction model.",
-        ),
-        st.Page(
-            "app_pages/portfolio.py", title="Portfolio", icon=":material/account_balance_wallet:",
-            url_path="portfolio", help="The stocks you own and your watchlist, saved on this Mac.",
-        ),
+        st.Page("app_pages/today.py", title=t("nav.today"), icon=":material/today:", default=True,
+                help=t("nav.today_help")),
+        st.Page("app_pages/screener.py", title=t("nav.screener"), icon=":material/table_chart:",
+                url_path="screener", help=t("nav.screener_help")),
+        st.Page("app_pages/stock.py", title=t("nav.stock"), icon=":material/candlestick_chart:", url_path="stock",
+                help=t("nav.stock_help")),
+        st.Page("app_pages/portfolio.py", title=t("nav.portfolio"), icon=":material/account_balance_wallet:",
+                url_path="portfolio", help=t("nav.portfolio_help")),
     ]
 )
 
 with st.sidebar:
+    st.segmented_control(t("app.language"), list(LANGS), format_func=lambda code: LANGS[code], key="lang_choice", required=True)
+    if st.session_state["lang_choice"] == DEFAULT:
+        st.query_params.pop("lang", None)
+    else:
+        st.query_params["lang"] = st.session_state["lang_choice"]
+
     try:
         as_of = store.as_of(store.STORE_PATH)
     except duckdb.Error:  # locked by an update running elsewhere
         as_of = None
     if as_of:
-        st.caption(f"Data as of **{as_of:%d %b %Y %H:%M}** (local store). Stocks outside SET100 are fetched live.")
+        st.caption(t("app.as_of", when=f"{as_of:%d %b %Y %H:%M}"))
     else:
-        st.caption("Live data (no local store yet). Press Update data to save a copy for fast, offline use.")
-    if st.button("Update data", icon=":material/sync:", help="Download today's data for all SET100 stocks into "
-                 "data/market.duckdb (about 1–2 minutes). Same as running scripts/update_data.py."):
-        with st.spinner("Downloading SET100 data..."):
+        st.caption(t("app.live"))
+    if st.button(t("app.update"), icon=":material/sync:", help=t("app.update_help")):
+        with st.spinner(t("app.updating")):
             try:
                 report = store.update_store(store.STORE_PATH, load_set100()["symbol"].tolist(), store.live_fetchers())
             except (store.UpdateError, duckdb.Error) as e:
-                st.error(str(e), title="Update failed")
+                st.error(str(e), title=t("app.update_failed"))
             else:
                 st.cache_data.clear()
                 if report.failed:
-                    st.warning(f"Skipped (old data kept): {', '.join(report.failed)}")
-                st.success(f"Updated {len(report.updated)} stocks.")
-    st.caption("Data: Yahoo Finance (prices, delayed ~15 min) and thaifin (financial history). "
-               "For learning only — not investment advice.")
+                    st.warning(t("app.update_skipped", symbols=", ".join(report.failed)))
+                st.success(t("app.updated", count=len(report.updated)))
+    st.caption(t("app.sources"))
 
 page.run()

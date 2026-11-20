@@ -6,14 +6,18 @@ import pandas as pd
 import streamlit as st
 
 from src import cache
+from src.charts import price_chart
+from src.fundamentals import (SCORE_COLUMNS, SnapshotError, growth_quality, pe_history, sector_medians, snapshot_for,
+                              yield_history)
+from src.i18n import current_lang, t
+from src.indicators import support_resistance
 from src.portfolio import last_full_year_dps
 from src.scoring import piotroski
-from src.charts import price_chart
-from src.fundamentals import SCORE_COLUMNS, SnapshotError, growth_quality, pe_history, sector_medians, snapshot_for, yield_history
-from src.indicators import support_resistance
 from src.set_links import set_links
-from src.valuation import DEFAULT_REQUIRED_RETURN, dcf_value, ddm_value, default_ddm_growth, sensitivity
 from src.universe import OUTSIDE_SET100, describe, is_valid_symbol, set100_expiry_warning
+from src.valuation import DEFAULT_REQUIRED_RETURN, dcf_value, ddm_value, default_ddm_growth, sensitivity
+
+lang = current_lang()
 
 
 def baht(x: float | None) -> str:
@@ -34,28 +38,32 @@ def num(x: float | None, digits: int = 2) -> str:
     return "–" if x is None or pd.isna(x) else f"{x:,.{digits}f}"
 
 
+def fin_label(column: str) -> str:
+    """Display name of a financials column (FIN_COLUMNS) in the current language."""
+    return t(f"fin.{column}")
+
+
 universe = cache.set100()
 # Options are plain symbols so the URL can be shared as ?symbol=PTT (a format_func
 # would change the option labels and the URL value would no longer match).
 # accept_new_options: any Thai stock can be typed in (or put in the URL), not only SET100.
-symbol = st.selectbox("Stock", universe["symbol"].tolist(), key="symbol", bind="query-params",
-                      accept_new_options=True, help="Pick a SET100 stock, or type any SET symbol and press Enter.")
+symbol = st.selectbox(t("stock.select"), universe["symbol"].tolist(), key="symbol", bind="query-params",
+                      accept_new_options=True, help=t("stock.select_help"))
 symbol = symbol.strip().upper()
 if not is_valid_symbol(symbol):
-    st.error("A SET symbol has only letters, digits and . & - (up to 15 characters), e.g. PTT.",
-             title="Not a valid symbol")
+    st.error(t("stock.invalid"), title=t("stock.invalid_title"))
     st.stop()
 name, sector = describe(universe, symbol)
 in_set100 = sector != OUTSIDE_SET100
 st.title(f"{symbol} · {name}")
 st.caption(sector)
-if expiry_warning := set100_expiry_warning(date.today()):
-    st.warning(expiry_warning, title="SET100 list may be out of date")
+if expiry_warning := set100_expiry_warning(date.today(), lang=lang):
+    st.warning(expiry_warning, title=t("common.list_expired_title"))
 
-with st.popover("See on the SET website", icon=":material/open_in_new:"):
-    st.caption("For what has no free data feed: money flows, shareholders, warning signs, XR dates and news.")
-    for link in set_links(symbol):
-        st.markdown(f"- [{link.label}]({link.url})" + (f" — all stocks, look up {symbol}" if link.market_wide else ""))
+with st.popover(t("stock.set_links"), icon=":material/open_in_new:"):
+    st.caption(t("stock.set_links_caption"))
+    for link in set_links(symbol, lang):
+        st.markdown(f"- [{link.label}]({link.url})" + (t("stock.all_stocks", symbol=symbol) if link.market_wide else ""))
 
 snapshot_error: SnapshotError | None = None
 try:
@@ -77,9 +85,8 @@ def need_snapshot() -> None:
         st.stop()
 
 tabs = st.tabs(
-    [":material/swap_vert: Trading", ":material/candlestick_chart: Chart", ":material/account_balance: Financials",
-     ":material/sell: Valuation", ":material/event: Dividends & calendar", ":material/balance: Fair value",
-     ":material/online_prediction: Prediction"],
+    [t("tab.trading"), t("tab.chart"), t("tab.financials"), t("tab.valuation"), t("tab.dividends"), t("tab.fair"),
+     t("tab.prediction")],
     key="tab", on_change="rerun",
 )
 t_trade, t_chart, t_fin, t_val, t_div, t_fair, t_pred = tabs
@@ -90,112 +97,107 @@ if t_trade.open:
         need_snapshot()
         vol_ratio = snap["volume"] / snap["avg_volume"] if snap["avg_volume"] else np.nan
         with st.container(horizontal=True):
-            st.metric("Price", num(snap["price"]), pct(snap["change_pct"], 2), border=True, height="stretch")
-            st.metric("Volume", baht(snap["volume"]), f"{vol_ratio:.1f}× avg" if pd.notna(vol_ratio) else None,
-                      delta_color="off", border=True, height="stretch",
-                      help="Today's volume compared with the 3-month average volume.")
-            st.metric("Value traded (THB)", baht(snap["value_traded"]), border=True, height="stretch")
-            st.metric("Market cap (THB)", baht(snap["market_cap"]), border=True, height="stretch")
+            st.metric(t("common.price"), num(snap["price"]), pct(snap["change_pct"], 2), border=True, height="stretch")
+            st.metric(t("trade.volume"), baht(snap["volume"]),
+                      t("trade.vol_ratio", ratio=vol_ratio) if pd.notna(vol_ratio) else None,
+                      delta_color="off", border=True, height="stretch", help=t("trade.volume_help"))
+            st.metric(t("trade.value"), baht(snap["value_traded"]), border=True, height="stretch")
+            st.metric(t("trade.market_cap"), baht(snap["market_cap"]), border=True, height="stretch")
         with st.container(horizontal=True):
-            st.metric("Bid / Offer", f"{num(snap['bid'])} / {num(snap['ask'])}", border=True, height="stretch",
-                      help="Best bid and offer only (delayed). Full market depth needs a broker feed.")
-            st.metric("52-week high", num(snap["high_52w"]), border=True, height="stretch")
-            st.metric("52-week low", num(snap["low_52w"]), border=True, height="stretch")
-            st.metric("Position in 52-week range", pct(snap["pos_52w"], 0), border=True, height="stretch",
-                      help="0% = at the 52-week low, 100% = at the 52-week high.")
-            st.metric("Free float (Yahoo estimate)", pct(snap["free_float"], 0), border=True, height="stretch",
-                      help="Share of shares not held by insiders or major holders, as estimated by Yahoo. "
-                           "SET's official figure is under 'Major shareholders and free float' on the SET website.")
+            st.metric(t("trade.bid_offer"), f"{num(snap['bid'])} / {num(snap['ask'])}", border=True, height="stretch",
+                      help=t("trade.bid_offer_help"))
+            st.metric(t("trade.high52"), num(snap["high_52w"]), border=True, height="stretch")
+            st.metric(t("trade.low52"), num(snap["low_52w"]), border=True, height="stretch")
+            st.metric(t("trade.pos52"), pct(snap["pos_52w"], 0), border=True, height="stretch",
+                      help=t("trade.pos52_help"))
+            st.metric(t("trade.free_float"), pct(snap["free_float"], 0), border=True, height="stretch",
+                      help=t("trade.free_float_help"))
         if pd.notna(vol_ratio) and vol_ratio >= 2:
-            st.info(f"Volume today is {vol_ratio:.1f}× the average — unusual interest.", title="High activity")
+            st.info(t("trade.high_activity", ratio=vol_ratio), title=t("trade.high_activity_title"))
 
 # ============ 4. Chart: trend, support/resistance, MA, RSI, volume ============
 if t_chart.open:
     with t_chart:
-        period = st.segmented_control("Period", ["3M", "6M", "1Y", "2Y", "5Y"], default="1Y", key="period",
+        period = st.segmented_control(t("chart.period"), ["3M", "6M", "1Y", "2Y", "5Y"], default="1Y", key="period",
                                       required=True)
         days = {"3M": 63, "6M": 126, "1Y": 250, "2Y": 500, "5Y": 1250}[period]
         try:
             df = cache.prices(symbol).tail(days)
         except cache.NoPriceData as e:
-            st.warning(str(e), title="No price data")
+            st.warning(str(e), title=t("chart.no_prices"))
             st.stop()
         supports, resistances = support_resistance(df)
-        st.plotly_chart(
-            price_chart(df, symbol, supports, resistances),
-            alt=f"{symbol} candlestick chart with SMA20/50, support and resistance lines, volume and RSI",
-        )
-        st.caption(
-            "Prices are adjusted for dividends and splits. S = support, R = resistance: price levels where the "
-            "stock turned around before (swing highs/lows within ±10 days, merged when within 2%)."
-        )
+        st.plotly_chart(price_chart(df, symbol, supports, resistances, lang), alt=t("chart.alt", symbol=symbol))
+        st.caption(t("chart.note"))
 
 # ============ 2. Financials: is the business good and strong? ============
 if t_fin.open:
     with t_fin:
         fin = cache.financials(symbol)
         if fin.empty:
-            st.warning("No financial statements found for this stock.", title="No data")
+            st.warning(t("fin.none"), title=t("common.no_data"))
         else:
             if fallback_note := fin.attrs.get("fallback_note"):
-                st.warning(fallback_note, title="Shorter history than usual")
+                st.warning(fallback_note, title=t("fin.short_title"))
             src = fin.attrs.get("source", "?")
-            st.caption(f"Annual figures {fin.index.min()}–{fin.index.max()} ({len(fin)} years). Source: {src}.")
+            st.caption(t("fin.caption", first=fin.index.min(), last=fin.index.max(), years=len(fin), source=src))
             last = fin.iloc[-1]
             with st.container(horizontal=True):
-                st.metric("Revenue", baht(last["Revenue"]), pct(last["Revenue growth"]), border=True, height="stretch")
-                st.metric("Net income", baht(last["Net income"]), pct(last["Net income growth"]), border=True,
+                st.metric(fin_label("Revenue"), baht(last["Revenue"]), pct(last["Revenue growth"]), border=True,
                           height="stretch")
-                st.metric("ROE", pct(last["ROE"]), border=True, height="stretch")
-                st.metric("D/E", num(last["D/E"]), border=True, height="stretch",
-                          help=f"{fin.attrs.get('de_definition', 'Debt / equity')}. "
-                               "Banks and finance companies naturally carry much higher leverage.")
-                st.metric("Free cash flow", baht(last["Free cash flow"]), border=True, height="stretch",
-                          help="Cash from operations minus investment spending.")
+                st.metric(fin_label("Net income"), baht(last["Net income"]), pct(last["Net income growth"]),
+                          border=True, height="stretch")
+                st.metric(fin_label("ROE"), pct(last["ROE"]), border=True, height="stretch")
+                st.metric(fin_label("D/E"), num(last["D/E"]), border=True, height="stretch",
+                          help=t("fin.de_help", definition=fin.attrs.get("de_definition", t("fin.de_default"))))
+                st.metric(fin_label("Free cash flow"), baht(last["Free cash flow"]), border=True, height="stretch",
+                          help=t("fin.fcf_help"))
+
+            def labelled(df: pd.DataFrame) -> pd.DataFrame:
+                return df.rename(index=str, columns=fin_label)
 
             left, right = st.columns(2)
             with left:
-                st.subheader("Revenue and net income")
-                st.bar_chart((fin[["Revenue", "Net income"]] / 1e9).rename(index=str), stack=False,
-                             y_label="THB billion", alt=f"{symbol} yearly revenue and net income")
+                st.subheader(t("fin.rev_ni"))
+                st.bar_chart(labelled(fin[["Revenue", "Net income"]] / 1e9), stack=False,
+                             y_label=t("fin.billion"), alt=t("fin.rev_ni_alt", symbol=symbol))
             with right:
-                st.subheader("Margins and ROE")
-                st.line_chart(fin[["Gross margin", "Net margin", "ROE"]].rename(index=str),
-                              alt=f"{symbol} gross margin, net margin and ROE by year")
+                st.subheader(t("fin.margins"))
+                st.line_chart(labelled(fin[["Gross margin", "Net margin", "ROE"]]),
+                              alt=t("fin.margins_alt", symbol=symbol))
 
-            st.subheader("Free cash flow")
-            st.bar_chart((fin["Free cash flow"] / 1e9).rename(index=str), y_label="THB billion",
-                         alt=f"{symbol} yearly free cash flow")
+            st.subheader(fin_label("Free cash flow"))
+            st.bar_chart((fin["Free cash flow"] / 1e9).rename(fin_label("Free cash flow")).rename(index=str),
+                         y_label=t("fin.billion"), alt=t("fin.fcf_alt", symbol=symbol))
             if sector in ("Banking", "Finance & Securities", "Insurance"):
-                st.caption("For banks, lenders and insurers, lending and investing are the business itself, "
-                           "so free cash flow swings widely and is not a useful health measure.")
+                st.caption(t("fin.fcf_banks"))
 
             table = fin.drop(columns=["P/E", "P/BV", *SCORE_COLUMNS]).T
             table.columns = [str(c) for c in table.columns]
             fmt = {"Revenue": baht, "Net income": baht, "Free cash flow": baht, "EPS": num, "D/E": num}
-            shown = table.apply(lambda r: r.map(fmt.get(r.name, pct)), axis=1)
-            st.dataframe(shown, alt=f"{symbol} yearly financial figures")
+            shown = table.apply(lambda r: r.map(fmt.get(r.name, pct)), axis=1).rename(index=fin_label)
+            st.dataframe(shown, alt=t("fin.table_alt", symbol=symbol))
 
 # ============ 3. Valuation: expensive or cheap? ============
 if t_val.open:
     with t_val:
         need_snapshot()
-        st.caption(f"Compared with the median of SET100 stocks in {sector}." if in_set100 else
-                   "Stocks outside SET100 have no sector comparison.")
+        st.caption(t("val.vs_peers", sector=sector) if in_set100 else t("val.no_peers"))
 
         def vs(value, median):
-            return f"{value / median - 1:+.0%} vs sector" if pd.notna(value) and pd.notna(median) and median else None
+            return t("val.vs_sector", diff=value / median - 1) if pd.notna(value) and pd.notna(median) and median \
+                else None
 
         with st.container(horizontal=True):
             st.metric("P/E", num(snap["pe"], 1), vs(snap["pe"], medians["pe"]), delta_color="inverse",
-                      border=True, height="stretch", help=f"Sector median: {num(medians['pe'], 1)}")
+                      border=True, height="stretch", help=t("val.sector_median", value=num(medians["pe"], 1)))
             st.metric("P/BV", num(snap["pbv"]), vs(snap["pbv"], medians["pbv"]), delta_color="inverse",
-                      border=True, height="stretch", help=f"Sector median: {num(medians['pbv'])}")
-            st.metric("Dividend yield", pct(snap["div_yield"]), vs(snap["div_yield"], medians["div_yield"]),
-                      border=True, height="stretch", help=f"Sector median: {pct(medians['div_yield'])}")
-        st.caption("Red = more expensive (or lower yield) than sector peers; green = cheaper.")
+                      border=True, height="stretch", help=t("val.sector_median", value=num(medians["pbv"])))
+            st.metric(t("val.div_yield"), pct(snap["div_yield"]), vs(snap["div_yield"], medians["div_yield"]),
+                      border=True, height="stretch", help=t("val.sector_median", value=pct(medians["div_yield"])))
+        st.caption(t("val.colors"))
 
-        st.subheader("Compared with its own history")
+        st.subheader(t("val.history"))
         fin = cache.financials(symbol)
         history = fin[["P/E", "P/BV"]].copy() if not fin.empty else pd.DataFrame()
         if not history.empty and history["P/E"].count() < 2:
@@ -205,8 +207,11 @@ if t_val.open:
             except cache.NoPriceData:
                 pass
 
-        metric = st.segmented_control("Metric", ["P/E", "P/BV", "Dividend yield"], default="P/E",
+        # Options are fixed keys; only their labels are translated (so the chosen metric survives a language switch).
+        metric = st.segmented_control(t("val.metric"), ["P/E", "P/BV", "Dividend yield"], default="P/E",
+                                      format_func=lambda m: t("val.metric_yield") if m == "Dividend yield" else m,
                                       key="val_metric", required=True)
+        metric_label = t("val.metric_yield") if metric == "Dividend yield" else metric
         if metric == "Dividend yield":
             try:
                 series = yield_history(cache.dividends(symbol), cache.unadjusted_close(symbol), date.today().year)
@@ -214,55 +219,51 @@ if t_val.open:
                 series = pd.Series(dtype=float)
         else:
             series = history[metric].dropna() if metric in history else pd.Series(dtype=float)
+        median_label = t("val.median_series", years=len(series))
         if len(series) < 2:
-            st.info(f"Not enough yearly {metric} history for this stock.", title="No history")
+            st.info(t("val.no_history", metric=metric_label), title=t("val.no_history_title"))
         elif metric == "Dividend yield":
             median = series.median()
-            st.line_chart(pd.DataFrame({"Dividend yield (%)": series * 100,
-                                        f"{len(series)}-year median": median * 100}).rename(index=str),
-                          y_label="%", alt=f"{symbol} yearly dividend yield compared with its median")
+            st.line_chart(pd.DataFrame({t("val.yield_series"): series * 100,
+                                        median_label: median * 100}).rename(index=str),
+                          y_label="%", alt=t("val.yield_alt", symbol=symbol))
             current = snap["div_yield"]
             if pd.notna(current):
                 pp = (current - median) * 100
-                verdict = "cheaper" if pp > 0 else "more expensive"  # a higher yield means a lower price
-                st.markdown(f"Current dividend yield **{pct(current)}** is **{pp:+.1f} pp** vs. its "
-                            f"{len(series)}-year median of {pct(median)} — {verdict} than usual.")
-            st.caption("Yearly yield = dividends per share with XD dates in that year ÷ the year's last close as "
-                       "traded (not adjusted for dividends). A year without dividends counts as 0%. "
-                       "pp = percentage points. Current value: Yahoo (trailing 12 months).")
+                verdict = t("val.cheaper") if pp > 0 else t("val.dearer")  # a higher yield means a lower price
+                st.markdown(t("val.yield_verdict", current=pct(current), pp=pp, years=len(series), median=pct(median),
+                              verdict=verdict))
+            st.caption(t("val.yield_note"))
         else:
             median = series.median()
-            st.line_chart(pd.DataFrame({metric: series, f"{len(series)}-year median": median}).rename(index=str),
-                          alt=f"{symbol} year-end {metric} by year compared with its median")
+            st.line_chart(pd.DataFrame({metric: series, median_label: median}).rename(index=str),
+                          alt=t("val.history_alt", symbol=symbol, metric=metric))
             current = {"P/E": snap["pe"], "P/BV": snap["pbv"]}[metric]
             if pd.notna(current) and median:
                 diff = current / median - 1
-                verdict = "cheaper" if diff < 0 else "more expensive"
-                st.markdown(f"Current {metric} **{num(current)}** is **{abs(diff):.0%} "
-                            f"{'below' if diff < 0 else 'above'}** its {len(series)}-year median of "
-                            f"{num(median)} — {verdict} than usual.")
-            st.caption("Median is used instead of average so one unusual year (e.g. a loss year) doesn't distort it. "
-                       f"Current value: Yahoo (trailing 12 months); history: {fin.attrs.get('source', '?')} "
-                       "(year-end), so the two can differ slightly.")
+                st.markdown(t("val.verdict", metric=metric, current=num(current), diff=abs(diff),
+                              direction=t("val.below") if diff < 0 else t("val.above"), years=len(series),
+                              median=num(median), verdict=t("val.cheaper") if diff < 0 else t("val.dearer")))
+            st.caption(t("val.history_note", source=fin.attrs.get("source", "?")))
 
 # ============ 8 (partly). Dividends & calendar ============
 if t_div.open:
     with t_div:
         need_snapshot()
         with st.container(horizontal=True):
-            st.metric("Next / last XD date", snap["ex_div_date"].strftime("%d %b %Y") if pd.notna(snap["ex_div_date"])
+            st.metric(t("div.xd"), snap["ex_div_date"].strftime("%d %b %Y") if pd.notna(snap["ex_div_date"])
                       else "–", border=True, height="stretch")
-            st.metric("Next earnings date", snap["earnings_date"].strftime("%d %b %Y")
+            st.metric(t("div.earnings"), snap["earnings_date"].strftime("%d %b %Y")
                       if pd.notna(snap["earnings_date"]) else "–", border=True, height="stretch",
-                      help="From Yahoo; often missing for Thai stocks. Check SET announcements to be sure.")
-            st.metric("Dividend yield", pct(snap["div_yield"]), border=True, height="stretch")
+                      help=t("div.earnings_help"))
+            st.metric(t("val.div_yield"), pct(snap["div_yield"]), border=True, height="stretch")
         div = cache.dividends(symbol)
         if div.empty:
-            st.info("No dividend history on Yahoo Finance.", title="No dividends")
+            st.info(t("div.none"), title=t("div.none_title"))
         else:
-            st.subheader("Dividend per share by year (THB)")
-            st.bar_chart(div.tail(15).rename(index=str), alt=f"{symbol} dividend per share by year")
-            st.caption("Grouped by XD date. The current year may be incomplete.")
+            st.subheader(t("div.per_year"))
+            st.bar_chart(div.tail(15).rename(index=str), alt=t("div.alt", symbol=symbol))
+            st.caption(t("div.note"))
 
 # ============ Fair value and F-score (backlog #13) ============
 FINANCIAL_SECTORS = ("Banking", "Finance & Securities", "Insurance")
@@ -275,16 +276,15 @@ def pct_slider(label: str, low: float, high: float, default: float, key: str, he
     return value / 100
 
 
-def show_fair_value(name: str, fair: float, price: float) -> None:
+def show_fair_value(model: str, fair: float, price: float) -> None:
     if fair <= 0:
-        st.info(f"The {name} result is zero or negative: with these assumptions, net debt is larger than the value "
-                "of the future cash flows. The model says little about this stock.", title="No meaningful value")
+        st.info(t("fair.no_value", model=model), title=t("fair.no_value_title"))
         return
     with st.container(horizontal=True):
-        st.metric(f"Fair value ({name})", num(fair), border=True, height="stretch")
-        st.metric("Price now", num(price), border=True, height="stretch")
-        st.metric("Margin of safety", pct(fair / price - 1, 0), border=True, height="stretch",
-                  help="How far the fair value is above (+) or below (−) today's price.")
+        st.metric(t("fair.value", model=model), num(fair), border=True, height="stretch")
+        st.metric(t("fair.price_now"), num(price), border=True, height="stretch")
+        st.metric(t("fair.margin"), pct(fair / price - 1, 0), border=True, height="stretch",
+                  help=t("fair.margin_help"))
 
 
 def show_sensitivity(table: pd.DataFrame, r_label: str, g_label: str, alt: str) -> None:
@@ -298,134 +298,117 @@ if t_fair.open:
     with t_fair:
         need_snapshot()
         price = snap["price"]
-        st.info("An estimate based on your assumptions — not investment advice. Small changes in the "
-                "assumptions move the result a lot; see the tables.", title="Estimate only", icon=":material/info:")
+        st.info(t("fair.estimate"), title=t("fair.estimate_title"), icon=":material/info:")
         this_year = date.today().year
 
-        st.subheader("Dividend discount model (DDM)")
+        st.subheader(t("fair.ddm"))
         div = cache.dividends(symbol)
         last_dps = last_full_year_dps(div, this_year)
         if pd.isna(last_dps) or last_dps <= 0:
-            st.info(f"{symbol} paid no dividend in {this_year - 1}, so the dividend model can't value it.",
-                    title="No dividend")
+            st.info(t("fair.no_dividend", symbol=symbol, year=this_year - 1), title=t("fair.no_dividend_title"))
         else:
             c1, c2 = st.columns(2)
             with c1:
-                g = pct_slider("Dividend growth per year", -5.0, 10.0, default_ddm_growth(div, this_year), "ddm_g",
-                               "Growth forever. Default: growth of dividends per share over the last 5 full years, "
-                               "at most 6% (it must stay below the required return).")
+                g = pct_slider(t("fair.ddm_g"), -5.0, 10.0, default_ddm_growth(div, this_year), "ddm_g",
+                               t("fair.ddm_g_help"))
             with c2:
-                r = pct_slider("Required return", 4.0, 15.0, DEFAULT_REQUIRED_RETURN, "ddm_r",
-                               "The yearly return you want for the risk. Default 8%.")
-            st.caption(f"Dividend per share paid in {this_year - 1}: {num(last_dps)} THB → next year "
-                       f"{num(last_dps * (1 + g))} THB at {g:.1%} growth.")
+                r = pct_slider(t("fair.ddm_r"), 4.0, 15.0, DEFAULT_REQUIRED_RETURN, "ddm_r", t("fair.ddm_r_help"))
+            st.caption(t("fair.ddm_note", year=this_year - 1, dps=num(last_dps), next=num(last_dps * (1 + g)), g=g))
             try:
                 show_fair_value("DDM", ddm_value(last_dps * (1 + g), g, r), price)
             except ValueError as e:
-                st.error(str(e), title="Can't compute")
+                st.error(str(e), title=t("fair.cant"))
             show_sensitivity(sensitivity(lambda rr, gg: ddm_value(last_dps * (1 + gg), gg, rr),
                                          [r - 0.01, r, r + 0.01], [g - 0.01, g, g + 0.01]),
-                             "r", "g", f"{symbol} DDM fair value for required return and growth ±1 point")
+                             "r", "g", t("fair.ddm_alt", symbol=symbol))
 
-        st.subheader("Discounted cash flow (DCF)")
+        st.subheader(t("fair.dcf"))
         fin = cache.financials(symbol)
         last = fin.iloc[-1] if not fin.empty else pd.Series(dtype=float)
         if sector in FINANCIAL_SECTORS:
-            st.info("Not used for banks, lenders and insurers: lending and investing are their business, so "
-                    "their free cash flow says little about their value. Use the dividend model above.",
-                    title="DCF not shown")
+            st.info(t("fair.no_dcf"), title=t("fair.no_dcf_title"))
         elif last.empty or not last.get("Free cash flow", 0) > 0 or not last.get("Shares", 0) > 0:
-            st.info("Needs a positive free cash flow and the number of shares for the last year.",
-                    title="Not enough data")
+            st.info(t("fair.not_enough"), title=t("fair.not_enough_title"))
         else:
             rev_cagr = growth_quality(fin)["rev_cagr5"]
             c1, c2, c3 = st.columns(3)
             with c1:
-                g = pct_slider("Cash-flow growth, next 5 years", -5.0, 15.0,
+                g = pct_slider(t("fair.dcf_g"), -5.0, 15.0,
                                min(max(0.0 if pd.isna(rev_cagr) else rev_cagr, 0.0), 0.10), "dcf_g",
-                               "Default: revenue growth over the last 5 years, between 0% and 10%.")
+                               t("fair.dcf_g_help"))
             with c2:
-                tg = pct_slider("Growth after that", 0.0, 4.0, 0.02, "dcf_tg", "Long-run growth forever. Default 2%.")
+                tg = pct_slider(t("fair.dcf_tg"), 0.0, 4.0, 0.02, "dcf_tg", t("fair.dcf_tg_help"))
             with c3:
-                r = pct_slider("Discount rate", 5.0, 15.0, 0.09, "dcf_r", "The yearly return you want. Default 9%.")
+                r = pct_slider(t("fair.dcf_r"), 5.0, 15.0, 0.09, "dcf_r", t("fair.dcf_r_help"))
             net_debt = float(np.nan_to_num(last.get("Total debt", 0.0)) - np.nan_to_num(last.get("Cash", 0.0)))
-            st.caption(f"Free cash flow {fin.index[-1]}: {baht(last['Free cash flow'])} THB; net debt "
-                       f"{baht(net_debt)} THB; shares {baht(last['Shares'])}.")
+            st.caption(t("fair.dcf_note", year=fin.index[-1], fcf=baht(last["Free cash flow"]), net_debt=baht(net_debt),
+                         shares=baht(last["Shares"])))
             dcf = lambda rr, gg: dcf_value(last["Free cash flow"], gg, 5, tg, rr, net_debt, last["Shares"])  # noqa: E731
             try:
                 show_fair_value("DCF", dcf(r, g), price)
             except ValueError as e:
-                st.error(str(e), title="Can't compute")
+                st.error(str(e), title=t("fair.cant"))
             show_sensitivity(sensitivity(dcf, [r - 0.01, r, r + 0.01], [g - 0.01, g, g + 0.01]),
-                             "r", "g", f"{symbol} DCF fair value for discount rate and growth ±1 point")
+                             "r", "g", t("fair.dcf_alt", symbol=symbol))
 
-        st.subheader("Piotroski F-score")
+        st.subheader(t("fair.fscore"))
         score = piotroski(fin)
         if not score.available:
-            st.info("No yearly financials to score.", title="No data")
+            st.info(t("fair.no_scores"), title=t("common.no_data"))
         else:
             st.metric("F-score", f"{score.points} / {score.available}", border=True, width="content",
-                      help="One point per check passed (last year vs. the year before). Checks without free "
-                           "data are left out, so the maximum is the number available.")
-            st.markdown("\n".join(f"- {'✅' if ok else '❌' if ok is False else '➖'} {name}"
-                                   + (" (no data)" if ok is None else "") for name, ok in score.checks.items()))
+                      help=t("fair.fscore_help"))
+            st.markdown("\n".join(f"- {'✅' if ok else '❌' if ok is False else '➖'} {t(f'check.{check}')}"
+                                  + (t("fair.no_check_data") if ok is None else "")
+                                  for check, ok in score.checks.items()))
 
 # ============ Prediction (from step 2) ============
 if t_pred.open:
     with t_pred:
-        st.markdown(
-            "A Random Forest model predicts whether **tomorrow's close will be higher than today's**. "
-            "Walk-forward test: the newest 40% of 5 years is split into 4 periods; each period is predicted by a "
-            "model trained only on the days before it (with a 1-day gap), as if it were run live."
-        )
+        st.markdown(t("pred.intro"))
         try:
-            with st.spinner("Training model..."):
+            with st.spinner(t("pred.training")):
                 result = cache.backtest(symbol)
         except (ValueError, cache.NoPriceData) as e:
-            st.warning(str(e), title="Can't train the model")
+            st.warning(str(e), title=t("pred.cant_title"))
             st.stop()
 
         with st.container(horizontal=True):
-            st.metric("Model accuracy (4 periods)", f"{result.accuracy:.1%}", border=True, height="stretch")
-            st.metric("Baseline accuracy", f"{result.baseline_accuracy:.1%}", border=True, height="stretch",
-                      help="Always guessing the most common direction. The model is only useful if it beats this.")
-            st.metric("Next day: chance of going up", f"{result.next_day_prob_up:.0%}", border=True, height="stretch")
+            st.metric(t("pred.accuracy"), f"{result.accuracy:.1%}", border=True, height="stretch")
+            st.metric(t("pred.baseline"), f"{result.baseline_accuracy:.1%}", border=True, height="stretch",
+                      help=t("pred.baseline_help"))
+            st.metric(t("pred.next_day"), f"{result.next_day_prob_up:.0%}", border=True, height="stretch")
 
         edge = result.accuracy - result.baseline_accuracy
         if edge > 0.02:
-            st.success(f"The model is {edge:+.1%} more accurate than the baseline on unseen data.",
-                       title="The model has an edge")
+            st.success(t("pred.edge", edge=edge), title=t("pred.edge_title"))
         else:
-            st.info(f"The model is {edge:+.1%} vs. the baseline. "
-                    "This is normal: daily stock moves are very close to random.", title="No real edge")
+            st.info(t("pred.no_edge", edge=edge), title=t("pred.no_edge_title"))
 
-        st.subheader("Accuracy in each test period")
+        st.subheader(t("pred.periods"))
         w = result.windows
+        cols = {k: t(f"pred.col_{k}") for k in ["period", "model", "baseline", "edge"]}
         st.dataframe(
-            pd.DataFrame({"Period": [f"{a:%d %b %Y} – {b:%d %b %Y}" for a, b in zip(w["test_start"], w["test_end"])],
-                          "Model": w["accuracy"], "Baseline": w["baseline"],
-                          "Model − baseline": w["accuracy"] - w["baseline"]}),
+            pd.DataFrame({cols["period"]: [f"{a:%d %b %Y} – {b:%d %b %Y}" for a, b in zip(w["test_start"], w["test_end"])],
+                          cols["model"]: w["accuracy"], cols["baseline"]: w["baseline"],
+                          cols["edge"]: w["accuracy"] - w["baseline"]}),
             hide_index=True,
-            column_config={c: st.column_config.NumberColumn(c, format="percent")
-                           for c in ["Model", "Baseline", "Model − baseline"]},
-            alt=f"{symbol} model and baseline accuracy in each walk-forward test period",
+            column_config={cols[k]: st.column_config.NumberColumn(cols[k], format="percent")
+                           for k in ["model", "baseline", "edge"]},
+            alt=t("pred.periods_alt", symbol=symbol),
         )
-        st.caption(f"Average over the {len(w)} periods: model {w['accuracy'].mean():.1%}, "
-                   f"baseline {w['baseline'].mean():.1%}.")
+        st.caption(t("pred.average", count=len(w), model=w["accuracy"].mean(), baseline=w["baseline"].mean()))
 
-        st.subheader("Backtest: 1 baht invested over the test periods")
+        st.subheader(t("pred.backtest"))
         eq = result.test
         st.line_chart(
             eq[["Buy_and_hold", "Model_strategy", "Model_before_costs"]].rename(columns={
-                "Buy_and_hold": "Buy & hold", "Model_strategy": "Model strategy (after costs)",
-                "Model_before_costs": "Model strategy (before costs)"}),
-            y_label="Value of 1 baht",
-            alt=f"Growth of 1 baht in {symbol}: buy and hold versus holding only on days the model predicts up",
+                "Buy_and_hold": t("pred.buy_hold"), "Model_strategy": t("pred.after_costs"),
+                "Model_before_costs": t("pred.before_costs")}),
+            y_label=t("pred.value_axis"),
+            alt=t("pred.backtest_alt", symbol=symbol),
         )
         trades = int(eq["Prediction"].diff().abs().fillna(eq["Prediction"]).sum())
-        st.caption(f"Model strategy = hold only on days the model predicts 'up' ({eq['Prediction'].mean():.0%} "
-                   f"of test days), paying {result.cost_per_trade:.2%} per buy or sell ({trades} trades). "
-                   "Buy & hold pays almost nothing. Taxes are ignored.")
-        st.subheader("Which features the model relied on")
-        st.bar_chart(result.feature_importance, horizontal=True,
-                     alt="Feature importance of the Random Forest model")
+        st.caption(t("pred.note", share=eq["Prediction"].mean(), cost=result.cost_per_trade, trades=trades))
+        st.subheader(t("pred.features"))
+        st.bar_chart(result.feature_importance, horizontal=True, alt=t("pred.features_alt"))

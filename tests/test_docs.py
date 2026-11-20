@@ -38,15 +38,19 @@ def test_fundamentals_docstring_names_both_sources():
 
 
 def test_sidebar_caption_names_both_sources():
-    text = (ROOT / "app.py").read_text()
-    captions = re.findall(r"st\.caption\((.*?)\)\n", text, re.S)
-    assert any("Yahoo" in c and "thaifin" in c for c in captions)
+    from src.i18n import TEXT
+
+    assert 't("app.sources")' in (ROOT / "app.py").read_text()
+    for lang_text in TEXT["app.sources"].values():
+        assert "Yahoo" in lang_text and "thaifin" in lang_text
 
 
 def test_screener_de_help_states_yahoo_definition():
+    from src.i18n import TEXT
+
     text = (ROOT / "app_pages/screener.py").read_text()
-    de = text.split('"de": nc(', 1)[1].split("),", 1)[0]
-    assert "interest-bearing debt" in de
+    assert 'help=t("scr.de_help")' in text.split('"de": nc(', 1)[1].split("),", 1)[0]
+    assert "interest-bearing debt" in TEXT["scr.de_help"]["en"]
 
 
 def test_spec_has_a_status_row_for_each_of_the_8_categories():

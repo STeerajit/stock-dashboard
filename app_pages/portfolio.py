@@ -5,11 +5,11 @@ import streamlit as st
 
 from src import cache, portfolio
 from src.fundamentals import SnapshotError
+from src.i18n import current_lang, t
 from src.universe import describe
 
-st.title("Portfolio")
-st.caption("The stocks you own, plus a watchlist: enter 0 shares for a stock you only want to follow. "
-           "Saved on this Mac only (data/portfolio.csv, never committed to git).")
+st.title(t("port.title"))
+st.caption(t("port.caption"))
 
 saved = portfolio.load()
 last_year = date.today().year - 1
@@ -31,7 +31,7 @@ def quotes(symbols: list[str]) -> pd.DataFrame:
 
 
 if saved.empty:
-    st.info("No stocks yet. Add them in the table below, then press Save.", title="Empty portfolio")
+    st.info(t("port.empty"), title=t("port.empty_title"))
 else:
     try:
         pos = portfolio.positions(saved, quotes(saved["symbol"].tolist()))
@@ -40,18 +40,17 @@ else:
     else:
         tot = portfolio.totals(pos)
         with st.container(horizontal=True):
-            st.metric("Market value (THB)", f"{tot['value']:,.0f}", border=True, height="stretch")
-            st.metric("Profit / loss (THB)", f"{tot['pnl']:+,.0f}",
+            st.metric(t("port.value"), f"{tot['value']:,.0f}", border=True, height="stretch")
+            st.metric(t("port.pnl"), f"{tot['pnl']:+,.0f}",
                       f"{tot['pnl_pct']:+.1%}" if pd.notna(tot["pnl_pct"]) else None, border=True, height="stretch",
-                      help=f"Market value minus cost ({tot['cost']:,.0f} THB).")
-            st.metric("Estimated dividend / year (THB)", f"{tot['est_dividend']:,.0f}", border=True,
-                      height="stretch", help=f"Dividend per share paid in {last_year} × shares you hold now.")
-            st.metric("Yield on cost", f"{tot['yield_on_cost']:.2%}" if pd.notna(tot["yield_on_cost"]) else "–",
-                      border=True, height="stretch", help="Estimated dividend / what you paid.")
+                      help=t("port.pnl_help", cost=f"{tot['cost']:,.0f}"))
+            st.metric(t("port.dividend"), f"{tot['est_dividend']:,.0f}", border=True,
+                      height="stretch", help=t("port.dividend_help", year=last_year))
+            st.metric(t("port.yoc"), f"{tot['yield_on_cost']:.2%}" if pd.notna(tot["yield_on_cost"]) else "–",
+                      border=True, height="stretch", help=t("port.yoc_help"))
 
         if missing := pos.loc[(pos["shares"] > 0) & pos["price"].isna(), "symbol"].tolist():
-            st.warning(f"No current price for {', '.join(missing)}, so the totals leave them out. "
-                       "Check the symbol, or try again in a minute.", title="Missing prices")
+            st.warning(t("port.missing", symbols=", ".join(missing)), title=t("port.missing_title"))
 
         nc = st.column_config.NumberColumn
         st.dataframe(
@@ -60,32 +59,29 @@ else:
             column_order=["symbol", "sector", "shares", "avg_cost", "price", "value", "pnl", "pnl_pct",
                           "est_dividend", "yield_on_cost"],
             column_config={
-                "symbol": st.column_config.TextColumn("Symbol", pinned=True),
-                "sector": "Sector",
-                "shares": nc("Shares", format="localized", help="0 = watchlist."),
-                "avg_cost": nc("Avg. cost", format="%.2f"),
-                "price": nc("Price", format="%.2f"),
-                "value": nc("Value (THB)", format="localized"),
-                "pnl": nc("P/L (THB)", format="localized"),
-                "pnl_pct": nc("P/L %", format="percent"),
-                "est_dividend": nc("Est. dividend (THB)", format="localized",
-                                   help=f"Dividend per share paid in {last_year} × shares."),
-                "yield_on_cost": nc("Yield on cost", format="percent"),
+                "symbol": st.column_config.TextColumn(t("common.symbol"), pinned=True),
+                "sector": st.column_config.TextColumn(t("common.sector")),
+                "shares": nc(t("port.shares"), format="localized", help=t("port.shares_help")),
+                "avg_cost": nc(t("port.avg_cost"), format="%.2f"),
+                "price": nc(t("common.price"), format="%.2f"),
+                "value": nc(t("port.col_value"), format="localized"),
+                "pnl": nc(t("port.col_pnl"), format="localized"),
+                "pnl_pct": nc(t("port.col_pnl_pct"), format="percent"),
+                "est_dividend": nc(t("port.col_dividend"), format="localized",
+                                   help=t("port.col_dividend_help", year=last_year)),
+                "yield_on_cost": nc(t("port.yoc"), format="percent"),
             },
-            alt="Holdings and watchlist with value, profit or loss, estimated dividend and yield on cost",
+            alt=t("port.table_alt"),
         )
 
         alloc = portfolio.allocation(pos)
         if not alloc.empty:
-            st.subheader("Allocation by sector")
-            st.bar_chart((alloc * 100).round(1).rename("% of value"), horizontal=True,
-                         x_label="% of market value",
-                         alt="Share of the portfolio's market value in each sector")
-        st.caption(f"No trading fees, VAT or dividend tax are included. Estimated dividend uses the dividends per "
-                   f"share paid in {last_year} (the last complete year, by XD date); future dividends may differ. "
-                   "Prices are delayed ~15 min.")
+            st.subheader(t("port.allocation"))
+            st.bar_chart((alloc * 100).round(1).rename(t("port.alloc_series")), horizontal=True,
+                         x_label=t("port.alloc_axis"), alt=t("port.alloc_alt"))
+        st.caption(t("port.note", year=last_year))
 
-st.subheader("Edit holdings")
+st.subheader(t("port.edit"))
 with st.form("holdings_form", border=False):
     edited = st.data_editor(
         saved,
@@ -93,20 +89,19 @@ with st.form("holdings_form", border=False):
         num_rows="dynamic",
         hide_index=True,
         column_config={
-            "symbol": st.column_config.TextColumn("Symbol", help="SET symbol, e.g. PTT. Any Thai stock works."),
-            "shares": st.column_config.NumberColumn("Shares", min_value=0, step=1, format="%d",
-                                                    help="0 = watchlist only."),
-            "avg_cost": st.column_config.NumberColumn("Average cost (THB)", min_value=0, format="%.2f",
-                                                      help="Average price paid per share. Leave empty for "
-                                                           "a watchlist stock."),
+            "symbol": st.column_config.TextColumn(t("common.symbol"), help=t("port.symbol_help")),
+            "shares": st.column_config.NumberColumn(t("port.shares"), min_value=0, step=1, format="%d",
+                                                    help=t("port.shares_edit_help")),
+            "avg_cost": st.column_config.NumberColumn(t("port.avg_cost_edit"), min_value=0, format="%.2f",
+                                                      help=t("port.avg_cost_edit_help")),
         },
     )
-    submitted = st.form_submit_button("Save", icon=":material/save:", type="primary")
+    submitted = st.form_submit_button(t("port.save"), icon=":material/save:", type="primary")
 
 if submitted:
-    holdings, problems = portfolio.clean(edited)
+    holdings, problems = portfolio.clean(edited, lang=current_lang())
     if problems:
-        st.error("Not saved. Please fix:\n" + "\n".join(f"- {p}" for p in problems), title="Check your input")
+        st.error(t("port.not_saved") + "\n" + "\n".join(f"- {p}" for p in problems), title=t("port.check_title"))
     else:
         portfolio.save(holdings)
         # The editor's state holds edits relative to the old table; drop it so the saved file is shown as-is
@@ -116,4 +111,4 @@ if submitted:
         st.rerun()
 
 if (count := st.session_state.pop("saved_count", None)) is not None:
-    st.toast(f"Saved {count} stocks.", icon=":material/check:")
+    st.toast(t("port.saved", count=count), icon=":material/check:")

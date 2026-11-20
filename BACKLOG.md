@@ -320,12 +320,16 @@ Form 59, C-sign / cash balance / turnover list) have no free official API. **Blo
 
 ## 18. Thai / English UI toggle — P3 · M
 
+> **Done** on 2026-11-21. Still in English in Thai mode: error messages raised by the data layer (e.g. Yahoo
+> down), company and sector names (as SET prints them in English) and month names in dates. A test reads the
+> pages' code and fails on any text written directly in a Streamlit call.
+
 **Why:** The target users are Thai investors, but the portfolio audience may read English.
 
 **Acceptance criteria**
-- [ ] All user-facing strings live in one translation file (e.g. `src/i18n.py`), and none are hard-coded in `app_pages/`.
-- [ ] A sidebar toggle switches between ไทย and English, and the choice is kept in the URL (`?lang=th`).
-- [ ] A test fails if any translation key is missing in either language.
+- [x] All user-facing strings live in one translation file (e.g. `src/i18n.py`), and none are hard-coded in `app_pages/`.
+- [x] A sidebar toggle switches between ไทย and English, and the choice is kept in the URL (`?lang=th`).
+- [x] A test fails if any translation key is missing in either language.
 
 ---
 

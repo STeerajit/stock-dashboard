@@ -244,3 +244,17 @@ def test_prediction_tab_shows_each_walk_forward_period(fake_cache):
     periods = at.dataframe[0].value
     assert len(periods) == 4 and list(periods.columns) == ["Period", "Model", "Baseline", "Model − baseline"]
     assert any("per buy or sell" in c.value for c in at.caption)
+
+
+def test_every_stock_tab_renders_in_thai(fake_cache):
+    at = AppTest.from_file(ROOT / "app_pages/stock.py", default_timeout=60)
+    at.query_params["symbol"] = "PTT"
+    at.query_params["lang"] = "th"
+    at.run()
+    labels = [tab.label for tab in at.tabs]
+    assert labels[0].endswith("การซื้อขาย")
+    for label in labels:
+        at.session_state["tab"] = label
+        at.run()
+        assert not at.exception, (label, at.exception)
+        assert not at.error, label

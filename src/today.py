@@ -7,6 +7,7 @@ from datetime import date
 
 import pandas as pd
 
+from src.i18n import text
 from src.indicators import support_resistance
 
 NEAR_SUPPORT = 0.03  # price at most 3% above the nearest support
@@ -27,19 +28,20 @@ def price_levels(prices: pd.DataFrame) -> tuple[float, float | None, float | Non
     return price, (supports[0] if supports else None), (resistances[0] if resistances else None)
 
 
-def _event(name: str, when, today: date) -> str | None:
+def _event(name: str, when, today: date, lang: str) -> str | None:
     if when is None or pd.isna(when):
         return None
     day = pd.Timestamp(when).date()
     days = (day - today).days
     if not 0 <= days < EVENT_DAYS:
         return None
-    label = "today" if days == 0 else "tomorrow" if days == 1 else f"in {days} days"
-    return f"{name} {label} ({day.day} {day:%b %Y})"
+    label = (text("reason.today", lang) if days == 0 else text("reason.tomorrow", lang) if days == 1
+             else text("reason.in_days", lang, days=days))
+    return text("reason.event", lang, name=name, when=label, date=f"{day.day} {day:%b %Y}")
 
 
 def reasons(*, today: date, price: float, support: float | None, resistance_before_today: float | None,
-            rsi: float, ex_div_date, earnings_date, pe: float, pe_median: float | None) -> list[str]:
+            rsi: float, ex_div_date, earnings_date, pe: float, pe_median: float | None, lang: str = "en") -> list[str]:
     """Why this stock is flagged today; an empty list means it isn't. Missing data never flags a rule."""
     # None -> NaN: every comparison with NaN is False, so a rule with missing data simply doesn't fire.
     price, support, resistance, rsi, pe, pe_median = (
@@ -47,16 +49,16 @@ def reasons(*, today: date, price: float, support: float | None, resistance_befo
         for x in (price, support, resistance_before_today, rsi, pe, pe_median))
     out = []
     if 0 < support <= price <= support * (1 + NEAR_SUPPORT):
-        out.append(f"Near support: price {price:.2f} is {price / support - 1:.1%} above support {support:.2f}")
+        out.append(text("reason.near_support", lang, price=price, gap=price / support - 1, support=support))
     if price > resistance:
-        out.append(f"Broke resistance: price {price:.2f} is above yesterday's resistance {resistance:.2f}")
+        out.append(text("reason.broke_resistance", lang, price=price, resistance=resistance))
     if rsi < RSI_LOW:
-        out.append(f"RSI {rsi:.1f} — oversold (below {RSI_LOW})")
+        out.append(text("reason.oversold", lang, rsi=rsi, low=RSI_LOW))
     elif rsi > RSI_HIGH:
-        out.append(f"RSI {rsi:.1f} — overbought (above {RSI_HIGH})")
-    for name, when in (("XD date", ex_div_date), ("Earnings date", earnings_date)):
-        if text := _event(name, when, today):
-            out.append(text)
+        out.append(text("reason.overbought", lang, rsi=rsi, high=RSI_HIGH))
+    for name, when in (("reason.xd", ex_div_date), ("reason.earnings", earnings_date)):
+        if event := _event(text(name, lang), when, today, lang):
+            out.append(event)
     if 0 < pe < pe_median * (1 - CHEAP_PE):
-        out.append(f"Cheap vs. its history: P/E {pe:.1f} is {1 - pe / pe_median:.0%} below its median {pe_median:.1f}")
+        out.append(text("reason.cheap", lang, pe=pe, gap=1 - pe / pe_median, median=pe_median))
     return out

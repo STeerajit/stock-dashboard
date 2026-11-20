@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.i18n import text
+
 SET100_CSV = Path(__file__).resolve().parent.parent / "data" / "set100.csv"
 SET100_PERIOD = "1 Jul – 31 Dec 2026"
 SET100_PERIOD_END = date(2026, 12, 31)  # last day the CSV's list is valid; update together with SET100_PERIOD
@@ -53,7 +55,7 @@ def yahoo_symbol(symbol: str) -> str:
     return f"{symbol}.BK"
 
 
-def set100_expiry_warning(today: date, period_end: date | None = None) -> str | None:
+def set100_expiry_warning(today: date, period_end: date | None = None, lang: str = "en") -> str | None:
     """A warning to show users once the SET100 list is past its period (None while it is current).
 
     `period_end` defaults to SET100_PERIOD_END.
@@ -61,7 +63,4 @@ def set100_expiry_warning(today: date, period_end: date | None = None) -> str | 
     end = period_end or SET100_PERIOD_END
     if today <= end:
         return None
-    return (
-        f"This SET100 list was valid until {end:%-d %b %Y}. SET has likely published a new list, "
-        "so some stocks may be missing or no longer in SET100. Update data/set100.csv (see README)."
-    )
+    return text("common.list_expired", lang, end=f"{end:%-d %b %Y}")

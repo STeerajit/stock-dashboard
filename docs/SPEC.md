@@ -58,7 +58,7 @@ The first request was "ต้องการทำสำหรับหุ้น
 | Data | **Free sources only** (Yahoo Finance, thaifin). Where no free data exists, link to the SET website | No budget for SETSMART / paid APIs. |
 | Price delay | ~15 min delay is fine | Mixed style, not day trading. |
 | Where it runs | **This Mac only** (`scripts/stocks.sh`), single user | Personal tool; no hosting, no login. Deploying (BACKLOG #8) is not a goal for real use. |
-| UI language | English everywhere | Simpler; Thai toggle (#18) stays a P3 idea. |
+| UI language | English by default, Thai with the sidebar toggle (`?lang=th`) | Added on request (#18); all text lives in `src/i18n.py`. |
 | Portfolio | Holdings = (symbol, shares, average cost), edited in the app, saved to `data/portfolio.csv` (gitignored). `shares = 0` means watchlist | Real holdings are private and must never be committed. |
 | Portfolio numbers | P&L per stock and total (THB and %), allocation by sector, estimated dividend and yield on cost. **No fees or taxes** | Keeps the maths checkable; stated on screen. |
 | Estimated dividend | Dividend per share of the **last complete calendar year** × shares | A full year is known; the current year is partial. |
