@@ -11,13 +11,14 @@ import pandas as pd
 SET50_CSV = Path(__file__).resolve().parent.parent / "data" / "set50.csv"
 SET50_PERIOD = "1 Jul – 31 Dec 2026"
 
-# Sector names exactly as SET prints them in its index-constituent documents.
+# The SET sector names (exactly as SET prints them) that SET50 stocks belong to today.
+# Deliberately only the sectors in use, so a typo in the CSV fails the test. When an index
+# review brings in a stock from a new sector, check SET's spelling and add the name here.
 SET_SECTORS = frozenset({
-    "Agribusiness", "Banking", "Commerce", "Construction Materials", "Construction Services",
-    "Electronic Components", "Energy & Utilities", "Fashion", "Finance & Securities", "Food & Beverage",
-    "Health Care Services", "Information & Communication Technology", "Insurance", "Media & Publishing",
-    "Packaging", "Personal Products & Pharmaceuticals", "Petrochemicals & Chemicals", "Professional Services",
-    "Property Development", "Tourism & Leisure", "Transportation & Logistics",
+    "Banking", "Commerce", "Construction Materials", "Electronic Components", "Energy & Utilities",
+    "Finance & Securities", "Food & Beverage", "Health Care Services", "Information & Communication Technology",
+    "Insurance", "Packaging", "Petrochemicals & Chemicals", "Property Development", "Tourism & Leisure",
+    "Transportation & Logistics",
 })
 
 

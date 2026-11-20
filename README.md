@@ -59,7 +59,7 @@ app.py                         # entry point + navigation
 app_pages/screener.py          # SET50 table
 app_pages/stock.py             # one-stock detail page (6 tabs)
 src/__init__.py
-src/universe.py                # SET50 list + official SET sector names
+src/universe.py                # SET50 list + the SET sector names in use
 src/data.py                    # daily prices
 src/fundamentals.py            # snapshot, financials, dividends, P/E history, sector medians
 src/indicators.py              # SMA, RSI, volatility, support/resistance

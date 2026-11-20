@@ -25,7 +25,10 @@ def test_symbols_look_like_set_symbols():
 
 def test_sectors_are_official_set_sector_names():
     unknown = set(load_set50()["sector"]) - SET_SECTORS
-    assert not unknown, f"not an SET sector name: {unknown}"
+    assert not unknown, (
+        f"sector not in SET_SECTORS: {unknown}. Fix the typo in data/set50.csv, or, if a stock from a "
+        "new sector joined SET50, add SET's exact spelling to SET_SECTORS in src/universe.py."
+    )
 
 
 def test_yahoo_symbol():
