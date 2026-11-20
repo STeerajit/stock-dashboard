@@ -54,3 +54,12 @@ def dividends(symbol: str) -> pd.Series:
 @st.cache_data(ttl="24h", max_entries=50)
 def backtest(symbol: str) -> BacktestResult:
     return train_and_backtest(prices(symbol, "5y"))
+
+
+def snapshot_of(symbol: str) -> pd.Series:
+    """The current snapshot of any symbol: from the shared SET100 table, or its own fetch if outside SET100.
+
+    Raises fd.SnapshotError if Yahoo has no price for it (or too many SET100 fetches failed).
+    """
+    snaps = snapshots() if symbol in set(set100()["symbol"]) else snapshot(symbol)
+    return fd.snapshot_for(snaps, symbol)

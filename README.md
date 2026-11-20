@@ -81,6 +81,7 @@ scripts/check.sh
 
 ```
 app.py                         # entry point + navigation
+app_pages/today.py             # default page: portfolio stocks to look at today
 app_pages/screener.py          # SET100 table
 app_pages/stock.py             # one-stock detail page (6 tabs)
 app_pages/portfolio.py         # holdings + watchlist editor

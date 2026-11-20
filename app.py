@@ -7,7 +7,11 @@ st.set_page_config(page_title="SET100 dashboard", page_icon=":material/candlesti
 page = st.navigation(
     [
         st.Page(
-            "app_pages/screener.py", title="SET100 screener", icon=":material/table_chart:", default=True,
+            "app_pages/today.py", title="Today", icon=":material/today:", default=True,
+            help="Stocks in your portfolio and watchlist that may deserve a look today, and why.",
+        ),
+        st.Page(
+            "app_pages/screener.py", title="SET100 screener", icon=":material/table_chart:", url_path="screener",
             help="All SET100 stocks in one table: price, valuation and quality. Sort, filter by sector, "
                  "and open any stock for details.",
         ),
