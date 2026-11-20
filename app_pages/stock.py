@@ -7,7 +7,7 @@ import streamlit as st
 
 from src import cache
 from src.charts import price_chart
-from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for
+from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for, yield_history
 from src.indicators import support_resistance
 from src.universe import OUTSIDE_SET100, describe, set100_expiry_warning
 
@@ -188,11 +188,31 @@ if t_val.open:
             except cache.NoPriceData:
                 pass
 
-        metric = st.segmented_control("Metric", ["P/E", "P/BV"], default="P/E", key="val_metric",
-                                      required=True)
-        series = history[metric].dropna() if metric in history else pd.Series(dtype=float)
+        metric = st.segmented_control("Metric", ["P/E", "P/BV", "Dividend yield"], default="P/E",
+                                      key="val_metric", required=True)
+        if metric == "Dividend yield":
+            try:
+                series = yield_history(cache.dividends(symbol), cache.unadjusted_close(symbol), date.today().year)
+            except cache.NoPriceData:
+                series = pd.Series(dtype=float)
+        else:
+            series = history[metric].dropna() if metric in history else pd.Series(dtype=float)
         if len(series) < 2:
             st.info(f"Not enough yearly {metric} history for this stock.", title="No history")
+        elif metric == "Dividend yield":
+            median = series.median()
+            st.line_chart(pd.DataFrame({"Dividend yield (%)": series * 100,
+                                        f"{len(series)}-year median": median * 100}).rename(index=str),
+                          y_label="%", alt=f"{symbol} yearly dividend yield compared with its median")
+            current = snap["div_yield"]
+            if pd.notna(current):
+                pp = (current - median) * 100
+                verdict = "cheaper" if pp > 0 else "more expensive"  # a higher yield means a lower price
+                st.markdown(f"Current dividend yield **{pct(current)}** is **{pp:+.1f} pp** vs. its "
+                            f"{len(series)}-year median of {pct(median)} — {verdict} than usual.")
+            st.caption("Yearly yield = dividends per share with XD dates in that year ÷ the year's last close as "
+                       "traded (not adjusted for dividends). A year without dividends counts as 0%. "
+                       "pp = percentage points. Current value: Yahoo (trailing 12 months).")
         else:
             median = series.median()
             st.line_chart(pd.DataFrame({metric: series, f"{len(series)}-year median": median}).rename(index=str),

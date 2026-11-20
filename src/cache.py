@@ -42,6 +42,16 @@ def prices(symbol: str, period: str = "5y") -> pd.DataFrame:
 
 
 @st.cache_data(ttl="24h", max_entries=100)
+def unadjusted_close(symbol: str) -> pd.Series:
+    """Daily close as traded (not adjusted for dividends), last 15 years. Raises NoPriceData."""
+    # Not "max" or "20y": Yahoo returned no data at all for PTT.BK and ADVANC.BK with those (checked 2026-11-21).
+    df = load_prices(yahoo_symbol(symbol), "15y", adjusted=False)
+    if df.empty:
+        raise NoPriceData(f"Could not download prices for {symbol}. Try again in a moment.")
+    return df["Close"]
+
+
+@st.cache_data(ttl="24h", max_entries=100)
 def financials(symbol: str) -> pd.DataFrame:
     return fd.get_financials(symbol)
 

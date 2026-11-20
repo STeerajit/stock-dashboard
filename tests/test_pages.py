@@ -66,6 +66,8 @@ def fake_cache(monkeypatch):
     monkeypatch.setattr(cache, "financials", lambda symbol: state["financials"])
     monkeypatch.setattr(cache, "dividends", lambda symbol: pd.Series([1.0, 1.2, 1.4], index=[2023, 2024, 2025]))
     monkeypatch.setattr(cache, "backtest", lambda symbol: train_and_backtest(PRICES))
+    monkeypatch.setattr(cache, "unadjusted_close", lambda symbol: pd.Series(
+        [20.0, 30.0, 35.0], index=pd.to_datetime(["2023-12-29", "2024-12-30", "2025-12-30"])))
     return state
 
 
@@ -181,3 +183,12 @@ def test_stock_unknown_to_yahoo_warns_instead_of_failing(fake_cache):
     at = open_stock("NOSUCH", tab_label("Trading"))
     assert not at.exception and not at.error
     assert any("NOSUCH" in w.value for w in at.warning)
+
+
+def test_valuation_tab_compares_dividend_yield_in_percentage_points(fake_cache):
+    at = open_stock("PTT", tab_label("Valuation"))
+    at.segmented_control(key="val_metric").set_value("Dividend yield").run()
+    assert not at.exception and not at.info
+    # Yields 1.0/20 = 5.0%, 1.2/30 = 4.0%, 1.4/35 = 4.0% -> median 4.0%; current 5.0% (fixture) -> +1.0 pp
+    text = " ".join(m.value for m in at.markdown)
+    assert "**+1.0 pp**" in text and "median of 4.0%" in text and "cheaper than usual" in text

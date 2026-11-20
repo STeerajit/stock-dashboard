@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from src.fundamentals import pe_history, sector_medians
+from src.fundamentals import pe_history, sector_medians, yield_history
 from src.indicators import support_resistance
 
 
@@ -47,3 +47,20 @@ def test_get_financials_falls_back_to_yahoo_when_thaifin_fails(monkeypatch, capl
     assert "thaifin is unavailable" in yahoo.attrs["fallback_note"]
     assert "only 2 years" in yahoo.attrs["fallback_note"]
     assert "thaifin source down" in caplog.text
+
+
+def test_yield_history_uses_unadjusted_year_end_close():
+    # Hand-computed: 2023: 2.00 / 40.00 = 5.0%; 2024: no dividend = 0.0%; 2025: 1.50 / 30.00 = 5.0%.
+    # 2026 is the current year (incomplete) and 2021 is before the first dividend: both left out.
+    close = pd.Series([50.0, 45.0, 40.0, 41.0, 25.0, 30.0, 33.0],
+                      index=pd.to_datetime(["2021-12-30", "2022-06-01", "2023-12-29", "2024-06-03",
+                                            "2024-12-30", "2025-12-30", "2026-11-20"]))
+    dividends = pd.Series([2.0, 1.5, 0.8], index=[2023, 2025, 2026])
+    result = yield_history(dividends, close, this_year=2026)
+    assert result.to_dict() == {2023: 0.05, 2024: 0.0, 2025: 0.05}
+
+
+def test_yield_history_without_dividends_or_prices_is_empty():
+    close = pd.Series([10.0], index=pd.to_datetime(["2025-12-30"]))
+    assert yield_history(pd.Series(dtype=float), close, this_year=2026).empty
+    assert yield_history(pd.Series([1.0], index=[2025]), pd.Series(dtype=float), this_year=2026).empty

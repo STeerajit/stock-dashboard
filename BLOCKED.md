@@ -12,3 +12,24 @@ exits 1 with a deliberately failing test and 0 after reverting it (locally, 2026
 3. Delete that branch. Then tick this box in BACKLOG.md #7.
 
 Also check that the README badge works: it assumes the repo is `STeerajit/stock-dashboard`.
+
+## Backlog #14 — spot check of yearly dividend yield against SET, years 2022–2023
+
+**Status:** partly checked (2026-11-21). SET's free factsheet page
+(`https://www.set.or.th/en/market/product/stock/quote/<SYMBOL>/factsheet`) shows the dividend yield only for the
+last two full years, so SET's own figure for 2022 and 2023 could not be found without a login.
+
+| Stock | Year | App | SET factsheet | Difference |
+|---|---|---|---|---|
+| PTT | 2025 | 6.88% | 6.62% | +0.26 pp |
+| PTT | 2024 | 6.30% | 6.30% | 0.00 pp |
+| ADVANC | 2025 | 4.04% | 3.39% | +0.65 pp |
+| ADVANC | 2024 | 3.30% | 3.00% | +0.30 pp |
+
+For 2022–2023 only the inputs were checked: dividends per share per year match SET's dividend table on the same
+page exactly (PTT 2.10 and 1.50 THB; ADVANC 7.69 and 8.24 THB), so the yield differs from SET's only through
+the year-end price used.
+
+**What you need to do** (optional): log in to set.or.th (or open SETSMART if you have it), find PTT and ADVANC
+dividend yield at year-end 2022 and 2023, and check they are within ±1 pp of the app (PTT 6.32%, 4.20%;
+ADVANC 3.94%, 3.80%). Then tick the spot-check box in BACKLOG.md #14.

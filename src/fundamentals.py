@@ -227,6 +227,21 @@ def pe_history(prices: pd.DataFrame, financials: pd.DataFrame) -> pd.Series:
     return (year_end / eps).dropna()
 
 
+def yield_history(dividends_per_year: pd.Series, close: pd.Series, this_year: int) -> pd.Series:
+    """Yearly dividend yield (0.05 = 5%) for complete years: dividends per share with XD dates in year Y
+    divided by the **unadjusted** close on the last trading day of Y.
+
+    Runs from the first year with a dividend to last year; a year without a dividend counts as 0.
+    Dividend-adjusted prices must not be used: they lower old prices and so inflate old yields.
+    """
+    if dividends_per_year.empty or close.empty:
+        return pd.Series(dtype=float)
+    year_end = close.groupby(pd.DatetimeIndex(close.index).year).last()
+    years = range(int(dividends_per_year.index.min()), this_year)
+    dps = dividends_per_year.reindex(years, fill_value=0.0)
+    return (dps / year_end.reindex(years)).dropna()
+
+
 def sector_medians(snapshots: pd.DataFrame, universe: pd.DataFrame) -> pd.DataFrame:
     """Median P/E, P/BV, dividend yield and ROE per sector, for peer comparison."""
     merged = universe.merge(snapshots, on="symbol")
