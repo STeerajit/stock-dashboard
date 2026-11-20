@@ -123,12 +123,15 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 
 ## 7. Continuous integration (GitHub Actions) — P1 · S
 
+> **Partly blocked** — the workflow has never run, because the repo is not on GitHub yet. See [BLOCKED.md](BLOCKED.md).
+
 **Why:** A green CI badge shows reviewers the project is tested. Depends on #1 (pinned deps) and a GitHub repo.
 
 **Acceptance criteria**
 - [x] `.github/workflows/ci.yml` runs on every push and pull request: install `requirements-dev.txt`, then `pytest`, then `ty check`.
-- [x] A deliberately failing test makes the workflow fail (checked once, then reverted).
-  *Checked locally with the same `scripts/check.sh` CI runs (exit 1 with the failing test, 0 after reverting). Not pushed, by request.*
+- [ ] A deliberately failing test makes the workflow fail (checked once, then reverted).
+  *Blocked until the repo is on GitHub. Locally, `scripts/check.sh` (the command CI runs) exits 1 with a
+  failing test and 0 after reverting, but the workflow itself has never run.*
 - [x] The README shows the CI status badge.
   *The badge URL assumes the GitHub repo will be `STeerajit/stock-dashboard`.*
 
