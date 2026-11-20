@@ -84,4 +84,4 @@ Plus two parts that were not in the original list: the **screener** (compare all
 ## Order of work
 
 1. **Goal A** — data base and portfolio: SET100 list, any symbol on the stock page, Portfolio page with its numbers (BACKLOG #19). **Done 2026-11-21.**
-2. **Goal B** — today overview page (#20), yield vs. own history (#14), links to the SET website + free float + XR (#21).
+2. **Goal B** — today overview page (#20), yield vs. own history (#14), links to the SET website + free float + XR (#21). **Done 2026-11-21.**

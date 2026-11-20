@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml)
 
-Personal dashboard for Thai stocks: a screener to compare the 100 largest (SET100), a detail page for
+Personal dashboard for Thai stocks: a Today page that lists which of your stocks deserve a look and why, a screener to compare the 100 largest (SET100), a detail page for
 any Thai stock covering trading activity, chart, financials, valuation vs. peers and dividends, and a
 portfolio page to track your holdings and watchlist — plus an honestly-evaluated price prediction model.
 
@@ -44,11 +44,12 @@ scripts/check.sh
 
 | Section | Shows | Question it answers |
 |---|---|---|
+| Today (start page) | Your portfolio and watchlist stocks that are near support, broke resistance, have RSI < 30 or > 70, an XD or earnings date within 14 days, or a P/E > 20% below their own median | Which of my stocks should I look at today? |
 | Screener | All SET100 (SET50 marked): price, 52-week position, value traded, P/E (vs. sector), P/BV, yield, ROE, D/E | Which stocks deserve a closer look? |
-| Trading | Price, volume vs. average, value traded, bid/offer, 52-week range, market cap | How much attention is the market paying? |
+| Trading | Price, volume vs. average, value traded, bid/offer, 52-week range, market cap, free float (Yahoo estimate) | How much attention is the market paying? |
 | Chart | Adjusted candlesticks, SMA20/50, support/resistance, volume, RSI | Where is the trend; where might price react? |
 | Financials | Up to 16 years: revenue & profit growth, margins, ROE, D/E, free cash flow | Is the business good and strong? |
-| Valuation | P/E, P/BV, yield vs. sector median; P/E and P/BV vs. their own 16-year median | Is the price expensive or cheap? |
+| Valuation | P/E, P/BV, yield vs. sector median; P/E, P/BV and dividend yield vs. their own history | Is the price expensive or cheap? |
 | Dividends & calendar | Dividend per share by year, XD date, earnings date | What events may move the price? |
 | Portfolio | Your holdings and watchlist: value, P&L, estimated dividend, yield on cost, allocation by sector | How is my money doing? |
 | Prediction | Random Forest next-day direction, time-based split, baseline & backtest | Can a simple model beat guessing? (Usually not.) |
@@ -74,8 +75,12 @@ scripts/check.sh
 - **Your portfolio:** `data/portfolio.csv`, written by the Portfolio page. It is in `.gitignore`, so your real
   holdings are never committed. Numbers ignore trading fees, VAT and dividend tax; the estimated dividend is
   last complete year's dividend per share × shares.
-- **Not included yet** (no free official API): investor-type flows, NVDR, short sales, top-10 shareholders,
-  Form 59, C-sign / cash balance / turnover list, SET news.
+- **Linked, not shown** (no free official API): the stock page's "See on the SET website" button links to the
+  stock's SET pages (trading signs, major shareholders, XD/XR, news) and to SET's all-stock pages for investor
+  types, NVDR, short sales, caution signs, cash balance / turnover list and Auto Pause. Form 59 is on the SEC
+  website and is not linked yet (see BLOCKED.md).
+- **Dividend yield history:** dividends per share (Yahoo, by XD year) ÷ the year's last close as traded, last 15
+  years (Yahoo returns nothing for longer periods of some stocks).
 
 ## Project structure
 

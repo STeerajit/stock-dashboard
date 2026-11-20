@@ -243,14 +243,17 @@ well-known scores show finance knowledge and set the project apart from generic 
 
 ## 14. Dividend yield history computed from reliable data — P2 · M
 
+> **Done** on 2026-11-21 (Goal B), except SET's own 2022–2023 figures for the spot check, which need a login
+> (see [BLOCKED.md](BLOCKED.md)). 2024–2025 are within 0.7 pp of SET's factsheet.
+
 **Why:** thaifin's yearly dividend yield was dropped because its units are inconsistent (PTT: 0.13 in 2010,
 3.1 in 2013). Yield vs. its own history is a key "cheap or expensive" signal for Thai dividend stocks.
 
 **Acceptance criteria**
-- [ ] Yearly yield = dividends per share with XD dates in year *Y* (Yahoo) ÷ **unadjusted** year-end close of *Y*.
-- [ ] Unit test with fake dividends and prices returns the expected yields.
+- [x] Yearly yield = dividends per share with XD dates in year *Y* (Yahoo) ÷ **unadjusted** year-end close of *Y*.
+- [x] Unit test with fake dividends and prices returns the expected yields.
 - [ ] Spot check: PTT and ADVANC yearly yields for 2022–2025 are within ±1 percentage point of SET's published figures (sources noted in the PR).
-- [ ] The Valuation tab's history selector offers "Dividend yield" again; the comparison text uses percentage points ("+2.1 pp"), not "% above".
+- [x] The Valuation tab's history selector offers "Dividend yield" again; the comparison text uses percentage points ("+2.1 pp"), not "% above".
 
 ---
 
@@ -331,26 +334,31 @@ may be outside SET50.
 
 ## 20. Today overview page — P1 · M
 
+> **Done** on 2026-11-21 (Goal B). Today is the app's start page. Checked in a real browser with 12 stocks.
+
 **Why:** One screen that says which held or watched stocks need a look today.
 
 **Acceptance criteria**
-- [ ] For every stock in the portfolio (watchlist included), flag it when any of these is true, and say which:
+- [x] For every stock in the portfolio (watchlist included), flag it when any of these is true, and say which:
   - price within 3% above support, or above resistance;
   - RSI < 30 or > 70;
   - XD date or earnings date within the next 14 days;
   - P/E more than 20% below its own historical median.
-- [ ] Each rule is unit-tested at its boundary (e.g. exactly 3%, RSI exactly 30).
-- [ ] With an empty portfolio the page explains how to add stocks.
+- [x] Each rule is unit-tested at its boundary (e.g. exactly 3%, RSI exactly 30).
+- [x] With an empty portfolio the page explains how to add stocks.
 
 ---
 
 ## 21. Links to the SET website, free float and XR dates — P2 · M
 
+> **Done** on 2026-11-21 (Goal B), except a Form 59 link (the SEC page refused the automated check; see
+> [BLOCKED.md](BLOCKED.md)). XR dates have no free feed, so they are covered by the "Rights & benefits" link.
+
 **Why:** Categories 5–8 of the spec have no free data source (#16). A link to the right SET page is the cheap
 way to cover them; free float and XR dates may be available for free.
 
 **Acceptance criteria**
-- [ ] The stock page has a "See on the SET website" section with links to the stock's SET pages
+- [x] The stock page has a "See on the SET website" section with links to the stock's SET pages
   (investor types / NVDR / short sales, major shareholders, Form 59, warning signs, news).
-- [ ] Free float % is shown if a free source has it; otherwise the link covers it.
-- [ ] XR dates are shown in the calendar if a free source has them; otherwise the link covers them.
+- [x] Free float % is shown if a free source has it; otherwise the link covers it.
+- [x] XR dates are shown in the calendar if a free source has them; otherwise the link covers them.
