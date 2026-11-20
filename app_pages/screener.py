@@ -1,12 +1,16 @@
+from datetime import date
+
 import streamlit as st
 
 from src import cache
 from src.fundamentals import SnapshotError, sector_medians
 from src.screener import selected_symbol
-from src.universe import SET50_PERIOD
+from src.universe import SET50_PERIOD, set50_expiry_warning
 
 st.title("SET50 screener")
 st.caption(f"SET50 constituents for {SET50_PERIOD}. Select a row to open the stock.")
+if expiry_warning := set50_expiry_warning(date.today()):
+    st.warning(expiry_warning, title="SET50 list may be out of date")
 
 universe = cache.set50()
 sectors = sorted(universe["sector"].unique())

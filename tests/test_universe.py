@@ -1,8 +1,18 @@
 """Backlog #3: data/set50.csv is a well-formed SET50 list."""
 
+from datetime import date
+
 import pandas as pd
 
-from src.universe import SET50_CSV, SET_SECTORS, load_set50, yahoo_symbol
+from src.universe import (
+    SET50_CSV,
+    SET50_PERIOD,
+    SET50_PERIOD_END,
+    SET_SECTORS,
+    load_set50,
+    set50_expiry_warning,
+    yahoo_symbol,
+)
 
 
 def test_exactly_50_unique_symbols():
@@ -33,3 +43,17 @@ def test_sectors_are_official_set_sector_names():
 
 def test_yahoo_symbol():
     assert yahoo_symbol("PTT") == "PTT.BK"
+
+
+def test_period_text_ends_on_the_period_end_date():
+    # The caption text and the date the expiry warning uses must not drift apart.
+    assert SET50_PERIOD.endswith(f"{SET50_PERIOD_END.day} {SET50_PERIOD_END:%b %Y}")
+
+
+def test_no_expiry_warning_on_the_last_day_of_the_period():
+    assert set50_expiry_warning(date(2026, 12, 31), period_end=date(2026, 12, 31)) is None
+
+
+def test_expiry_warning_from_the_day_after_the_period():
+    msg = set50_expiry_warning(date(2027, 1, 1), period_end=date(2026, 12, 31))
+    assert msg and "data/set50.csv" in msg

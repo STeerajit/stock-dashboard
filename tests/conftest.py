@@ -6,6 +6,7 @@ is caught immediately instead of silently passing on a machine with Wi-Fi.
 """
 
 import socket
+from datetime import date
 
 import pytest
 from curl_cffi import AsyncCurl, Curl
@@ -28,6 +29,15 @@ def _block_network(monkeypatch):
     # bypassing everything above, so block the points where a curl request is started.
     monkeypatch.setattr(Curl, "perform", guard)
     monkeypatch.setattr(AsyncCurl, "add_handle", guard)
+
+
+@pytest.fixture(autouse=True)
+def _set50_list_not_expired(monkeypatch):
+    """Keep page tests independent of today's date: the SET50 list counts as current.
+    Tests about the expiry warning move SET50_PERIOD_END into the past themselves."""
+    import src.universe
+
+    monkeypatch.setattr(src.universe, "SET50_PERIOD_END", date.max)
 
 
 @pytest.fixture

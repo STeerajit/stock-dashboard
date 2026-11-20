@@ -1,3 +1,5 @@
+from datetime import date
+
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -6,6 +8,7 @@ from src import cache
 from src.charts import price_chart
 from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for
 from src.indicators import support_resistance
+from src.universe import set50_expiry_warning
 
 
 def baht(x: float | None) -> str:
@@ -33,6 +36,8 @@ symbol = st.selectbox("Stock", universe["symbol"].tolist(), key="symbol", bind="
 row = universe.set_index("symbol").loc[symbol]
 st.title(f"{symbol} · {row['name']}")
 st.caption(row["sector"])
+if expiry_warning := set50_expiry_warning(date.today()):
+    st.warning(expiry_warning, title="SET50 list may be out of date")
 
 snapshot_error: SnapshotError | None = None
 try:

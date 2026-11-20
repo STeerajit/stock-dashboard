@@ -51,7 +51,8 @@ scripts/check.sh
   Update on August 3, 2026"), from the "July 1, 2026 to December 31, 2026 – between the periodic review update" file on
   https://www.set.or.th/en/market/information/securities-list/constituents-list-set50-set100 (login required).
   All 50 symbols and sectors match.
-  SET reviews the index every 6 months — update the CSV in January and July.
+  SET reviews the index every 6 months — update the CSV in January and July, together with `SET50_PERIOD` and
+  `SET50_PERIOD_END` in `src/universe.py`. After `SET50_PERIOD_END`, both pages warn that the list may be out of date.
 - **Not included yet** (no free official API): investor-type flows, NVDR, short sales, top-10 shareholders,
   Form 59, C-sign / cash balance / turnover list, SET news.
 

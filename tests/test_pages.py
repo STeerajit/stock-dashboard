@@ -133,3 +133,21 @@ def test_valuation_tab_with_no_history_shows_info(fake_cache):
     at = open_stock("PTT", tab_label("Valuation"))
     assert not at.exception
     assert any("not enough" in i.value.lower() for i in at.info)
+
+
+@pytest.mark.parametrize("page", ["screener", "stock"])
+def test_both_pages_warn_only_when_the_set50_list_has_expired(fake_cache, monkeypatch, page):
+    import datetime
+
+    import src.universe
+
+    def expiry_warnings():
+        at = AppTest.from_file(ROOT / f"app_pages/{page}.py", default_timeout=60)
+        at.query_params["symbol"] = "PTT"
+        at.run()
+        assert not at.exception
+        return [w for w in at.warning if "set50.csv" in w.value]
+
+    assert expiry_warnings() == []  # the fixture keeps the list current
+    monkeypatch.setattr(src.universe, "SET50_PERIOD_END", datetime.date(2000, 1, 1))
+    assert len(expiry_warnings()) == 1
