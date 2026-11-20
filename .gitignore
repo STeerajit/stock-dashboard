@@ -21,3 +21,7 @@ stocks.log
 
 # Your real holdings (Portfolio page): private, never commit
 data/portfolio.csv
+
+# Local data store written by scripts/update_data.py (rebuildable, large)
+data/market.duckdb
+data/market.duckdb.wal

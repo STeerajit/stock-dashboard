@@ -39,8 +39,8 @@ def test_fundamentals_docstring_names_both_sources():
 
 def test_sidebar_caption_names_both_sources():
     text = (ROOT / "app.py").read_text()
-    caption = re.search(r"st\.caption\((.*?)\)\n", text, re.S).group(1)
-    assert "Yahoo" in caption and "thaifin" in caption
+    captions = re.findall(r"st\.caption\((.*?)\)\n", text, re.S)
+    assert any("Yahoo" in c and "thaifin" in c for c in captions)
 
 
 def test_screener_de_help_states_yahoo_definition():

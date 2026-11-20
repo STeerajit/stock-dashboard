@@ -32,6 +32,15 @@ def _block_network(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_local_store(monkeypatch, tmp_path):
+    """Tests never read the real data/market.duckdb: by default there is no store (data comes from fakes).
+    Store tests point STORE_PATH at a file they fill themselves."""
+    import src.store
+
+    monkeypatch.setattr(src.store, "STORE_PATH", tmp_path / "no-store.duckdb")
+
+
+@pytest.fixture(autouse=True)
 def _set100_list_not_expired(monkeypatch):
     """Keep page tests independent of today's date: the SET100 list counts as current.
     Tests about the expiry warning move SET100_PERIOD_END into the past themselves."""

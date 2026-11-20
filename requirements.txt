@@ -1,5 +1,6 @@
 # Runtime dependencies (what the app needs to run). Pinned so installs are reproducible.
 # Dev/test tools live in requirements-dev.txt.
+duckdb==1.5.6
 numpy==2.4.6
 pandas==3.1.1
 plotly==7.1.0

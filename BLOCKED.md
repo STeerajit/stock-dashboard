@@ -33,3 +33,12 @@ the year-end price used.
 **What you need to do** (optional): log in to set.or.th (or open SETSMART if you have it), find PTT and ADVANC
 dividend yield at year-end 2022 and 2023, and check they are within ±1 pp of the app (PTT 6.32%, 4.20%;
 ADVANC 3.94%, 3.80%). Then tick the spot-check box in BACKLOG.md #14.
+
+## Backlog #10 — the scheduled "Update data" GitHub job has never run
+
+**Status:** `.github/workflows/update-data.yml` is written (weekdays 18:30 Bangkok + manual run, uploads
+`market.duckdb` as an artifact), but the repo is not on GitHub, so it has never run. The same script works
+locally: `scripts/update_data.py` updated 99 of 100 stocks in 61 s on 2026-11-21.
+
+**What you need to do** (after the repo is on GitHub): open **Actions → Update data → Run workflow** once and
+check it ends green with a `market-duckdb` artifact. Then tick the last box in BACKLOG.md #10.

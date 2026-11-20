@@ -25,3 +25,10 @@ def test_check_script_runs_pytest_and_ty_and_fails_fast():
     text = CHECK.read_text()
     assert "set -euo pipefail" in text  # any failing step makes the whole run fail
     assert "-m pytest" in text and "ty@" in text and " check " in text
+
+
+def test_data_update_runs_on_weekdays_after_the_close_and_on_demand():
+    text = (ROOT / ".github/workflows/update-data.yml").read_text()
+    assert 'cron: "30 11 * * 1-5"' in text  # 18:30 Bangkok
+    assert "workflow_dispatch:" in text
+    assert "python scripts/update_data.py" in text

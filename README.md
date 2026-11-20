@@ -31,6 +31,15 @@ It keeps running after you close the terminal; its output goes to `stocks.log`. 
 `alias stocks='<path to repo>/scripts/stocks.sh'` to `~/.zshrc` to type just `stocks`.
 To run it in the foreground instead: `.venv/bin/streamlit run app.py`.
 
+For speed and offline use, save a local copy of all SET100 data (about 1 minute; again whenever you want
+fresh numbers, e.g. each evening after the close):
+
+```bash
+.venv/bin/python scripts/update_data.py   # or press "Update data" in the app's sidebar
+```
+
+The sidebar then shows "Data as of …". Without a local copy, the app fetches everything live.
+
 Share a stock directly with `http://localhost:8501/stock?symbol=PTT` (any SET symbol works, e.g. `?symbol=MAJOR`).
 
 Run all checks — tests (offline, including a data-leakage check) and the type checker.
@@ -73,6 +82,10 @@ scripts/check.sh
   and July, together with `SET100_PERIOD` and `SET100_PERIOD_END` in `src/universe.py`. After
   `SET100_PERIOD_END`, both pages warn that the list may be out of date.
   The stock page also opens stocks outside SET100 (`?symbol=MAJOR`); their sector shows as "Outside SET100".
+- **Local store:** `data/market.duckdb` (gitignored), written by `scripts/update_data.py`: prices as traded,
+  dividends, the latest snapshot per day and yearly financials. Adjusted prices are computed from prices and
+  dividends when read, so each update downloads only the new days. An update that fails for more than 20% of
+  the stocks, or sees a zero or negative price, changes nothing.
 - **Your portfolio:** `data/portfolio.csv`, written by the Portfolio page. It is in `.gitignore`, so your real
   holdings are never committed. Numbers ignore trading fees, VAT and dividend tax; the estimated dividend is
   last complete year's dividend per share × shares.
@@ -104,10 +117,12 @@ src/today.py                   # rules that flag a stock on the Today page
 src/set_links.py               # links to the SET website + free float
 src/valuation.py               # fair value: DDM, DCF, sensitivity table
 src/scoring.py                 # Piotroski F-score, Magic Formula rank
+src/store.py                   # local DuckDB data store: safe incremental update, reads
 src/cache.py                   # Streamlit caching of all loaders
 data/set100.csv                # SET100 constituents (with an in_set50 flag)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
 scripts/stocks.sh              # start/stop the app in the background (macOS)
+scripts/update_data.py         # download today's SET100 data into data/market.duckdb
 .github/workflows/ci.yml       # GitHub Actions CI
 tests/conftest.py              # blocks network access; fake Yahoo fixture
 tests/fakes.py                 # offline fakes for yfinance
@@ -122,6 +137,7 @@ tests/test_today.py            # Today rules at their boundaries
 tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank
+tests/test_store.py            # store: idempotent, incremental, safe; offline app
 tests/test_set_links.py        # SET links and free float
 tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies

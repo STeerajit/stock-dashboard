@@ -1,0 +1,32 @@
+name: Update data
+
+# Builds data/market.duckdb after the SET closes and keeps it as a downloadable artifact for 7 days.
+# The app on your Mac uses its own copy: press "Update data" in the sidebar or run scripts/update_data.py.
+on:
+  schedule:
+    - cron: "30 11 * * 1-5"  # 18:30 Bangkok (UTC+7), Monday-Friday
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Download today's data (fails, without saving, if more than 20% of stocks fail)
+        run: python scripts/update_data.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: market-duckdb
+          path: data/market.duckdb
+          retention-days: 7

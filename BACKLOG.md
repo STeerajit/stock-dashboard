@@ -176,17 +176,22 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 
 ## 10. Data pipeline: daily data store (DuckDB) — P2 · L
 
+> **Done** on 2026-11-21, except running the scheduled GitHub job, which needs the repo on GitHub (like #7).
+> First real update: 99 of 100 stocks in 61 s (8 in parallel, one retry each). Screener first load from the
+> store: 2.5 s in a real browser (10 s live). Adjusted prices are computed from stored raw prices and dividends,
+> because fetching only new days would leave stored adjusted prices wrong after each new dividend.
+
 **Why:** Every page view downloads live from Yahoo and thaifin. This makes the app slow on first load and
 fragile when a source is down (#2 only softens that). We also keep no history of our own, e.g. a daily P/E series.
 A small daily pipeline fixes all three and shows data-engineering skill.
 
 **Acceptance criteria**
-- [ ] `scripts/update_data.py` fetches, for every SET50 symbol: daily prices (adjusted **and** unadjusted close), the trading/valuation snapshot, yearly financials and dividends. It writes them to `data/market.duckdb` in the tables `prices`, `snapshots`, `financials`, `dividends`.
-- [ ] Idempotent: running it twice on the same day leaves the same row counts (unique keys like `(date, symbol)`). Unit-tested on a temporary database.
-- [ ] Incremental: the second run asks only for price days after the latest stored date. A unit test checks the requested date range with the fetchers mocked.
-- [ ] Safety: if more than 20% of symbols fail, or any stored price is ≤ 0, the script exits non-zero and leaves the existing store untouched.
-- [ ] The app reads through `src/cache.py` from the store, not the network. With Wi-Fi off, both pages still render the last stored data and show "Data as of <date>".
-- [ ] The screener's first load from the store takes under 3 seconds.
+- [x] `scripts/update_data.py` fetches, for every SET50 symbol: daily prices (adjusted **and** unadjusted close), the trading/valuation snapshot, yearly financials and dividends. It writes them to `data/market.duckdb` in the tables `prices`, `snapshots`, `financials`, `dividends`.
+- [x] Idempotent: running it twice on the same day leaves the same row counts (unique keys like `(date, symbol)`). Unit-tested on a temporary database.
+- [x] Incremental: the second run asks only for price days after the latest stored date. A unit test checks the requested date range with the fetchers mocked.
+- [x] Safety: if more than 20% of symbols fail, or any stored price is ≤ 0, the script exits non-zero and leaves the existing store untouched.
+- [x] The app reads through `src/cache.py` from the store, not the network. With Wi-Fi off, both pages still render the last stored data and show "Data as of <date>".
+- [x] The screener's first load from the store takes under 3 seconds.
 - [ ] A scheduled GitHub Actions job runs the script on weekdays after market close (18:30 Bangkok = 11:30 UTC) and can also be started manually. Depends on #7.
 
 ---
