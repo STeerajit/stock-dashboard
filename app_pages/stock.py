@@ -1,4 +1,5 @@
 from datetime import date
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ from src import cache
 from src.charts import price_chart
 from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for
 from src.indicators import support_resistance
-from src.universe import set50_expiry_warning
+from src.universe import OUTSIDE_SET100, describe, set100_expiry_warning
 
 
 def baht(x: float | None) -> str:
@@ -29,21 +30,29 @@ def num(x: float | None, digits: int = 2) -> str:
     return "–" if x is None or pd.isna(x) else f"{x:,.{digits}f}"
 
 
-universe = cache.set50()
+universe = cache.set100()
 # Options are plain symbols so the URL can be shared as ?symbol=PTT (a format_func
 # would change the option labels and the URL value would no longer match).
-symbol = st.selectbox("Stock", universe["symbol"].tolist(), key="symbol", bind="query-params")
-row = universe.set_index("symbol").loc[symbol]
-st.title(f"{symbol} · {row['name']}")
-st.caption(row["sector"])
-if expiry_warning := set50_expiry_warning(date.today()):
-    st.warning(expiry_warning, title="SET50 list may be out of date")
+# accept_new_options: any Thai stock can be typed in (or put in the URL), not only SET100.
+symbol = st.selectbox("Stock", universe["symbol"].tolist(), key="symbol", bind="query-params",
+                      accept_new_options=True, help="Pick a SET100 stock, or type any SET symbol and press Enter.")
+symbol = symbol.strip().upper()
+name, sector = describe(universe, symbol)
+in_set100 = sector != OUTSIDE_SET100
+st.title(f"{symbol} · {name}")
+st.caption(sector)
+if expiry_warning := set100_expiry_warning(date.today()):
+    st.warning(expiry_warning, title="SET100 list may be out of date")
 
 snapshot_error: SnapshotError | None = None
 try:
-    snaps = cache.snapshots()
+    if in_set100:
+        snaps = cache.snapshots()
+        medians = cast(pd.Series, sector_medians(snaps, universe).loc[sector])  # sectors are unique
+    else:
+        snaps = cache.snapshot(symbol)
+        medians = pd.Series(np.nan, index=["pe", "pbv", "div_yield", "roe"])  # no SET peers to compare with
     snap = snapshot_for(snaps, symbol)
-    medians = sector_medians(snaps, universe).loc[row["sector"]]
 except SnapshotError as e:
     snapshot_error = e  # `snap` and `medians` are then unset: tabs that use them call need_snapshot() first
 
@@ -140,7 +149,7 @@ if t_fin.open:
             st.subheader("Free cash flow")
             st.bar_chart((fin["Free cash flow"] / 1e9).rename(index=str), y_label="THB billion",
                          alt=f"{symbol} yearly free cash flow")
-            if row["sector"] in ("Banking", "Finance & Securities", "Insurance"):
+            if sector in ("Banking", "Finance & Securities", "Insurance"):
                 st.caption("For banks, lenders and insurers, lending and investing are the business itself, "
                            "so free cash flow swings widely and is not a useful health measure.")
 
@@ -154,7 +163,8 @@ if t_fin.open:
 if t_val.open:
     with t_val:
         need_snapshot()
-        st.caption(f"Compared with the median of SET50 stocks in {row['sector']}.")
+        st.caption(f"Compared with the median of SET100 stocks in {sector}." if in_set100 else
+                   "Stocks outside SET100 have no sector comparison.")
 
         def vs(value, median):
             return f"{value / median - 1:+.0%} vs sector" if pd.notna(value) and pd.notna(median) and median else None

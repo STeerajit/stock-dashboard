@@ -49,7 +49,7 @@ def test_outage_is_not_cached(fake_yahoo):
         cache.snapshots()
     fake_yahoo.down = False  # Yahoo is back: the very next call must fetch again, not reuse the failure
     snaps = cache.snapshots()
-    assert snaps["price"].notna().all() and len(snaps) == 50
+    assert snaps["price"].notna().all() and len(snaps) == 100
 
 
 def test_screener_shows_error_not_traceback_when_yahoo_is_down(fake_yahoo):
@@ -60,12 +60,12 @@ def test_screener_shows_error_not_traceback_when_yahoo_is_down(fake_yahoo):
     assert len(at.dataframe) == 0
 
 
-def test_screener_renders_49_rows_when_one_symbol_fails(fake_yahoo):
+def test_screener_renders_99_rows_when_one_symbol_fails(fake_yahoo):
     fake_yahoo.failing = {"PTT"}
     at = AppTest.from_file(ROOT / "app_pages/screener.py", default_timeout=30).run()
     assert not at.exception and not at.error
     table = at.dataframe[0].value
-    assert len(table) == 50 and table["price"].notna().sum() == 49
+    assert len(table) == 100 and table["price"].notna().sum() == 99
 
 
 def test_stock_page_trading_tab_warns_when_yahoo_is_down(fake_yahoo):

@@ -1,4 +1,4 @@
-"""The list of stocks the app covers: SET50 constituents.
+"""The list of stocks the app covers: SET100 constituents (with a flag for SET50).
 
 SET reviews the index every 6 months (effective 1 Jan and 1 Jul), so the list
 lives in a CSV that is easy to update, not in code.
@@ -9,24 +9,36 @@ from pathlib import Path
 
 import pandas as pd
 
-SET50_CSV = Path(__file__).resolve().parent.parent / "data" / "set50.csv"
-SET50_PERIOD = "1 Jul – 31 Dec 2026"
-SET50_PERIOD_END = date(2026, 12, 31)  # last day the CSV's list is valid; update together with SET50_PERIOD
+SET100_CSV = Path(__file__).resolve().parent.parent / "data" / "set100.csv"
+SET100_PERIOD = "1 Jul – 31 Dec 2026"
+SET100_PERIOD_END = date(2026, 12, 31)  # last day the CSV's list is valid; update together with SET100_PERIOD
 
-# The SET sector names (exactly as SET prints them) that SET50 stocks belong to today.
+# Sector shown for a stock that is not in the list. Yahoo's sector names differ from SET's, so they aren't mixed in.
+OUTSIDE_SET100 = "Outside SET100"
+
+# The SET sector names (exactly as SET prints them) that SET100 stocks belong to today.
 # Deliberately only the sectors in use, so a typo in the CSV fails the test. When an index
 # review brings in a stock from a new sector, check SET's spelling and add the name here.
 SET_SECTORS = frozenset({
-    "Banking", "Commerce", "Construction Materials", "Electronic Components", "Energy & Utilities",
-    "Finance & Securities", "Food & Beverage", "Health Care Services", "Information & Communication Technology",
-    "Insurance", "Packaging", "Petrochemicals & Chemicals", "Property Development", "Tourism & Leisure",
-    "Transportation & Logistics",
+    "Agribusiness", "Banking", "Commerce", "Construction Materials", "Construction Services",
+    "Electronic Components", "Energy & Utilities", "Fashion", "Finance & Securities", "Food & Beverage",
+    "Health Care Services", "Information & Communication Technology", "Insurance", "Media & Publishing",
+    "Packaging", "Personal Products & Pharmaceuticals", "Petrochemicals & Chemicals", "Property Development",
+    "Tourism & Leisure", "Transportation & Logistics",
 })
 
 
-def load_set50() -> pd.DataFrame:
-    """Columns: symbol, name, sector (sector names as used by SET)."""
-    return pd.read_csv(SET50_CSV)
+def load_set100() -> pd.DataFrame:
+    """Columns: symbol, name, sector (sector names as used by SET), in_set50 (bool)."""
+    return pd.read_csv(SET100_CSV)
+
+
+def describe(universe: pd.DataFrame, symbol: str) -> tuple[str, str]:
+    """(name, sector) of any symbol. A symbol outside the list gets its own symbol as name and OUTSIDE_SET100."""
+    match = universe[universe["symbol"] == symbol]
+    if match.empty:
+        return symbol, OUTSIDE_SET100
+    return str(match["name"].iloc[0]), str(match["sector"].iloc[0])
 
 
 def yahoo_symbol(symbol: str) -> str:
@@ -34,15 +46,15 @@ def yahoo_symbol(symbol: str) -> str:
     return f"{symbol}.BK"
 
 
-def set50_expiry_warning(today: date, period_end: date | None = None) -> str | None:
-    """A warning to show users once the SET50 list is past its period (None while it is current).
+def set100_expiry_warning(today: date, period_end: date | None = None) -> str | None:
+    """A warning to show users once the SET100 list is past its period (None while it is current).
 
-    `period_end` defaults to SET50_PERIOD_END.
+    `period_end` defaults to SET100_PERIOD_END.
     """
-    end = period_end or SET50_PERIOD_END
+    end = period_end or SET100_PERIOD_END
     if today <= end:
         return None
     return (
-        f"This SET50 list was valid until {end:%-d %b %Y}. SET has likely published a new list, "
-        "so some stocks may be missing or no longer in SET50. Update data/set50.csv (see README)."
+        f"This SET100 list was valid until {end:%-d %b %Y}. SET has likely published a new list, "
+        "so some stocks may be missing or no longer in SET100. Update data/set100.csv (see README)."
     )

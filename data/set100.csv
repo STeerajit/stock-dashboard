@@ -1,0 +1,101 @@
+symbol,name,sector,in_set50
+AAV,ASIA AVIATION,Transportation & Logistics,False
+ADVANC,Advanced Info Service,Information & Communication Technology,True
+AEONTS,AEON THANA SINSAP (THAILAND),Finance & Securities,False
+AMATA,AMATA CORPORATION,Property Development,False
+AOT,Airports of Thailand,Transportation & Logistics,True
+AP,AP (THAILAND),Property Development,False
+AURA,Aurora Design,Fashion,False
+AWC,Asset World Corp,Property Development,True
+BA,BANGKOK AIRWAYS,Transportation & Logistics,False
+BAM,BANGKOK COMMERCIAL ASSET MANAGEMENT,Finance & Securities,False
+BANPU,Banpu,Energy & Utilities,True
+BBL,Bangkok Bank,Banking,True
+BCH,BANGKOK CHAIN HOSPITAL,Health Care Services,False
+BCP,Bangchak Corporation,Energy & Utilities,True
+BCPG,BCPG,Energy & Utilities,False
+BDMS,Bangkok Dusit Medical Services,Health Care Services,True
+BEM,Bangkok Expressway and Metro,Transportation & Logistics,True
+BGRIM,B.GRIMM POWER,Energy & Utilities,False
+BH,Bumrungrad Hospital,Health Care Services,True
+BJC,Berli Jucker,Commerce,True
+BLA,BANGKOK LIFE ASSURANCE,Insurance,False
+BTG,BETAGRO,Food & Beverage,False
+BTS,BTS GROUP HOLDINGS,Transportation & Logistics,False
+CBG,CARABAO GROUP,Food & Beverage,False
+CCET,Cal-Comp Electronics (Thailand),Electronic Components,True
+CENTEL,CENTRAL PLAZA HOTEL,Tourism & Leisure,False
+CHG,CHULARAT HOSPITAL,Health Care Services,False
+CK,CH. KARNCHANG,Construction Services,False
+COM7,Com7,Commerce,True
+CPALL,CP All,Commerce,True
+CPF,Charoen Pokphand Foods,Food & Beverage,True
+CPN,Central Pattana,Property Development,True
+CRC,Central Retail Corporation,Commerce,True
+DELTA,Delta Electronics (Thailand),Electronic Components,True
+DOHOME,DOHOME,Commerce,False
+EA,ENERGY ABSOLUTE,Energy & Utilities,False
+EGCO,Electricity Generating,Energy & Utilities,True
+ERW,THE ERAWAN GROUP,Tourism & Leisure,False
+GFPT,GFPT,Agribusiness,False
+GLOBAL,SIAM GLOBAL HOUSE,Commerce,False
+GPSC,Global Power Synergy,Energy & Utilities,True
+GST,GULF SPACE TECHNOLOGY,Information & Communication Technology,False
+GULF,Gulf Development,Energy & Utilities,True
+GUNKUL,GUNKUL ENGINEERING,Energy & Utilities,False
+HANA,HANA MICROELECTRONICS,Electronic Components,False
+HMPRO,Home Product Center,Commerce,True
+ICHI,ICHITAN GROUP,Food & Beverage,False
+IRPC,IRPC,Energy & Utilities,False
+IVL,Indorama Ventures,Petrochemicals & Chemicals,True
+JMART,JAYMART GROUP HOLDINGS,Information & Communication Technology,False
+JMT,JMT NETWORK SERVICES,Finance & Securities,False
+KBANK,Kasikornbank,Banking,True
+KCE,KCE ELECTRONICS,Electronic Components,False
+KKP,Kiatnakin Phatra Bank,Banking,True
+KTB,Krung Thai Bank,Banking,True
+KTC,Krungthai Card,Finance & Securities,True
+LH,Land and Houses,Property Development,True
+M,MK RESTAURANT GROUP,Food & Beverage,False
+MEGA,MEGA LIFESCIENCES,Commerce,False
+MINT,Minor International,Tourism & Leisure,True
+MOSHI,Moshi Moshi Retail Corporation,Commerce,False
+MRDIYT,MR. D.I.Y. Holding (Thailand),Commerce,True
+MTC,Muangthai Capital,Finance & Securities,True
+OR,PTT Oil and Retail Business,Energy & Utilities,True
+OSP,Osotspa,Food & Beverage,True
+PLANB,PLAN B MEDIA,Media & Publishing,False
+PR9,PRARAM 9 HOSPITAL,Health Care Services,False
+PRM,PRIMA MARINE,Transportation & Logistics,False
+PTG,PTG ENERGY,Energy & Utilities,False
+PTT,PTT,Energy & Utilities,True
+PTTEP,PTT Exploration and Production,Energy & Utilities,True
+PTTGC,PTT Global Chemical,Petrochemicals & Chemicals,True
+QH,QUALITY HOUSES,Property Development,False
+RATCH,Ratch Group,Energy & Utilities,True
+RCL,REGIONAL CONTAINER LINES,Transportation & Logistics,False
+SAWAD,SRISAWAD CORPORATION,Finance & Securities,False
+SCB,SCB X,Banking,True
+SCC,The Siam Cement,Construction Materials,True
+SCGP,SCG Packaging,Packaging,True
+SIRI,SANSIRI,Property Development,False
+SPALI,SUPALAI,Property Development,False
+SPRC,STAR PETROLEUM REFINING,Energy & Utilities,False
+STA,SRI TRANG AGRO-INDUSTRY,Agribusiness,False
+STECON,STECON GROUP,Construction Services,False
+STGT,SRI TRANG GLOVES (THAILAND),Personal Products & Pharmaceuticals,False
+TASCO,TIPCO ASPHALT,Construction Materials,False
+TCAP,Thanachart Capital,Banking,True
+TFG,Thaifoods Group,Food & Beverage,True
+THAI,Thai Airways International,Transportation & Logistics,True
+TIDLOR,Tidlor Holdings,Finance & Securities,True
+TISCO,Tisco Financial Group,Banking,True
+TLI,Thai Life Insurance,Insurance,True
+TOA,TOA PAINT (THAILAND),Construction Materials,False
+TOP,Thai Oil,Energy & Utilities,True
+TRUE,True Corporation,Information & Communication Technology,True
+TTB,TMBThanachart Bank,Banking,True
+TU,Thai Union Group,Food & Beverage,True
+VGI,VGI,Media & Publishing,False
+WHA,WHA Corporation,Property Development,True
+WHAUP,WHA UTILITIES AND POWER,Energy & Utilities,False

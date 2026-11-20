@@ -2,13 +2,13 @@
 
 import streamlit as st
 
-st.set_page_config(page_title="SET50 dashboard", page_icon=":material/candlestick_chart:", layout="wide")
+st.set_page_config(page_title="SET100 dashboard", page_icon=":material/candlestick_chart:", layout="wide")
 
 page = st.navigation(
     [
         st.Page(
-            "app_pages/screener.py", title="SET50 screener", icon=":material/table_chart:", default=True,
-            help="All SET50 stocks in one table: price, valuation and quality. Sort, filter by sector, "
+            "app_pages/screener.py", title="SET100 screener", icon=":material/table_chart:", default=True,
+            help="All SET100 stocks in one table: price, valuation and quality. Sort, filter by sector, "
                  "and open any stock for details.",
         ),
         st.Page(

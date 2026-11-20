@@ -24,14 +24,16 @@ UNIVERSE = pd.DataFrame({
     "name": ["PTT", "PTT Exploration", "Kasikornbank", "SCB X", "CP All", "Airports of Thailand"],
     "sector": ["Energy & Utilities", "Energy & Utilities", "Banking", "Banking", "Commerce",
                "Transportation & Logistics"],
+    "in_set50": [True, True, True, True, True, False],
 })
 
 
-def snapshots() -> pd.DataFrame:
+def snapshots(symbols: list[str] | None = None) -> pd.DataFrame:
     """Shaped exactly like the real loader: indexing by SNAPSHOT_COLUMNS raises if a column is missing."""
-    n = len(UNIVERSE)
+    symbols = UNIVERSE["symbol"].tolist() if symbols is None else symbols
+    n = len(symbols)
     return pd.DataFrame({
-        "symbol": UNIVERSE["symbol"], "price": np.linspace(30, 80, n), "change_pct": 0.01,
+        "symbol": symbols, "price": np.linspace(30, 80, n), "change_pct": 0.01,
         "volume": 2e6, "avg_volume": 1e6, "value_traded": 1e8, "bid": 29.9, "ask": 30.1,
         "high_52w": 90.0, "low_52w": 20.0, "pos_52w": 0.5, "market_cap": np.linspace(1e12, 1e11, n),
         "pe": np.linspace(8, 20, n), "pbv": 1.2, "div_yield": 0.05, "roe": 0.1, "de": 0.8, "net_margin": 0.08,
@@ -56,9 +58,10 @@ PRICES = add_indicators(fake_prices(n=700))
 @pytest.fixture
 def fake_cache(monkeypatch):
     """Replace every cache loader the pages call. Returns a dict to tweak per test."""
-    state = {"financials": financials()}
-    monkeypatch.setattr(cache, "set50", lambda: UNIVERSE.copy())
+    state = {"financials": financials(), "snapshot": snapshots}
+    monkeypatch.setattr(cache, "set100", lambda: UNIVERSE.copy())
     monkeypatch.setattr(cache, "snapshots", snapshots)
+    monkeypatch.setattr(cache, "snapshot", lambda symbol: state["snapshot"]([symbol]))
     monkeypatch.setattr(cache, "prices", lambda symbol, period="5y": PRICES)
     monkeypatch.setattr(cache, "financials", lambda symbol: state["financials"])
     monkeypatch.setattr(cache, "dividends", lambda symbol: pd.Series([1.0, 1.2, 1.4], index=[2023, 2024, 2025]))
@@ -136,7 +139,7 @@ def test_valuation_tab_with_no_history_shows_info(fake_cache):
 
 
 @pytest.mark.parametrize("page", ["screener", "stock"])
-def test_both_pages_warn_only_when_the_set50_list_has_expired(fake_cache, monkeypatch, page):
+def test_both_pages_warn_only_when_the_set100_list_has_expired(fake_cache, monkeypatch, page):
     import datetime
 
     import src.universe
@@ -146,8 +149,35 @@ def test_both_pages_warn_only_when_the_set50_list_has_expired(fake_cache, monkey
         at.query_params["symbol"] = "PTT"
         at.run()
         assert not at.exception
-        return [w for w in at.warning if "set50.csv" in w.value]
+        return [w for w in at.warning if "set100.csv" in w.value]
 
     assert expiry_warnings() == []  # the fixture keeps the list current
-    monkeypatch.setattr(src.universe, "SET50_PERIOD_END", datetime.date(2000, 1, 1))
+    monkeypatch.setattr(src.universe, "SET100_PERIOD_END", datetime.date(2000, 1, 1))
     assert len(expiry_warnings()) == 1
+
+
+def test_stock_outside_set100_opens_on_every_tab(fake_cache):
+    for label in stock_tab_labels():
+        at = open_stock("MAJOR", label)
+        assert not at.exception, (label, at.exception)
+        assert at.title[0].value == "MAJOR · MAJOR"
+        assert at.caption[0].value == "Outside SET100"
+        assert not at.error and not at.warning, label
+
+
+def test_symbol_typed_in_lowercase_is_upper_cased(fake_cache):
+    at = open_stock("major")
+    assert not at.exception
+    assert at.title[0].value == "MAJOR · MAJOR"
+
+
+def test_stock_unknown_to_yahoo_warns_instead_of_failing(fake_cache):
+    def no_data(symbols):
+        df = snapshots(symbols)
+        df["price"] = np.nan  # what get_snapshots returns when Yahoo has nothing for the symbol
+        return df
+
+    fake_cache["snapshot"] = no_data
+    at = open_stock("NOSUCH", tab_label("Trading"))
+    assert not at.exception and not at.error
+    assert any("NOSUCH" in w.value for w in at.warning)

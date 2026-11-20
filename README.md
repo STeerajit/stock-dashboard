@@ -60,13 +60,16 @@ scripts/check.sh
   - thaifin's D/E is *total liabilities* / equity; Yahoo's is *interest-bearing debt* / equity.
   - thaifin's yearly dividend yield is not used: its units are inconsistent across years.
   - Recently listed stocks (e.g. MRDIYT) have only 1–2 years of history.
-- **SET50 list:** `data/set50.csv`, for 1 Jul – 31 Dec 2026. Checked on 2026-11-21 against SET's official
-  `SET50_SET100_H2_2026_revise.pdf` ("SET50 / SET50FF Index Constituents … July 1 - December 31, 2026,
-  Update on August 3, 2026"), from the "July 1, 2026 to December 31, 2026 – between the periodic review update" file on
+- **SET100 list:** `data/set100.csv`, for 1 Jul – 31 Dec 2026, built on 2026-11-21 from SET's official
+  `SET50_SET100_H2_2026_revise.pdf` ("SET100 / SET100FF Index Constituents … July 1 - December 31, 2026,
+  Update on August 3, 2026", pages 3–5; SET50 on pages 1–2 sets the `in_set50` column), from the
+  "July 1, 2026 to December 31, 2026 – between the periodic review update" file on
   https://www.set.or.th/en/market/information/securities-list/constituents-list-set50-set100 (login required).
-  All 50 symbols and sectors match.
-  SET reviews the index every 6 months — update the CSV in January and July, together with `SET50_PERIOD` and
-  `SET50_PERIOD_END` in `src/universe.py`. After `SET50_PERIOD_END`, both pages warn that the list may be out of date.
+  Symbols and sectors are as printed; names of non-SET50 stocks are the PDF's, minus "Public Company Limited".
+  SET reviews the index every 6 months — update the CSV (and the lists in `tests/test_universe.py`) in January
+  and July, together with `SET100_PERIOD` and `SET100_PERIOD_END` in `src/universe.py`. After
+  `SET100_PERIOD_END`, both pages warn that the list may be out of date.
+  The stock page also opens stocks outside SET100 (`?symbol=MAJOR`); their sector shows as "Outside SET100".
 - **Not included yet** (no free official API): investor-type flows, NVDR, short sales, top-10 shareholders,
   Form 59, C-sign / cash balance / turnover list, SET news.
 
@@ -74,10 +77,10 @@ scripts/check.sh
 
 ```
 app.py                         # entry point + navigation
-app_pages/screener.py          # SET50 table
+app_pages/screener.py          # SET100 table
 app_pages/stock.py             # one-stock detail page (6 tabs)
 src/__init__.py
-src/universe.py                # SET50 list + the SET sector names in use
+src/universe.py                # SET100 list + the SET sector names in use
 src/data.py                    # daily prices
 src/fundamentals.py            # snapshot, financials, dividends, P/E history, sector medians
 src/indicators.py              # SMA, RSI, volatility, support/resistance
@@ -85,7 +88,7 @@ src/charts.py                  # Plotly price chart
 src/model.py                   # prediction model + backtest
 src/screener.py                # screener helpers (selected row -> symbol)
 src/cache.py                   # Streamlit caching of all loaders
-data/set50.csv                 # SET50 constituents
+data/set100.csv                # SET100 constituents (with an in_set50 flag)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
 scripts/stocks.sh              # start/stop the app in the background (macOS)
 .github/workflows/ci.yml       # GitHub Actions CI
@@ -97,7 +100,7 @@ tests/test_normalization.py    # unit conversions from thaifin and Yahoo
 tests/test_outage.py           # behaviour when Yahoo is down
 tests/test_pages.py            # AppTest smoke tests for both pages
 tests/test_navigation.py       # screener row -> stock page
-tests/test_universe.py         # SET50 CSV format
+tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies
 tests/test_ci.py               # CI workflow and check script
 tests/test_docs.py             # README and in-app text stay in sync with the code

@@ -7,19 +7,25 @@ from src import fundamentals as fd
 from src.data import load_prices
 from src.indicators import add_indicators
 from src.model import BacktestResult, train_and_backtest
-from src.universe import load_set50, yahoo_symbol
+from src.universe import load_set100, yahoo_symbol
 
 
 @st.cache_data(ttl="24h")
-def set50() -> pd.DataFrame:
-    return load_set50()
+def set100() -> pd.DataFrame:
+    return load_set100()
 
 
-@st.cache_data(ttl="15m", show_spinner="Loading SET50 prices and valuations...")
+@st.cache_data(ttl="15m", show_spinner="Loading SET100 prices and valuations...")
 def snapshots() -> pd.DataFrame:
     # Raises fd.SnapshotError when too many symbols fail. st.cache_data does not cache
     # exceptions, so a short outage is retried on the next rerun instead of sticking for 15 min.
-    return fd.check_snapshot_coverage(fd.get_snapshots(set50()["symbol"].tolist()))
+    return fd.check_snapshot_coverage(fd.get_snapshots(set100()["symbol"].tolist()))
+
+
+@st.cache_data(ttl="15m", max_entries=100)
+def snapshot(symbol: str) -> pd.DataFrame:
+    """The snapshot of one stock outside SET100 (same columns as `snapshots`; NaN price if Yahoo has no data)."""
+    return fd.get_snapshots([symbol])
 
 
 class NoPriceData(RuntimeError):
