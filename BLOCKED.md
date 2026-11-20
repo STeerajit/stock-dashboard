@@ -42,3 +42,12 @@ locally: `scripts/update_data.py` updated 99 of 100 stocks in 61 s on 2026-11-21
 
 **What you need to do** (after the repo is on GitHub): open **Actions → Update data → Run workflow** once and
 check it ends green with a `market-duckdb` artifact. Then tick the last box in BACKLOG.md #10.
+
+## Backlog #12 — publish the article
+
+**Status:** written and reproducible ([docs/article.md](docs/article.md), figures in `docs/img/`), not published.
+Publishing needs your own Medium, LinkedIn or dev.to account, and the "Live app" link needs the deploy (#8).
+
+**What you need to do:** paste `docs/article.md` into your platform (upload the two PNGs from `docs/img/`), add
+the live-app link once #8 is done, publish, and put the article's URL in the README. Then tick the two open
+boxes in BACKLOG.md #12.

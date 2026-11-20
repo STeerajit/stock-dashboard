@@ -214,15 +214,18 @@ or unlucky period. Also, the last training row's target is the first test day's 
 
 ## 12. Write-up: "Why my stock model didn't beat a coin flip" — P2 · M
 
+> **Written** on 2026-11-21 ([docs/article.md](docs/article.md), 1,280 words, 2 figures). Not published yet:
+> that needs your Medium / LinkedIn / dev.to account, and the live-app link needs #8 (see BLOCKED.md).
+
 **Why:** An honest negative result, explained well, is rare and memorable. It also gets the project far more
 readers than a link alone. Needs the live app (#8) and the realistic backtest (#11), so the numbers hold up.
 
 **Acceptance criteria**
 - [ ] An article of 1,000–1,800 words is published on Medium, LinkedIn or dev.to (English; a Thai version is optional).
-- [ ] It covers: the question, data sources and their limits, what data leakage is and how the test guards against it, and the results.
-- [ ] The results table covers at least 5 SET50 stocks: model accuracy vs. baseline, and strategy vs. buy-and-hold **after trading costs**, averaged over the walk-forward windows.
-- [ ] Every number is reproducible. `scripts/report_backtest.py` prints the table as Markdown, and the article's numbers match its output for the date stated in the article.
-- [ ] At least 2 figures: an equity curve, and accuracy per walk-forward window.
+- [x] It covers: the question, data sources and their limits, what data leakage is and how the test guards against it, and the results.
+- [x] The results table covers at least 5 SET50 stocks: model accuracy vs. baseline, and strategy vs. buy-and-hold **after trading costs**, averaged over the walk-forward windows.
+- [x] Every number is reproducible. `scripts/report_backtest.py` prints the table as Markdown, and the article's numbers match its output for the date stated in the article.
+- [x] At least 2 figures: an equity curve, and accuracy per walk-forward window.
 - [ ] It links to the live app and the repo; the README links back to the article; it ends with a "not investment advice" note.
 
 ---

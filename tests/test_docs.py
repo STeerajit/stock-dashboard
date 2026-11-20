@@ -59,3 +59,13 @@ def test_spec_has_a_status_row_for_each_of_the_8_categories():
 
 def test_readme_links_to_the_spec():
     assert "docs/SPEC.md" in (ROOT / "README.md").read_text()
+
+
+def test_article_has_the_results_table_and_its_figures():
+    text = (ROOT / "docs/article.md").read_text()
+    rows = [line for line in text.splitlines() if re.match(r"\| [A-Z]+ \| \d", line)]
+    assert len(rows) >= 5  # at least 5 stocks
+    for image in re.findall(r"\]\((img/[^)]+)\)", text):
+        assert (ROOT / "docs" / image).exists(), image
+    assert "not investment advice" in text
+    assert "docs/article.md" in (ROOT / "README.md").read_text()

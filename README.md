@@ -123,6 +123,7 @@ data/set100.csv                # SET100 constituents (with an in_set50 flag)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
 scripts/stocks.sh              # start/stop the app in the background (macOS)
 scripts/update_data.py         # download today's SET100 data into data/market.duckdb
+scripts/report_backtest.py     # results table (+ figures) for docs/article.md
 .github/workflows/ci.yml       # GitHub Actions CI
 tests/conftest.py              # blocks network access; fake Yahoo fixture
 tests/fakes.py                 # offline fakes for yfinance
@@ -146,6 +147,8 @@ tests/test_docs.py             # README and in-app text stay in sync with the co
 ```
 
 ## Results of the prediction model (honest)
+
+The full story, with the walk-forward results for five stocks: [docs/article.md](docs/article.md).
 
 On the stocks tested, test accuracy is about the same as a naive baseline — no real edge.
 That is the expected result for daily price direction, and the app reports it rather than hiding it.
