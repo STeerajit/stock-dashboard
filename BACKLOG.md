@@ -198,15 +198,17 @@ A small daily pipeline fixes all three and shows data-engineering skill.
 
 ## 11. Realistic backtest: trading costs + walk-forward — P2 · M
 
+> **Done** on 2026-11-21: 4 expanding walk-forward windows over the newest 40%, 0.17% per side.
+
 **Why:** The backtest ignores trading costs and uses a single 80/20 split, so the result depends on one lucky
 or unlucky period. Also, the last training row's target is the first test day's return (a 1-day overlap).
 
 **Acceptance criteria**
-- [ ] `train_and_backtest` takes `cost_per_trade` (default 0.17% per side, roughly a Thai online commission + VAT) and deducts it each time the strategy enters or exits.
-- [ ] A test: a strategy that flips every day ends lower with costs than without.
-- [ ] Walk-forward evaluation: at least 4 consecutive test windows, each trained only on data before it; the UI shows accuracy per window and the average.
-- [ ] A 1-day gap between train and test so no training target overlaps the test period; the existing leakage test still passes.
-- [ ] The Prediction tab still says plainly whether the model beats the baseline.
+- [x] `train_and_backtest` takes `cost_per_trade` (default 0.17% per side, roughly a Thai online commission + VAT) and deducts it each time the strategy enters or exits.
+- [x] A test: a strategy that flips every day ends lower with costs than without.
+- [x] Walk-forward evaluation: at least 4 consecutive test windows, each trained only on data before it; the UI shows accuracy per window and the average.
+- [x] A 1-day gap between train and test so no training target overlaps the test period; the existing leakage test still passes.
+- [x] The Prediction tab still says plainly whether the model beats the baseline.
 
 ---
 

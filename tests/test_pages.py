@@ -236,3 +236,11 @@ def test_fair_value_tab_skips_dcf_for_banks(fake_cache):
     labels = {m.label for m in at.metric}
     assert "Fair value (DDM)" in labels and "Fair value (DCF)" not in labels
     assert any("banks" in i.value for i in at.info)
+
+
+def test_prediction_tab_shows_each_walk_forward_period(fake_cache):
+    at = open_stock("PTT", tab_label("Prediction"))
+    assert not at.exception
+    periods = at.dataframe[0].value
+    assert len(periods) == 4 and list(periods.columns) == ["Period", "Model", "Baseline", "Model − baseline"]
+    assert any("per buy or sell" in c.value for c in at.caption)

@@ -375,7 +375,8 @@ if t_pred.open:
     with t_pred:
         st.markdown(
             "A Random Forest model predicts whether **tomorrow's close will be higher than today's**. "
-            "It is trained on the older 80% of 5 years of data and tested on the newest 20% it has never seen."
+            "Walk-forward test: the newest 40% of 5 years is split into 4 periods; each period is predicted by a "
+            "model trained only on the days before it (with a 1-day gap), as if it were run live."
         )
         try:
             with st.spinner("Training model..."):
@@ -385,7 +386,7 @@ if t_pred.open:
             st.stop()
 
         with st.container(horizontal=True):
-            st.metric("Model accuracy (test)", f"{result.accuracy:.1%}", border=True, height="stretch")
+            st.metric("Model accuracy (4 periods)", f"{result.accuracy:.1%}", border=True, height="stretch")
             st.metric("Baseline accuracy", f"{result.baseline_accuracy:.1%}", border=True, height="stretch",
                       help="Always guessing the most common direction. The model is only useful if it beats this.")
             st.metric("Next day: chance of going up", f"{result.next_day_prob_up:.0%}", border=True, height="stretch")
@@ -398,16 +399,33 @@ if t_pred.open:
             st.info(f"The model is {edge:+.1%} vs. the baseline. "
                     "This is normal: daily stock moves are very close to random.", title="No real edge")
 
-        st.subheader("Backtest: 1 baht invested in the test period")
+        st.subheader("Accuracy in each test period")
+        w = result.windows
+        st.dataframe(
+            pd.DataFrame({"Period": [f"{a:%d %b %Y} – {b:%d %b %Y}" for a, b in zip(w["test_start"], w["test_end"])],
+                          "Model": w["accuracy"], "Baseline": w["baseline"],
+                          "Model − baseline": w["accuracy"] - w["baseline"]}),
+            hide_index=True,
+            column_config={c: st.column_config.NumberColumn(c, format="percent")
+                           for c in ["Model", "Baseline", "Model − baseline"]},
+            alt=f"{symbol} model and baseline accuracy in each walk-forward test period",
+        )
+        st.caption(f"Average over the {len(w)} periods: model {w['accuracy'].mean():.1%}, "
+                   f"baseline {w['baseline'].mean():.1%}.")
+
+        st.subheader("Backtest: 1 baht invested over the test periods")
         eq = result.test
         st.line_chart(
-            eq[["Buy_and_hold", "Model_strategy"]].rename(
-                columns={"Buy_and_hold": "Buy & hold", "Model_strategy": "Model strategy"}),
+            eq[["Buy_and_hold", "Model_strategy", "Model_before_costs"]].rename(columns={
+                "Buy_and_hold": "Buy & hold", "Model_strategy": "Model strategy (after costs)",
+                "Model_before_costs": "Model strategy (before costs)"}),
             y_label="Value of 1 baht",
             alt=f"Growth of 1 baht in {symbol}: buy and hold versus holding only on days the model predicts up",
         )
+        trades = int(eq["Prediction"].diff().abs().fillna(eq["Prediction"]).sum())
         st.caption(f"Model strategy = hold only on days the model predicts 'up' ({eq['Prediction'].mean():.0%} "
-                   "of test days). Ignores trading fees and taxes.")
+                   f"of test days), paying {result.cost_per_trade:.2%} per buy or sell ({trades} trades). "
+                   "Buy & hold pays almost nothing. Taxes are ignored.")
         st.subheader("Which features the model relied on")
         st.bar_chart(result.feature_importance, horizontal=True,
                      alt="Feature importance of the Random Forest model")

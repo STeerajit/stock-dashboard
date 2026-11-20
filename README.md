@@ -62,7 +62,7 @@ scripts/check.sh
 | Dividends & calendar | Dividend per share by year, XD date, earnings date | What events may move the price? |
 | Portfolio | Your holdings and watchlist: value, P&L, estimated dividend, yield on cost, allocation by sector | How is my money doing? |
 | Fair value | Dividend discount model and discounted cash flow with your assumptions, 3×3 sensitivity tables, Piotroski F-score check by check | What could it be worth, and is the business improving? |
-| Prediction | Random Forest next-day direction, time-based split, baseline & backtest | Can a simple model beat guessing? (Usually not.) |
+| Prediction | Random Forest next-day direction, 4-period walk-forward test, baseline, backtest after trading costs | Can a simple model beat guessing? (Usually not.) |
 
 ## Data sources and limits
 
