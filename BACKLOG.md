@@ -77,17 +77,23 @@ It was never checked against SET's own H2/2026 document. A wrong list undermines
 
 ## 4. Verify screener row → stock page navigation — P0 · S
 
-> **Partly blocked** — logic covered by `tests/test_navigation.py`; the real-browser click check is still to do. See [BLOCKED.md](BLOCKED.md).
+> **Done** — checked in a real (headless Chromium) browser with Playwright on 2026-11-21. The check found one bug,
+> now fixed: the URL stayed `/stock`, so a reload or bookmark opened ADVANC instead of the clicked stock.
 
 **Why:** Selecting a row calls `st.session_state["symbol"] = ...` then `st.switch_page(...)`.
 This path was never tested (the agent API cannot select dataframe rows). One risk: when the user comes back
 to the screener, the old row selection could still be active and redirect them again immediately.
 
 **Acceptance criteria** (manual check in a real browser, then documented in the PR)
-- [ ] Click the PTT row → the stock page opens showing **PTT**, and the URL contains `?symbol=PTT`.
-- [ ] Click "SET50 screener" in the sidebar → the screener stays open (no automatic redirect).
-- [ ] With the Banking filter on, clicking the 3rd row opens the 3rd **visible** bank (not the 3rd stock overall).
-- [ ] If any check fails, fix it and add an AppTest regression test where possible.
+- [x] Click the PTT row → the stock page opens showing **PTT**, and the URL contains `?symbol=PTT`.
+  *Failed at first (URL was `/stock`). Fixed: the screener now calls `st.switch_page(..., query_params={"symbol": ...})`.
+  After the fix the URL is `/stock?symbol=PTT`, and it still shows PTT after a reload.*
+- [x] Click "SET50 screener" in the sidebar → the screener stays open (no automatic redirect).
+  *Passed; the feared redirect does not happen.*
+- [x] With the Banking filter on, clicking the 3rd row opens the 3rd **visible** bank (not the 3rd stock overall).
+  *Passed: the visible banks were KBANK, KTB, SCB…; the 3rd row opened SCB (`/stock?symbol=SCB`).*
+- [x] If any check fails, fix it and add an AppTest regression test where possible.
+  *`tests/test_navigation.py::test_selecting_a_row_opens_the_stock_page_with_the_symbol_in_the_url`.*
 
 ---
 

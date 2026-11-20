@@ -37,13 +37,23 @@ def test_filtered_table_third_row_is_third_visible_bank():
     assert selected_symbol(shown, [2]) == "KTB"  # not "AOT", the 3rd stock overall
 
 
-def test_stock_page_opens_the_symbol_set_by_the_screener(fake_yahoo):
-    at = AppTest.from_file(ROOT / "app.py", default_timeout=30).run()
-    assert not at.exception
-    at.session_state["symbol"] = "KBANK"  # what the screener sets before switch_page
-    at.switch_page("app_pages/stock.py").run()
-    assert not at.exception
-    assert at.title[0].value.startswith("KBANK")
+def test_selecting_a_row_opens_the_stock_page_with_the_symbol_in_the_url(fake_yahoo, monkeypatch):
+    # Regression (found in a real browser): the screener used to pass the symbol through
+    # session_state only, so the URL stayed /stock and a reload or bookmark opened ADVANC.
+    import streamlit as st
+
+    import src.screener
+
+    calls = []
+
+    def fake_switch_page(page, **kwargs):
+        calls.append((page, kwargs))
+        st.stop()
+
+    monkeypatch.setattr(src.screener, "selected_symbol", lambda shown, rows: "KBANK")  # a row was clicked
+    monkeypatch.setattr(st, "switch_page", fake_switch_page)
+    AppTest.from_file(ROOT / "app_pages/screener.py", default_timeout=30).run()
+    assert calls == [("app_pages/stock.py", {"query_params": {"symbol": "KBANK"}})]
 
 
 def test_stock_page_opens_symbol_from_url(fake_yahoo):

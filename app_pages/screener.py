@@ -67,8 +67,9 @@ with table_slot.skeleton():
 
 symbol = selected_symbol(shown, event.selection.rows)
 if symbol:
-    st.session_state["symbol"] = symbol  # the stock page's selectbox key (also bound to ?symbol=)
-    st.switch_page("app_pages/stock.py")
+    # Pass the symbol in the URL (the stock page's selectbox is bound to ?symbol=), so a reload,
+    # bookmark or shared link keeps showing this stock.
+    st.switch_page("app_pages/stock.py", query_params={"symbol": symbol})
 
 with st.expander("Sector medians"):
     st.dataframe(
