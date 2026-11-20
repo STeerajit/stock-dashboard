@@ -77,12 +77,15 @@ def test_falls_back_to_yahoo_when_thaifin_has_under_2_years(fake_thaifin, monkey
     yahoo = pd.DataFrame({"Revenue": [1.0, 2.0]}, index=[2024, 2025])
     monkeypatch.setattr(fd, "_financials_yahoo", lambda symbol: yahoo)
     assert fd.get_financials("MRDIYT") is yahoo
+    assert "fewer than 2 years of statements for MRDIYT" in yahoo.attrs["fallback_note"]
 
 
 def test_uses_thaifin_when_it_has_2_or_more_years(fake_thaifin, monkeypatch):
     fake_thaifin.frame = thaifin_frame({2024: {}, 2025: {}})
     monkeypatch.setattr(fd, "_financials_yahoo", lambda symbol: pytest.fail("should not fall back"))
-    assert fd.get_financials("PTT").attrs["source"] == "thaifin"
+    fin = fd.get_financials("PTT")
+    assert fin.attrs["source"] == "thaifin"
+    assert fin.attrs["fallback_note"] is None
 
 
 # ---------- Yahoo snapshot ----------

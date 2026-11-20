@@ -33,7 +33,7 @@ def test_sector_medians():
     assert med.loc["Bank", "pe"] == 15 and med.loc["Energy", "pe"] == 8
 
 
-def test_get_financials_falls_back_to_yahoo_when_thaifin_fails(monkeypatch):
+def test_get_financials_falls_back_to_yahoo_when_thaifin_fails(monkeypatch, caplog):
     import src.fundamentals as fd
 
     def broken(symbol):
@@ -43,3 +43,7 @@ def test_get_financials_falls_back_to_yahoo_when_thaifin_fails(monkeypatch):
     monkeypatch.setattr(fd, "_financials_thaifin", broken)
     monkeypatch.setattr(fd, "_financials_yahoo", lambda symbol: yahoo)
     assert fd.get_financials("PTT") is yahoo
+    # Users are told the history is short, and the error is logged instead of swallowed.
+    assert "thaifin is unavailable" in yahoo.attrs["fallback_note"]
+    assert "only 2 years" in yahoo.attrs["fallback_note"]
+    assert "thaifin source down" in caplog.text

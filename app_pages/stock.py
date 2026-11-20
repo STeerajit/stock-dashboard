@@ -106,6 +106,8 @@ if t_fin.open:
         if fin.empty:
             st.warning("No financial statements found for this stock.", title="No data")
         else:
+            if fallback_note := fin.attrs.get("fallback_note"):
+                st.warning(fallback_note, title="Shorter history than usual")
             src = fin.attrs.get("source", "?")
             st.caption(f"Annual figures {fin.index.min()}–{fin.index.max()} ({len(fin)} years). Source: {src}.")
             last = fin.iloc[-1]

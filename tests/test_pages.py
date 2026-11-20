@@ -119,6 +119,15 @@ def test_financials_tab_with_no_data_shows_warning(fake_cache):
     assert any("no financial statements" in w.value.lower() for w in at.warning)
 
 
+def test_financials_tab_warns_when_figures_come_from_the_fallback_source(fake_cache):
+    fin = financials(years=3)
+    fin.attrs["fallback_note"] = "thaifin is unavailable right now, so these figures come from Yahoo Finance"
+    fake_cache["financials"] = fin
+    at = open_stock("PTT", tab_label("Financials"))
+    assert not at.exception
+    assert [w.value for w in at.warning] == [fin.attrs["fallback_note"]]
+
+
 def test_valuation_tab_with_no_history_shows_info(fake_cache):
     fake_cache["financials"] = financials(years=1)
     at = open_stock("PTT", tab_label("Valuation"))

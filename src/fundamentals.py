@@ -9,6 +9,7 @@ Data sources:
 Fields a source lacks for a stock (e.g. Yahoo's D/E for banks) are NaN.
 """
 
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import cast
 from datetime import datetime, timezone
@@ -18,6 +19,8 @@ import pandas as pd
 import yfinance as yf
 
 from src.universe import yahoo_symbol
+
+log = logging.getLogger(__name__)
 
 
 def _ts_to_date(ts):
@@ -125,14 +128,25 @@ def get_financials(symbol: str) -> pd.DataFrame:
 
     Tries thaifin first (~15 years, includes yearly P/E and P/BV), then falls back to
     Yahoo (~4 years). `df.attrs["source"]` and `df.attrs["de_definition"]` say which was used.
+    After a fallback, `df.attrs["fallback_note"]` is a message ready to show users, so they
+    know the history is shorter than usual; otherwise it is None.
     """
     try:
         fin = _financials_thaifin(symbol)
         if len(fin) >= 2:
+            fin.attrs["fallback_note"] = None
             return fin
+        why = f"thaifin has fewer than 2 years of statements for {symbol}"  # e.g. a new listing
     except Exception:
-        pass  # thaifin's source can be down or not cover a new listing; fall back to Yahoo
-    return _financials_yahoo(symbol)
+        # thaifin's source can be down; log it, so a bug in our own thaifin code is not hidden.
+        log.warning("thaifin failed for %s; falling back to Yahoo Finance", symbol, exc_info=True)
+        why = "thaifin is unavailable right now"
+    fin = _financials_yahoo(symbol)
+    fin.attrs["fallback_note"] = (
+        f"{why}, so these figures come from Yahoo Finance and cover only {len(fin)} years "
+        "instead of the usual ~15."
+    )
+    return fin
 
 
 def _financials_thaifin(symbol: str) -> pd.DataFrame:
