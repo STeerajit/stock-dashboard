@@ -8,6 +8,7 @@ is caught immediately instead of silently passing on a machine with Wi-Fi.
 import socket
 
 import pytest
+from curl_cffi import AsyncCurl, Curl
 
 
 class NetworkBlocked(RuntimeError):
@@ -23,6 +24,10 @@ def _block_network(monkeypatch):
     monkeypatch.setattr(socket.socket, "connect_ex", guard)
     monkeypatch.setattr(socket, "create_connection", guard)
     monkeypatch.setattr(socket, "getaddrinfo", guard)
+    # yfinance downloads through curl_cffi. Its C library (libcurl) opens sockets itself,
+    # bypassing everything above, so block the points where a curl request is started.
+    monkeypatch.setattr(Curl, "perform", guard)
+    monkeypatch.setattr(AsyncCurl, "add_handle", guard)
 
 
 @pytest.fixture

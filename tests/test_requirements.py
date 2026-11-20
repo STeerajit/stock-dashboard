@@ -46,3 +46,13 @@ def test_installed_versions_match_pins(req_file):
 def test_network_is_blocked_during_tests():
     with pytest.raises(Exception, match="must not use the network"):
         socket.create_connection(("example.com", 80), timeout=1)
+
+
+def test_curl_cffi_is_blocked_during_tests():
+    # yfinance downloads through curl_cffi, whose C library opens sockets itself and never
+    # calls Python's socket module. Port 9 on localhost: even if the guard broke, nothing
+    # would leave this machine.
+    from curl_cffi import requests as curl_requests
+
+    with pytest.raises(Exception, match="must not use the network"):
+        curl_requests.get("http://127.0.0.1:9", timeout=1)
