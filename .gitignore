@@ -15,3 +15,6 @@ build/
 
 # Full local pip freeze, used only to rebuild .venv on this machine (see the file header)
 requirements-frozen.txt
+
+# Output of scripts/stocks.sh (the background dashboard)
+stocks.log
