@@ -47,3 +47,15 @@ def test_screener_de_help_states_yahoo_definition():
     text = (ROOT / "app_pages/screener.py").read_text()
     de = text.split('"de": nc(', 1)[1].split("),", 1)[0]
     assert "interest-bearing debt" in de
+
+
+def test_spec_has_a_status_row_for_each_of_the_8_categories():
+    text = (ROOT / "docs/SPEC.md").read_text()
+    table = text.split("## Status of the 8 categories", 1)[1].split("\n## ", 1)[0]
+    rows = [line.split("|")[1:4] for line in table.splitlines() if re.match(r"\| \d \|", line)]
+    assert [int(n) for n, _, _ in rows] == list(range(1, 9))
+    assert all(status.strip() in {"Done", "Partial", "Not started"} for _, _, status in rows)
+
+
+def test_readme_links_to_the_spec():
+    assert "docs/SPEC.md" in (ROOT / "README.md").read_text()

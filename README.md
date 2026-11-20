@@ -6,6 +6,8 @@ Interactive dashboard for the 50 largest Thai stocks (SET50): a screener to comp
 and a detail page per stock covering trading activity, chart, financials, valuation vs. peers,
 dividends — plus an honestly-evaluated price prediction model.
 
+What it is for, the decisions behind it and the status of each part: [docs/SPEC.md](docs/SPEC.md).
+
 ## How to run
 
 One-time setup:

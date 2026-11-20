@@ -23,8 +23,11 @@ Effort: **S** ≈ under 2 h · **M** ≈ half a day · **L** ≈ 1–2 days.
 | 14 | Dividend yield history computed from reliable data | P2 | M |
 | 15 | Growth & quality columns in the screener | P2 | M |
 | 16 | Phase 2 data spike: fund flows, NVDR, short sales, warnings | P3 | M |
-| 17 | LLM news sentiment (step 3) | P3 | L |
+| 17 | ~~LLM news sentiment (step 3)~~ — cancelled | — | — |
 | 18 | Thai / English UI toggle | P3 | M |
+| 19 | Portfolio: SET100 list, any symbol, holdings and their numbers | P1 | L |
+| 20 | Today overview page | P1 | M |
+| 21 | Links to the SET website, free float and XR dates | P2 | M |
 
 ---
 
@@ -277,7 +280,10 @@ Form 59, C-sign / cash balance / turnover list) have no free official API. **Blo
 
 ---
 
-## 17. LLM news sentiment (step 3) — P3 · L
+## 17. LLM news sentiment (step 3) — cancelled
+
+> **Cancelled** on 2026-11-21: it needs a paid API key and a paid news source, and the app is a personal
+> tool that uses free data only. See [docs/SPEC.md](docs/SPEC.md). Kept below for reference.
 
 **Why:** The original plan used an LLM for news sentiment as an extra model feature.
 **Blocked on** a Claude API key and a news source (both cost money).
@@ -299,3 +305,49 @@ Form 59, C-sign / cash balance / turnover list) have no free official API. **Blo
 - [ ] All user-facing strings live in one translation file (e.g. `src/i18n.py`), and none are hard-coded in `app_pages/`.
 - [ ] A sidebar toggle switches between ไทย and English, and the choice is kept in the URL (`?lang=th`).
 - [ ] A test fails if any translation key is missing in either language.
+
+---
+
+## 19. Portfolio: SET100 list, any symbol, holdings and their numbers — P1 · L
+
+**Why:** The app is for real investing ([docs/SPEC.md](docs/SPEC.md)). Owned stocks must be tracked, and they
+may be outside SET50.
+
+**Acceptance criteria**
+- [ ] `data/set100.csv` holds SET's official H2/2026 SET100 list (100 rows, sectors as SET prints them, a column
+  saying which are in SET50); the screener shows all 100.
+- [ ] The stock page opens any Thai symbol (e.g. `/stock?symbol=MAJOR`); stocks outside SET100 show the sector
+  `Outside SET100`; if Yahoo has no data the page warns instead of failing.
+- [ ] A Portfolio page with an editable table (symbol, shares, average cost; `shares = 0` = watchlist), saved to
+  `data/portfolio.csv`, which is gitignored. Bad input (empty symbol, negative numbers) is rejected with a message.
+- [ ] Numbers: P&L per stock and in total (THB and %), allocation by sector, estimated dividend (dividend per share
+  of the last complete calendar year × shares) and yield on cost. No fees or taxes, and the page says so.
+  Unit-tested with hand-computed examples.
+
+---
+
+## 20. Today overview page — P1 · M
+
+**Why:** One screen that says which held or watched stocks need a look today.
+
+**Acceptance criteria**
+- [ ] For every stock in the portfolio (watchlist included), flag it when any of these is true, and say which:
+  - price within 3% above support, or above resistance;
+  - RSI < 30 or > 70;
+  - XD date or earnings date within the next 14 days;
+  - P/E more than 20% below its own historical median.
+- [ ] Each rule is unit-tested at its boundary (e.g. exactly 3%, RSI exactly 30).
+- [ ] With an empty portfolio the page explains how to add stocks.
+
+---
+
+## 21. Links to the SET website, free float and XR dates — P2 · M
+
+**Why:** Categories 5–8 of the spec have no free data source (#16). A link to the right SET page is the cheap
+way to cover them; free float and XR dates may be available for free.
+
+**Acceptance criteria**
+- [ ] The stock page has a "See on the SET website" section with links to the stock's SET pages
+  (investor types / NVDR / short sales, major shareholders, Form 59, warning signs, news).
+- [ ] Free float % is shown if a free source has it; otherwise the link covers it.
+- [ ] XR dates are shown in the calendar if a free source has them; otherwise the link covers them.
