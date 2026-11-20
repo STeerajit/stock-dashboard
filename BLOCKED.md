@@ -55,7 +55,7 @@ boxes in BACKLOG.md #12.
 ## Backlog #8 — deploy to Streamlit Community Cloud
 
 **Status:** ready to deploy, not deployed. The repo is not on GitHub yet, and Streamlit Cloud needs your own
-login. Before the repo goes public, note that **every commit carries the author email from your git config**.
+login. (Checked: all commits use your GitHub noreply address, so no personal email becomes public.)
 
 **What you need to do:**
 1. Put the repo on GitHub as **public** (Streamlit's free plan needs it) and push `main`.
