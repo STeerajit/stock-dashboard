@@ -65,7 +65,13 @@ SNAPSHOT_COLUMNS = ["symbol", "price", "change_pct", "volume", "avg_volume", "va
 
 
 class SnapshotError(RuntimeError):
-    """Too many symbols failed to load — the data source is probably down."""
+    """Market data could not be loaded: for too many symbols (the data source is probably
+    down), or for the one symbol a page needs. `str(e)` is a message ready to show users."""
+
+    title = "Market data unavailable"
+
+
+RETRY_HINT = "Please try again in a minute."
 
 
 def get_snapshots(symbols: list[str], workers: int = 8) -> pd.DataFrame:
@@ -93,10 +99,17 @@ def check_snapshot_coverage(snapshots: pd.DataFrame, max_failed: float = 0.2) ->
     failed = snapshots["price"].isna().mean() if len(snapshots) else 1.0
     if failed > max_failed:
         raise SnapshotError(
-            f"Could not load market data for {failed:.0%} of stocks — Yahoo Finance may be down. "
-            "Please try again in a minute."
+            f"Could not load market data for {failed:.0%} of stocks — Yahoo Finance may be down. {RETRY_HINT}"
         )
     return snapshots
+
+
+def snapshot_for(snapshots: pd.DataFrame, symbol: str) -> pd.Series:
+    """The snapshot row of one symbol. Raises SnapshotError if its fetch failed (no price)."""
+    snap = cast(pd.Series, snapshots.set_index("symbol").loc[symbol])  # symbols are unique
+    if pd.isna(snap["price"]):
+        raise SnapshotError(f"Could not load current market data for {symbol}. {RETRY_HINT}")
+    return snap
 
 
 def _row(df: pd.DataFrame, name: str) -> pd.Series:

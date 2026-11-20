@@ -12,15 +12,12 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from src import cache
-from src.fundamentals import FIN_COLUMNS
+from src.fundamentals import FIN_COLUMNS, SNAPSHOT_COLUMNS
 from src.indicators import add_indicators
 from src.model import train_and_backtest
 from tests.fakes import fake_prices
 
 ROOT = Path(__file__).resolve().parent.parent
-TABS = [":material/swap_vert: Trading", ":material/candlestick_chart: Chart", ":material/account_balance: Financials",
-        ":material/sell: Valuation", ":material/event: Dividends & calendar",
-        ":material/online_prediction: Prediction"]
 
 UNIVERSE = pd.DataFrame({
     "symbol": ["PTT", "PTTEP", "KBANK", "SCB", "CPALL", "AOT"],
@@ -31,6 +28,7 @@ UNIVERSE = pd.DataFrame({
 
 
 def snapshots() -> pd.DataFrame:
+    """Shaped exactly like the real loader: indexing by SNAPSHOT_COLUMNS raises if a column is missing."""
     n = len(UNIVERSE)
     return pd.DataFrame({
         "symbol": UNIVERSE["symbol"], "price": np.linspace(30, 80, n), "change_pct": 0.01,
@@ -38,7 +36,7 @@ def snapshots() -> pd.DataFrame:
         "high_52w": 90.0, "low_52w": 20.0, "pos_52w": 0.5, "market_cap": np.linspace(1e12, 1e11, n),
         "pe": np.linspace(8, 20, n), "pbv": 1.2, "div_yield": 0.05, "roe": 0.1, "de": 0.8, "net_margin": 0.08,
         "ex_div_date": pd.Timestamp("2026-08-19"), "earnings_date": pd.NaT,
-    })
+    })[SNAPSHOT_COLUMNS]
 
 
 def financials(years: int = 6) -> pd.DataFrame:
@@ -69,11 +67,21 @@ def fake_cache(monkeypatch):
 
 
 def open_stock(symbol: str, tab: str | None = None) -> AppTest:
+    """Run the stock page, opened on the tab with the full label `tab` (see tab_label)."""
     at = AppTest.from_file(ROOT / "app_pages/stock.py", default_timeout=60)
     at.query_params["symbol"] = symbol
     if tab:
         at.session_state["tab"] = tab
     return at.run()
+
+
+def tab_label(word: str) -> str:
+    """The full label of the stock page tab containing `word`, read from the page itself."""
+    return next(label for label in stock_tab_labels() if word in label)
+
+
+def stock_tab_labels() -> list[str]:
+    return [t.label for t in open_stock("PTT").tabs]
 
 
 def test_screener_renders_all_rows(fake_cache):
@@ -89,28 +97,30 @@ def test_screener_sector_filter_reduces_rows(fake_cache):
     assert set(at.dataframe[0].value["symbol"]) == {"KBANK", "SCB"}
 
 
-@pytest.mark.parametrize("tab", TABS)
-def test_every_stock_tab_renders(fake_cache, tab):
-    at = open_stock("PTT", tab)
-    assert not at.exception, at.exception
-    assert at.title[0].value == "PTT · PTT"
-    assert not at.error and not at.warning
+def test_every_stock_tab_renders(fake_cache):
+    labels = stock_tab_labels()
+    assert len(labels) == 6
+    for label in labels:
+        at = open_stock("PTT", label)
+        assert not at.exception, (label, at.exception)
+        assert at.title[0].value == "PTT · PTT"
+        assert not at.error and not at.warning, label
 
 
 def test_tab_content_is_the_selected_tab(fake_cache):
-    labels = {m.label for m in open_stock("PTT", TABS[2]).metric}  # Financials
+    labels = {m.label for m in open_stock("PTT", tab_label("Financials")).metric}
     assert "Revenue" in labels and "Bid / Offer" not in labels
 
 
 def test_financials_tab_with_no_data_shows_warning(fake_cache):
     fake_cache["financials"] = pd.DataFrame(columns=FIN_COLUMNS)
-    at = open_stock("PTT", TABS[2])
+    at = open_stock("PTT", tab_label("Financials"))
     assert not at.exception
     assert any("no financial statements" in w.value.lower() for w in at.warning)
 
 
 def test_valuation_tab_with_no_history_shows_info(fake_cache):
     fake_cache["financials"] = financials(years=1)
-    at = open_stock("PTT", TABS[3])
+    at = open_stock("PTT", tab_label("Valuation"))
     assert not at.exception
     assert any("not enough" in i.value.lower() for i in at.info)

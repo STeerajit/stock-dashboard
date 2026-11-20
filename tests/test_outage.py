@@ -36,6 +36,13 @@ def test_coverage_check_raises_above_20_percent_failed():
         fd.check_snapshot_coverage(bad)
 
 
+def test_snapshot_for_returns_the_row_or_raises_when_its_fetch_failed():
+    snaps = pd.DataFrame({"symbol": ["PTT", "AOT"], "price": [34.5, None]})
+    assert fd.snapshot_for(snaps, "PTT")["price"] == 34.5
+    with pytest.raises(fd.SnapshotError, match="market data for AOT. Please try again"):
+        fd.snapshot_for(snaps, "AOT")
+
+
 def test_outage_is_not_cached(fake_yahoo):
     fake_yahoo.down = True
     with pytest.raises(fd.SnapshotError):

@@ -4,7 +4,7 @@ import streamlit as st
 
 from src import cache
 from src.charts import price_chart
-from src.fundamentals import SnapshotError, pe_history, sector_medians
+from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for
 from src.indicators import support_resistance
 
 
@@ -34,22 +34,19 @@ row = universe.set_index("symbol").loc[symbol]
 st.title(f"{symbol} · {row['name']}")
 st.caption(row["sector"])
 
+snapshot_error: SnapshotError | None = None
 try:
     snaps = cache.snapshots()
-    snapshot_error = None
-except SnapshotError as e:
-    snaps, snapshot_error = None, str(e)
-if snaps is not None:
-    snap = snaps.set_index("symbol").loc[symbol]
+    snap = snapshot_for(snaps, symbol)
     medians = sector_medians(snaps, universe).loc[row["sector"]]
-    if pd.isna(snap["price"]):
-        snapshot_error = f"Could not load current market data for {symbol}. Please try again in a minute."
+except SnapshotError as e:
+    snapshot_error = e  # `snap` and `medians` are then unset: tabs that use them call need_snapshot() first
 
 
 def need_snapshot() -> None:
     """Inside a tab that needs live market data: show a warning and stop if it is unavailable."""
     if snapshot_error:
-        st.warning(snapshot_error, title="Market data unavailable")
+        st.warning(str(snapshot_error), title=SnapshotError.title)
         st.stop()
 
 tabs = st.tabs(

@@ -17,7 +17,7 @@ with table_slot.skeleton():
     try:
         snaps = cache.snapshots()
     except SnapshotError as e:
-        table_slot.error(str(e), title="Market data unavailable")
+        table_slot.error(str(e), title=SnapshotError.title)
         table_slot.button("Try again", icon=":material/refresh:", key="retry")
         st.stop()
 
