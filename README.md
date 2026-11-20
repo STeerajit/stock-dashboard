@@ -46,8 +46,11 @@ scripts/check.sh
   - thaifin's D/E is *total liabilities* / equity; Yahoo's is *interest-bearing debt* / equity.
   - thaifin's yearly dividend yield is not used: its units are inconsistent across years.
   - Recently listed stocks (e.g. MRDIYT) have only 1–2 years of history.
-- **SET50 list:** `data/set50.csv`, for 1 Jul – 31 Dec 2026. Built from SET's official H1/2026 constituent list
-  with the H2/2026 changes (+BCP, MRDIYT, TFG, THAI; −BTS, CBG, CENTEL, SAWAD) as reported by Kaohoon.
+- **SET50 list:** `data/set50.csv`, for 1 Jul – 31 Dec 2026. Checked on 2026-11-21 against SET's official
+  `SET50_SET100_H2_2026_revise.pdf` ("SET50 / SET50FF Index Constituents … July 1 - December 31, 2026,
+  Update on August 3, 2026"), from the "July 1, 2026 to December 31, 2026 – between the periodic review update" file on
+  https://www.set.or.th/en/market/information/securities-list/constituents-list-set50-set100 (login required).
+  All 50 symbols and sectors match.
   SET reviews the index every 6 months — update the CSV in January and July.
 - **Not included yet** (no free official API): investor-type flows, NVDR, short sales, top-10 shareholders,
   Form 59, C-sign / cash balance / turnover list, SET news.
