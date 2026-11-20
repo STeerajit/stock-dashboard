@@ -71,12 +71,12 @@ The first request was "ต้องการทำสำหรับหุ้น
 |---|---|---|---|
 | 1 | Price & trading | Done | Stock page → Trading tab; screener columns |
 | 2 | Financial statements (5+ years) | Done | Financials tab: up to ~16 years from thaifin (Yahoo fallback ~4 years, with a warning) |
-| 3 | Valuation | Partial | P/E, P/BV, yield vs. sector and P/E, P/BV vs. own history are done. Yield vs. own history is missing (BACKLOG #14) |
+| 3 | Valuation | Done | Valuation tab: P/E, P/BV, yield vs. sector median and vs. own history (yield from dividends ÷ unadjusted year-end price) |
 | 4 | Chart | Done | Chart tab: adjusted candles, SMA20/50, support/resistance, volume, RSI |
-| 5 | Money flows | Not started | No free source for investor types, NVDR, short sales (#16). Plan: link to the SET website (#21) |
-| 6 | Shareholders | Not started | Top-10 holders, Form 59: no free source (#16). Plan: free float + link to SET (#21) |
-| 7 | Warning signs | Not started | C sign, cash balance, turnover list, Auto Pause: no free source (#16). Plan: link to SET (#21) |
-| 8 | News & calendar | Partial | Earnings date and XD date are done. XR and SET news are missing; plan: link to SET (#21). News sentiment cancelled |
+| 5 | Money flows | Partial | Links only: SET's all-stock pages for investor types, NVDR, short sales ("See on the SET website"). No per-stock free data (#16) |
+| 6 | Shareholders | Partial | Free float (Yahoo estimate) on the Trading tab; link to SET's major shareholders page. Form 59 is on the SEC website, not linked (could not be verified) |
+| 7 | Warning signs | Partial | Links only: SET's caution signs, cash balance / turnover list and Auto Pause pages (all stocks) |
+| 8 | News & calendar | Partial | Earnings and XD dates in the app; XR dates and news via links to the stock's SET pages. News sentiment cancelled |
 
 Plus two parts that were not in the original list: the **screener** (compare all stocks at once) and the
 **prediction model** (learning only).

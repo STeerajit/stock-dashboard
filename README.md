@@ -95,6 +95,7 @@ src/model.py                   # prediction model + backtest
 src/screener.py                # screener helpers (selected row -> symbol)
 src/portfolio.py               # load, check and save holdings (data/portfolio.csv)
 src/today.py                   # rules that flag a stock on the Today page
+src/set_links.py               # links to the SET website + free float
 src/cache.py                   # Streamlit caching of all loaders
 data/set100.csv                # SET100 constituents (with an in_set50 flag)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
@@ -110,6 +111,7 @@ tests/test_pages.py            # AppTest smoke tests for both pages
 tests/test_navigation.py       # screener row -> stock page
 tests/test_portfolio.py        # holdings: input checks, saving, Portfolio page
 tests/test_today.py            # Today rules at their boundaries
+tests/test_set_links.py        # SET links and free float
 tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies
 tests/test_ci.py               # CI workflow and check script

@@ -125,3 +125,8 @@ def test_change_and_value_traded(snapshot_with):
     snap = snapshot_with(currentPrice=110.0, previousClose=100.0, volume=1000)
     assert snap["change_pct"] == pytest.approx(0.10)
     assert snap["value_traded"] == 110_000.0
+
+
+def test_free_float_from_yahoo_share_counts(snapshot_with):
+    assert snapshot_with()["free_float"] == pytest.approx(0.4)  # fake: 400M float / 1,000M outstanding
+    assert math.isnan(snapshot_with(floatShares=None)["free_float"])

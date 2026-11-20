@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
+from src.set_links import free_float
 from src.universe import yahoo_symbol
 
 log = logging.getLogger(__name__)
@@ -59,12 +60,13 @@ def get_snapshot(symbol: str) -> dict:
         "net_margin": info.get("profitMargins"),
         "ex_div_date": _ts_to_date(info.get("exDividendDate")),
         "earnings_date": _ts_to_date(info.get("earningsTimestamp")),
+        "free_float": free_float(info.get("floatShares"), info.get("sharesOutstanding")),  # Yahoo's estimate
     }
 
 
 SNAPSHOT_COLUMNS = ["symbol", "price", "change_pct", "volume", "avg_volume", "value_traded", "bid", "ask",
                     "high_52w", "low_52w", "pos_52w", "market_cap", "pe", "pbv", "div_yield", "roe", "de",
-                    "net_margin", "ex_div_date", "earnings_date"]
+                    "net_margin", "ex_div_date", "earnings_date", "free_float"]
 
 
 class SnapshotError(RuntimeError):

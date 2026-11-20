@@ -12,6 +12,7 @@ def fake_info(price: float = 100.0) -> dict:
         "marketCap": 1e11, "trailingPE": 12.0, "priceToBook": 1.5, "dividendYield": 4.0,
         "returnOnEquity": 0.12, "debtToEquity": 80.0, "profitMargins": 0.1,
         "exDividendDate": 1_790_000_000, "earningsTimestamp": None,
+        "floatShares": 400_000_000, "sharesOutstanding": 1_000_000_000,
     }
 
 

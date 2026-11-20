@@ -37,7 +37,7 @@ def snapshots(symbols: list[str] | None = None) -> pd.DataFrame:
         "volume": 2e6, "avg_volume": 1e6, "value_traded": 1e8, "bid": 29.9, "ask": 30.1,
         "high_52w": 90.0, "low_52w": 20.0, "pos_52w": 0.5, "market_cap": np.linspace(1e12, 1e11, n),
         "pe": np.linspace(8, 20, n), "pbv": 1.2, "div_yield": 0.05, "roe": 0.1, "de": 0.8, "net_margin": 0.08,
-        "ex_div_date": pd.Timestamp("2026-08-19"), "earnings_date": pd.NaT,
+        "ex_div_date": pd.Timestamp("2026-08-19"), "earnings_date": pd.NaT, "free_float": 0.4,
     })[SNAPSHOT_COLUMNS]
 
 
@@ -192,3 +192,11 @@ def test_valuation_tab_compares_dividend_yield_in_percentage_points(fake_cache):
     # Yields 1.0/20 = 5.0%, 1.2/30 = 4.0%, 1.4/35 = 4.0% -> median 4.0%; current 5.0% (fixture) -> +1.0 pp
     text = " ".join(m.value for m in at.markdown)
     assert "**+1.0 pp**" in text and "median of 4.0%" in text and "cheaper than usual" in text
+
+
+def test_stock_page_links_to_the_set_website_and_shows_free_float(fake_cache):
+    at = open_stock("PTT", tab_label("Trading"))
+    assert not at.exception
+    text = " ".join(m.value for m in at.markdown)
+    assert "https://www.set.or.th/en/market/product/stock/quote/PTT/major-shareholders" in text
+    assert {m.label: m.value for m in at.metric}["Free float (Yahoo estimate)"] == "40%"

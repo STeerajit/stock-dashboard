@@ -9,6 +9,7 @@ from src import cache
 from src.charts import price_chart
 from src.fundamentals import SnapshotError, pe_history, sector_medians, snapshot_for, yield_history
 from src.indicators import support_resistance
+from src.set_links import set_links
 from src.universe import OUTSIDE_SET100, describe, set100_expiry_warning
 
 
@@ -43,6 +44,12 @@ st.title(f"{symbol} · {name}")
 st.caption(sector)
 if expiry_warning := set100_expiry_warning(date.today()):
     st.warning(expiry_warning, title="SET100 list may be out of date")
+
+with st.popover("See on the SET website", icon=":material/open_in_new:"):
+    st.caption("For what has no free data feed: money flows, shareholders, warning signs, XR dates and news.")
+    for link in set_links(symbol):
+        st.markdown(f"- [{link.label}]({link.url})" + (f" — all stocks, look up {symbol}" if link.market_wide else ""))
+    st.caption("Form 59 (executives' trades) is published by the SEC at market.sec.or.th.")
 
 snapshot_error: SnapshotError | None = None
 try:
@@ -89,6 +96,9 @@ if t_trade.open:
             st.metric("52-week low", num(snap["low_52w"]), border=True, height="stretch")
             st.metric("Position in 52-week range", pct(snap["pos_52w"], 0), border=True, height="stretch",
                       help="0% = at the 52-week low, 100% = at the 52-week high.")
+            st.metric("Free float (Yahoo estimate)", pct(snap["free_float"], 0), border=True, height="stretch",
+                      help="Share of shares not held by insiders or major holders, as estimated by Yahoo. "
+                           "SET's official figure is under 'Major shareholders and free float' on the SET website.")
         if pd.notna(vol_ratio) and vol_ratio >= 2:
             st.info(f"Volume today is {vol_ratio:.1f}× the average — unusual interest.", title="High activity")
 
