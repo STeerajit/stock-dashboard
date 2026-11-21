@@ -8,6 +8,7 @@ import pytest
 
 from src import store
 from src.fundamentals import FIN_COLUMNS, SNAPSHOT_COLUMNS
+from src.quarterly import QUARTER_COLUMNS
 
 DAYS = pd.bdate_range("2026-11-02", "2026-11-13")  # 10 trading days
 
@@ -22,6 +23,7 @@ class FakeSources:
 
     def __init__(self, failing=(), bad_price=False):
         self.failing, self.bad_price = set(failing), bad_price
+        self.no_quarters: set[str] = set()
         self.price_requests: list[tuple[str, date | None]] = []
         self.today_days = DAYS
 
@@ -48,8 +50,14 @@ class FakeSources:
         fin.attrs = {"source": "thaifin"}
         return fin
 
+    def quarterly(self, symbol):
+        if symbol in self.no_quarters:
+            return pd.DataFrame()
+        return pd.DataFrame({c: [1.0, 2.0] for c in QUARTER_COLUMNS},
+                            index=pd.to_datetime(["2026-06-30", "2026-09-30"]))
+
     def fetchers(self) -> store.Fetchers:
-        return store.Fetchers(self.prices, self.dividends, self.snapshot, self.financials)
+        return store.Fetchers(self.prices, self.dividends, self.snapshot, self.financials, self.quarterly)
 
 
 SYMBOLS = ["PTT", "AOT", "KBANK", "SCB", "CPALL"]
@@ -219,3 +227,22 @@ def test_a_download_that_fails_once_is_retried(db):
 
     src.snapshot = flaky
     assert store.update_store(db, SYMBOLS, src.fetchers(), now=NOW).failed == []
+
+
+def test_quarterly_statements_are_stored_and_kept_when_thaifin_is_down(db):
+    sources = FakeSources()
+    store.update_store(db, SYMBOLS, sources.fetchers(), now=NOW)
+    q = store.load_quarterly(db, "PTT")
+    assert list(q.columns) == QUARTER_COLUMNS
+    assert q.index.tolist() == [pd.Timestamp("2026-06-30"), pd.Timestamp("2026-09-30")]
+
+    sources.no_quarters = {"PTT"}  # thaifin's quarterly statements unavailable on the next update
+    store.update_store(db, SYMBOLS, sources.fetchers(), now=NOW)
+    assert len(store.load_quarterly(db, "PTT")) == 2
+
+
+def test_a_store_made_before_quarterly_statements_reads_as_no_quarters(db):
+    import duckdb
+
+    duckdb.connect(str(db)).close()  # an empty store file without the quarterly table
+    assert store.load_quarterly(db, "PTT").empty

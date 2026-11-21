@@ -15,6 +15,8 @@ from typing import NamedTuple
 import numpy as np
 import pandas as pd
 
+from src import quarterly as qt
+
 LOW_VOL_KEEP = 50
 VOL_WEEKS = 156
 DIVIDEND_YEARS = 5
@@ -35,6 +37,7 @@ class StockData(NamedTuple):
     close: pd.Series  # daily close as traded, not adjusted (for yields)
     dividends: pd.Series  # cash dividend per share, one row per XD date, as traded
     financials: pd.DataFrame  # yearly figures (src.fundamentals.FIN_COLUMNS), index = year
+    quarterly: pd.DataFrame = pd.DataFrame()  # quarterly figures (src.quarterly.QUARTER_COLUMNS), index = quarter end
 
 
 def _until(s, as_of: pd.Timestamp):
@@ -102,11 +105,12 @@ def screen(data: dict[str, StockData], as_of) -> pd.DataFrame:
     rows = []
     for symbol, d in data.items():
         fin = published_financials(d.financials, as_of)
-        eps = fin["EPS"].dropna() if "EPS" in fin else pd.Series(dtype=float)
+        eps = fin["EPS"].dropna() if "EPS" in fin else pd.Series(dtype=float)  # yearly: for "EPS down 3 years"
         price = _price_on(d.close, as_of)
         dps = trailing_dividends(d.dividends, as_of)
         div_yield = dps / price if price > 0 else float("nan")
-        latest_eps = float(eps.iloc[-1]) if len(eps) else float("nan")
+        # Latest EPS (for "EPS negative" and payout): the last 4 published quarters when newer than the year.
+        latest_eps = qt.latest_eps(eps, qt.published(d.quarterly, as_of))
         rows.append({
             "symbol": symbol,
             "volatility": weekly_volatility(d.prices, as_of),

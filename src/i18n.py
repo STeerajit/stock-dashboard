@@ -549,7 +549,7 @@ TEXT: dict[str, dict[str, str]] = {
     "pk.volatility": {"en": 'Weekly volatility', "th": 'ความผันผวนรายสัปดาห์'},
     "pk.volatility_help": {"en": 'Standard deviation of the last 156 weekly returns. Lower = steadier.', "th": 'ส่วนเบี่ยงเบนมาตรฐานของผลตอบแทนรายสัปดาห์ 156 สัปดาห์ล่าสุด ยิ่งต่ำยิ่งนิ่ง'},
     "pk.payout": {"en": 'Payout', "th": 'Payout'},
-    "pk.payout_help": {"en": 'Dividends of the last 12 months / latest published yearly EPS. Above 100% is a dividend trap.', "th": 'ปันผล 12 เดือนล่าสุด / กำไรต่อหุ้นปีล่าสุดที่ประกาศแล้ว เกิน 100% ถือเป็นกับดักปันผล'},
+    "pk.payout_help": {"en": 'Dividends of the last 12 months / EPS of the last 4 published quarters (the latest published year if no newer quarters are out). Above 100% is a dividend trap.', "th": 'ปันผล 12 เดือนล่าสุด / กำไรต่อหุ้น 4 ไตรมาสล่าสุดที่ประกาศแล้ว (หรือปีล่าสุดถ้ายังไม่มีงบไตรมาสที่ใหม่กว่า) เกิน 100% ถือเป็นกับดักปันผล'},
     "pk.table_alt": {"en": 'The 10 dividend picks with rank, yield, momentum, volatility, payout and F-score', "th": 'หุ้นปันผล 10 ตัวพร้อมอันดับ yield โมเมนตัม ความผันผวน payout และ F-score'},
     "pk.signals_title": {"en": 'Signals for each pick', "th": 'สัญญาณของแต่ละตัว'},
     "pk.signals_caption": {"en": 'Each signal stands on its own. They are aids for timing, not instructions.', "th": 'แต่ละสัญญาณแสดงแยกกัน ใช้ช่วยดูจังหวะ ไม่ใช่คำสั่งซื้อขาย'},

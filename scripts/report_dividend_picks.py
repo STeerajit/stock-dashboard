@@ -22,7 +22,7 @@ from src.universe import load_set100  # noqa: E402
 
 def load(path: Path = store.STORE_PATH) -> dict[str, dp.StockData]:
     return {s: dp.StockData(store.load_prices(path, s), store.load_close(path, s), store.load_dividends(path, s),
-                            store.load_financials(path, s))
+                            store.load_financials(path, s), store.load_quarterly(path, s))
             for s in load_set100()["symbol"] if store.has(path, s)}
 
 

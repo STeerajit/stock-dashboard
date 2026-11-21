@@ -58,7 +58,10 @@ def fake_yahoo(monkeypatch):
     import streamlit as st
     import yfinance
 
+    import pandas as pd
+
     import src.fundamentals as fd
+    import src.quarterly as qt
     from tests.fakes import FakeTicker, fake_download
 
     FakeTicker.failing = set()
@@ -70,6 +73,7 @@ def fake_yahoo(monkeypatch):
         raise ConnectionError("thaifin disabled in tests")
 
     monkeypatch.setattr(fd, "_financials_thaifin", no_thaifin)
+    monkeypatch.setattr(qt, "get_quarterly", lambda symbol: pd.DataFrame(columns=qt.QUARTER_COLUMNS))
     st.cache_data.clear()
     yield FakeTicker
     st.cache_data.clear()

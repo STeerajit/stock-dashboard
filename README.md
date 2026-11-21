@@ -64,9 +64,9 @@ Blitz & van Vliet 2018). Each pick shows its buy, info and sell signals with how
 one is. Where every rule comes from, and which papers could not be checked: [docs/research/dividend-picks.md](docs/research/dividend-picks.md).
 
 10-year backtest (`scripts/report_dividend_picks.py`, saved in `data/dividend_picks_backtest.json`): the picks
-returned 8.1% a year against 7.2% for an equal-weight SET100, with lower volatility. Only two rules beat the plain
-picks (buy only above the 10-month average; sell only below rank 20), and the summary "buy now" / "sell" labels did
-not, so the app does not show them. Today's SET100 members are used for the whole period, so these results look
+returned 8.0% a year against 7.2% for an equal-weight SET100, with lower volatility. Only one rule beat the plain
+picks (sell only below rank 20), and the summary "buy now" / "sell" labels did not, so the app does not show them.
+Payout uses the EPS of the last 4 published quarters (thaifin) when newer than the last yearly statements. Today's SET100 members are used for the whole period, so these results look
 better than they were (survivorship bias).
 
 ## Public demo (Streamlit Community Cloud)
@@ -148,6 +148,7 @@ src/today.py                   # rules that flag a stock on the Today page
 src/set_links.py               # links to the SET website + free float
 src/valuation.py               # fair value: DDM, DCF, sensitivity table
 src/scoring.py                 # Piotroski F-score, Magic Formula rank
+src/quarterly.py               # quarterly statements, publication lag, trailing-12-month EPS
 src/dividend_picks.py          # Dividend Picks: low volatility, dividend-trap filters, rank
 src/signals.py                 # Dividend Picks buy/info/sell signals with their evidence
 src/picks_backtest.py          # Dividend Picks backtest results (data/dividend_picks_backtest.json)
@@ -176,6 +177,7 @@ tests/test_today.py            # Today rules at their boundaries; sell signals f
 tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank
+tests/test_quarterly.py        # quarterly publication lag, TTM EPS, thaifin parsing
 tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
 tests/test_signals.py          # each signal at its boundary; summary buy/sell labels

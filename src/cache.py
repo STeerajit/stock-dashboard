@@ -12,6 +12,7 @@ import streamlit as st
 
 from src import dividend_picks as dp
 from src import fundamentals as fd
+from src import quarterly as qt
 from src import store
 from src.data import load_prices
 from src.indicators import add_indicators
@@ -99,6 +100,10 @@ def financials(symbol: str) -> pd.DataFrame:
     return _financials(symbol)
 
 
+def _quarterly(symbol: str) -> pd.DataFrame:
+    return store.load_quarterly(store.STORE_PATH, symbol) if _stored(symbol) else qt.get_quarterly(symbol)
+
+
 @st.cache_data(ttl="24h", show_spinner="Loading 5-year growth for SET100 (about 10 seconds, once a day)...")
 def growth() -> pd.DataFrame:
     """Per SET100 stock: 5-year revenue / net-income CAGR, average ROE and the Piotroski F-score (points, available)."""
@@ -142,12 +147,12 @@ def _picks_one(symbol: str) -> dp.StockData | None:
         if _stored(symbol):
             path = store.STORE_PATH
             return dp.StockData(store.load_prices(path, symbol), store.load_close(path, symbol),
-                                store.load_dividends(path, symbol), _financials(symbol))
+                                store.load_dividends(path, symbol), _financials(symbol), _quarterly(symbol))
         prices = load_prices(yahoo_symbol(symbol), "5y")
         close = load_prices(yahoo_symbol(symbol), "5y", adjusted=False).get("Close", pd.Series(dtype=float))
         if prices.empty or close.empty:
             return None
-        return dp.StockData(prices, close, fd.get_dividends(symbol), _financials(symbol))
+        return dp.StockData(prices, close, fd.get_dividends(symbol), _financials(symbol), _quarterly(symbol))
     except Exception:  # one stock failing (network, bad data) must not break the whole list
         return None
 

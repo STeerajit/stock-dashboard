@@ -142,3 +142,20 @@ def test_missing_history_is_not_ranked():
 
 def test_changes_lists_entered_and_left():
     assert dp.changes(["A", "B", "C"], ["B", "C", "D"]) == (["A"], ["D"])
+
+
+def test_payout_uses_the_last_four_published_quarters_when_newer_than_the_year():
+    # Yearly EPS 2025 = 1.4 (payout 1.0 / 1.4 = 71%), but the 4 quarters to Sep 2026 earned only 0.8 a share.
+    from tests.test_quarterly import quarters
+
+    d = stock()._replace(quarterly=quarters(4, eps=0.2))
+    df = dp.screen({"A": d}, AS_OF)
+    assert row(df, "A")["eps"] == pytest.approx(0.8)
+    assert row(df, "A")["payout"] == pytest.approx(1.0 / 0.8)
+    assert row(df, "A")["stage"] == "payout"
+    # Before Q3 2026 is out (45 days) only 3 quarters are published: the yearly EPS is used.
+    assert row(dp.screen({"A": d}, pd.Timestamp("2026-11-13")), "A")["eps"] == pytest.approx(1.4)
+
+
+def test_payout_falls_back_to_the_yearly_eps_without_quarters():
+    assert row(dp.screen({"A": stock()}, AS_OF), "A")["payout"] == pytest.approx(1.0 / 1.4)

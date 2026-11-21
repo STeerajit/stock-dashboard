@@ -1,4 +1,5 @@
-"""The daily data store: one DuckDB file (data/market.duckdb) with prices, dividends, snapshots and financials.
+"""The daily data store: one DuckDB file (data/market.duckdb) with prices, dividends, snapshots and financials
+(yearly and quarterly).
 
 `update_store` fetches everything first, checks it, and only then writes it in one transaction, so a bad or
 partial download never damages what is already stored. Prices are stored as traded; the dividend
@@ -18,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from src.fundamentals import FIN_COLUMNS, SNAPSHOT_COLUMNS
+from src.quarterly import QUARTER_COLUMNS
 
 STORE_PATH = Path(__file__).resolve().parent.parent / "data" / "market.duckdb"
 MAX_FAILED = 0.2
@@ -33,6 +35,7 @@ class Fetchers(NamedTuple):
     dividends: Callable[[str], pd.Series]  # cash dividend per share by XD date
     snapshot: Callable[[str], dict]  # like fundamentals.get_snapshot
     financials: Callable[[str], pd.DataFrame]  # like fundamentals.get_financials
+    quarterly: Callable[[str], pd.DataFrame] = lambda symbol: pd.DataFrame()  # like quarterly.get_quarterly
 
 
 class UpdateError(RuntimeError):
@@ -71,6 +74,9 @@ def _create_tables(con: duckdb.DuckDBPyConnection) -> None:
                 "PRIMARY KEY (symbol, date))")
     con.execute(f"CREATE TABLE IF NOT EXISTS financials (symbol VARCHAR, year INTEGER, {fin_cols}, "
                 "source VARCHAR, PRIMARY KEY (symbol, year))")
+    q_cols = ", ".join(f"{_q(c)} DOUBLE" for c in QUARTER_COLUMNS)
+    con.execute(f"CREATE TABLE IF NOT EXISTS quarterly (symbol VARCHAR, quarter_end DATE, {q_cols}, "
+                "PRIMARY KEY (symbol, quarter_end))")
     con.execute("CREATE TABLE IF NOT EXISTS meta (key VARCHAR PRIMARY KEY, value VARCHAR)")
 
 
@@ -87,7 +93,8 @@ def update_store(path: Path, symbols: list[str], fetch: Fetchers, now: datetime 
         start = last_dates[sym] + timedelta(days=1) if sym in last_dates else None
         for attempt in range(1 + RETRIES):  # Yahoo often fails a request once ("Invalid Crumb", DNS timeout)
             try:
-                return fetch.prices(sym, start), fetch.dividends(sym), fetch.snapshot(sym), fetch.financials(sym)
+                return (fetch.prices(sym, start), fetch.dividends(sym), fetch.snapshot(sym), fetch.financials(sym),
+                        fetch.quarterly(sym))
             except Exception:
                 if attempt == RETRIES:
                     return None
@@ -105,8 +112,8 @@ def update_store(path: Path, symbols: list[str], fetch: Fetchers, now: datetime 
 
     with connect(path) as con:
         con.execute("BEGIN TRANSACTION")
-        for sym, (prices, dividends, snap, fin) in fetched.items():
-            _write(con, sym, prices, dividends, snap, fin, now.date())
+        for sym, (prices, dividends, snap, fin, quarterly) in fetched.items():
+            _write(con, sym, prices, dividends, snap, fin, quarterly, now.date())
         con.execute("INSERT OR REPLACE INTO meta VALUES ('last_update', ?)", [now.isoformat()])
         con.execute("COMMIT")
     return Report(sorted(fetched), failed)
@@ -121,7 +128,7 @@ def _last_price_dates(path: Path, symbols: list[str]) -> dict[str, date]:
 
 
 def _write(con, sym: str, prices: pd.DataFrame, dividends: pd.Series, snap: dict, fin: pd.DataFrame,
-           day: date) -> None:
+           quarterly: pd.DataFrame, day: date) -> None:
     if not prices.empty:
         p = prices[PRICE_COLUMNS].copy()
         p.insert(0, "date", pd.DatetimeIndex(p.index).date)
@@ -146,6 +153,13 @@ def _write(con, sym: str, prices: pd.DataFrame, dividends: pd.Series, snap: dict
         f.insert(0, "symbol", sym)
         f["source"] = fin.attrs.get("source", "?")
         con.execute("INSERT INTO financials BY NAME SELECT * FROM f")
+    # Keep the stored quarters when this download has none (thaifin down): they are still correct.
+    if not quarterly.empty:
+        con.execute("DELETE FROM quarterly WHERE symbol = ?", [sym])
+        q = quarterly.reindex(columns=QUARTER_COLUMNS).astype(float)
+        q.insert(0, "quarter_end", pd.DatetimeIndex(q.index).date)
+        q.insert(0, "symbol", sym)
+        con.execute("INSERT INTO quarterly BY NAME SELECT * FROM q")
 
 
 # ---------- read ----------
@@ -232,6 +246,16 @@ def load_financials(path: Path, symbol: str) -> pd.DataFrame:
     return fin
 
 
+def load_quarterly(path: Path, symbol: str) -> pd.DataFrame:
+    """Quarterly figures like quarterly.get_quarterly (QUARTER_COLUMNS, index = quarter end), oldest first."""
+    with connect(path, read_only=True) as con:
+        try:
+            df = con.execute("SELECT * FROM quarterly WHERE symbol = ? ORDER BY quarter_end", [symbol]).df()
+        except duckdb.CatalogException:  # a store made before quarterly statements were added
+            return pd.DataFrame(columns=QUARTER_COLUMNS)
+    return df.set_index(pd.DatetimeIndex(df["quarter_end"]))[QUARTER_COLUMNS].astype(float).rename_axis(None)
+
+
 def load_snapshots(path: Path, symbols: list[str]) -> pd.DataFrame:
     """The latest stored snapshot of each symbol (SNAPSHOT_COLUMNS); NaN row for a symbol not stored."""
     with connect(path, read_only=True) as con:
@@ -247,6 +271,7 @@ def load_snapshots(path: Path, symbols: list[str]) -> pd.DataFrame:
 
 def live_fetchers() -> Fetchers:
     """Fetchers that download from Yahoo Finance (prices, dividends, snapshot) and thaifin (financials)."""
+    from src.quarterly import get_quarterly
     import yfinance as yf
 
     from src import fundamentals as fd
@@ -276,4 +301,4 @@ def live_fetchers() -> Fetchers:
             raise ConnectionError(f"No price for {symbol}")
         return snap
 
-    return Fetchers(prices, dividends, snapshot, fd.get_financials)
+    return Fetchers(prices, dividends, snapshot, fd.get_financials, get_quarterly)
