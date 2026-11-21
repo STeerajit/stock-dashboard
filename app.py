@@ -21,6 +21,8 @@ page = st.navigation(
                 help=t("nav.today_help")),
         st.Page("app_pages/screener.py", title=t("nav.screener"), icon=":material/table_chart:",
                 url_path="screener", help=t("nav.screener_help")),
+        st.Page("app_pages/dividend_picks.py", title=t("nav.picks"), icon=":material/savings:",
+                url_path="dividend-picks", help=t("nav.picks_help")),
         st.Page("app_pages/stock.py", title=t("nav.stock"), icon=":material/candlestick_chart:", url_path="stock",
                 help=t("nav.stock_help")),
         st.Page("app_pages/portfolio.py", title=t("nav.portfolio"), icon=":material/account_balance_wallet:",

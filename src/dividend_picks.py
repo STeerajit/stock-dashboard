@@ -151,3 +151,14 @@ def picks(screened: pd.DataFrame, n: int = PICKS) -> list[str]:
 def changes(today: list[str], yesterday: list[str]) -> tuple[list[str], list[str]]:
     """(entered, left): symbols new in today's list, and symbols in yesterday's list but not today's."""
     return [s for s in today if s not in yesterday], [s for s in yesterday if s not in today]
+
+
+def equal_weight_index(data: dict[str, StockData]) -> pd.Series:
+    """An equal-weighted SET100 index (start = 100) from the stocks' dividend-adjusted closes.
+
+    Stands in for the SET index, whose history Yahoo Finance does not provide (only today's value,
+    checked 2026-11-21). Each day is the average daily return of the stocks that traded that day.
+    """
+    closes = pd.DataFrame({s: d.prices["Close"] for s, d in data.items()})
+    returns = closes.pct_change(fill_method=None).mean(axis=1, skipna=True).fillna(0.0)
+    return 100 * (1 + returns).cumprod()

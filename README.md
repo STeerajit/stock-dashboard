@@ -120,6 +120,7 @@ app_pages/today.py             # default page: portfolio stocks to look at today
 app_pages/screener.py          # SET100 table
 app_pages/stock.py             # one-stock detail page (7 tabs)
 app_pages/portfolio.py         # holdings + watchlist editor
+app_pages/dividend_picks.py    # 10 dividend picks with buy/sell signals and backtest
 src/__init__.py
 src/universe.py                # SET100 list + the SET sector names in use
 src/data.py                    # daily prices
@@ -135,6 +136,7 @@ src/valuation.py               # fair value: DDM, DCF, sensitivity table
 src/scoring.py                 # Piotroski F-score, Magic Formula rank
 src/dividend_picks.py          # Dividend Picks: low volatility, dividend-trap filters, rank
 src/signals.py                 # Dividend Picks buy/info/sell signals with their evidence
+src/picks_backtest.py          # Dividend Picks backtest results (data/dividend_picks_backtest.json)
 src/store.py                   # local DuckDB data store: safe incremental update, reads
 src/i18n.py                    # every user-facing string, English and Thai
 src/cache.py                   # Streamlit caching of all loaders
@@ -160,6 +162,7 @@ tests/test_scoring.py          # F-score checks, Magic Formula rank
 tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
 tests/test_signals.py          # each signal at its boundary; summary buy/sell labels
+tests/test_picks_page.py       # Dividend picks page: list, signals, backtest, Thai, outages
 tests/test_store.py            # store: idempotent, incremental, safe; offline app
 tests/test_i18n.py             # translations complete; no hard-coded text in pages
 tests/test_set_links.py        # SET links and free float

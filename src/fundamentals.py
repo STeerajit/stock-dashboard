@@ -234,6 +234,15 @@ def get_dividends_per_year(symbol: str) -> pd.Series:
     return div.groupby(pd.DatetimeIndex(div.index).year).sum()
 
 
+def get_dividends(symbol: str) -> pd.Series:
+    """Cash dividend per share, one row per XD date (dates without time zone), as traded."""
+    div = yf.Ticker(yahoo_symbol(symbol)).dividends
+    index = pd.DatetimeIndex(div.index)
+    if index.tz is not None:
+        index = index.tz_localize(None)
+    return pd.Series(div.to_numpy(dtype=float), index=index.normalize())
+
+
 def pe_history(prices: pd.DataFrame, financials: pd.DataFrame) -> pd.Series:
     """Approximate year-end P/E: last close of each year / that year's EPS."""
     if financials.empty:

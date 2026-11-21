@@ -10,6 +10,7 @@ import duckdb
 import pandas as pd
 import streamlit as st
 
+from src import dividend_picks as dp
 from src import fundamentals as fd
 from src import store
 from src.data import load_prices
@@ -132,3 +133,30 @@ def snapshot_of(symbol: str) -> pd.Series:
     """
     snaps = snapshots() if symbol in set(set100()["symbol"]) else snapshot(symbol)
     return fd.snapshot_for(snaps, symbol)
+
+
+
+def _picks_one(symbol: str) -> dp.StockData | None:
+    """Everything Dividend Picks needs for one stock; None if it cannot be loaded (the stock is then skipped)."""
+    try:
+        if _stored(symbol):
+            path = store.STORE_PATH
+            return dp.StockData(store.load_prices(path, symbol), store.load_close(path, symbol),
+                                store.load_dividends(path, symbol), _financials(symbol))
+        prices = load_prices(yahoo_symbol(symbol), "5y")
+        close = load_prices(yahoo_symbol(symbol), "5y", adjusted=False).get("Close", pd.Series(dtype=float))
+        if prices.empty or close.empty:
+            return None
+        return dp.StockData(prices, close, fd.get_dividends(symbol), _financials(symbol))
+    except Exception:  # one stock failing (network, bad data) must not break the whole list
+        return None
+
+
+@st.cache_data(ttl="1h", show_spinner="Loading SET100 prices, dividends and financials...")
+def picks_data() -> dict[str, dp.StockData]:
+    """Dividend Picks inputs for every SET100 stock that could be loaded."""
+    symbols = set100()["symbol"].tolist()
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        loaded = dict(zip(symbols, pool.map(_picks_one, symbols)))
+    return {s: d for s, d in loaded.items() if d is not None}
+
