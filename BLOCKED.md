@@ -45,11 +45,11 @@ boxes in BACKLOG.md #12.
 
 ## Backlog #8 — deploy to Streamlit Community Cloud
 
-**Status:** ready to deploy, not deployed. The repo is not on GitHub yet, and Streamlit Cloud needs your own
-login. (Checked: all commits use your GitHub noreply address, so no personal email becomes public.)
+**Status:** ready to deploy, not deployed. The repo is public on GitHub (https://github.com/STeerajit/stock-dashboard,
+`main` pushed 2026-11-21, CI green); Streamlit Cloud needs your own login. (Checked: all commits use your GitHub noreply address, so no personal email becomes public.)
 
 **What you need to do:**
-1. Put the repo on GitHub as **public** (Streamlit's free plan needs it) and push `main`.
+1. ~~Put the repo on GitHub as public and push `main`~~ — done.
 2. Open https://share.streamlit.io, sign in with GitHub → **Create app** → repo, branch `main`, file `app.py`,
    Python 3.11 → **Advanced settings → Secrets**: `STOCKS_PUBLIC = "1"` → **Deploy**.
 3. Check: the screener shows 100 rows within 30 s, and `<url>/stock?symbol=KBANK` opens KBANK.
