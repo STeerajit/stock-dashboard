@@ -134,6 +134,7 @@ src/set_links.py               # links to the SET website + free float
 src/valuation.py               # fair value: DDM, DCF, sensitivity table
 src/scoring.py                 # Piotroski F-score, Magic Formula rank
 src/dividend_picks.py          # Dividend Picks: low volatility, dividend-trap filters, rank
+src/signals.py                 # Dividend Picks buy/info/sell signals with their evidence
 src/store.py                   # local DuckDB data store: safe incremental update, reads
 src/i18n.py                    # every user-facing string, English and Thai
 src/cache.py                   # Streamlit caching of all loaders
@@ -158,6 +159,7 @@ tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank
 tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
+tests/test_signals.py          # each signal at its boundary; summary buy/sell labels
 tests/test_store.py            # store: idempotent, incremental, safe; offline app
 tests/test_i18n.py             # translations complete; no hard-coded text in pages
 tests/test_set_links.py        # SET links and free float
