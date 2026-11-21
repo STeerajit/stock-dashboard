@@ -153,17 +153,36 @@ def test_fcf_with_only_one_known_year_is_unknown():
 
 # ---------- special dividends ----------
 
-def test_special_year_flagged_above_1_5x_median():
+def special(per_year: dict[int, float]) -> set[int]:
+    return safety.special_years(pd.Series(per_year))
+
+
+def test_special_year_is_a_spike_above_1_5x_both_neighbours():
     base = {y: 1.0 for y in range(2016, 2026)}
-    assert safety.special_years(pd.Series({**base, 2020: 1.5})) == set()  # exactly 1.5x: not special
-    assert safety.special_years(pd.Series({**base, 2020: 1.51})) == {2020}
+    assert special({**base, 2020: 1.5}) == set()  # exactly 1.5x: not special
+    assert special({**base, 2020: 1.51}) == {2020}
+    assert special({2021: 1.0, 2022: 1.0, 2023: 3.0, 2024: 1.0, 2025: 1.0}) == {2023}  # 1, 1, 3, 1
+    assert special({2021: 1.0, 2022: 2.0, 2023: 1.4, 2024: 1.4, 2025: 1.4}) == set()  # not 1.5x the next year
 
 
-def test_years_without_a_dividend_are_left_out_of_the_special_median():
-    # Paid 2.0, then nothing for 4 years, then 1.0: the median of the paying years is 2.0, so 2025's 2.5 is normal.
-    back = {2016: 2.0, 2017: 2.0, 2018: 2.0, 2019: 0.0, 2020: 0.0, 2021: 0.0, 2022: 0.0, 2023: 1.0, 2024: 1.0,
-            2025: 2.5}
-    assert safety.special_years(pd.Series(back)) == set()
+def test_previous_paid_year_skips_years_without_a_dividend():
+    assert special({2020: 1.0, 2021: 0.0, 2022: 1.4, 2023: 0.9, 2024: 1.0, 2025: 1.0}) == set()
+    assert special({2020: 1.0, 2021: 0.0, 2022: 1.6, 2023: 1.0, 2024: 1.0, 2025: 1.0}) == {2022}
+
+
+def test_latest_year_is_special_above_1_5x_the_median_of_the_3_paid_years_before():
+    base = {2021: 5.0, 2022: 1.0, 2023: 1.0, 2024: 1.2}  # median of 2022-2024: 1.0
+    assert special({**base, 2025: 1.5}) == set()
+    assert special({**base, 2025: 1.51}) == {2025}
+
+
+def test_steady_grower_is_never_special():
+    assert special(growing(first=2016, last=2025, growth=0.10)) == set()
+
+
+def test_recovery_after_a_low_year_is_not_special():
+    assert special({2018: 1.0, 2019: 1.0, 2020: 0.3, 2021: 1.0, 2022: 1.05, 2023: 1.1, 2024: 1.1,
+                    2025: 1.2}) == set()
 
 
 def test_special_year_excluded_from_cagr_and_cut():

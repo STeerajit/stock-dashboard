@@ -9,7 +9,7 @@ Six checks, each "good", "ok", "bad", "unknown" (data missing: never counted as 
 | Years since the last cut | >= 5 or none | 2-4 | 0-1 (a cut in the last 2 complete years) | Set by us; cuts are bad news (Michaely, Thaler & Womack 1995, not checked). |
 | Years paid in a row | >= 10 | 3-9 | < 3 | 3: SETHD's "paid for 3 years"; 10: set by us (like the 10 years of Dividend Achiever lists). |
 | 5-year DPS growth (CAGR) | >= 2% | 0-2% | < 0 | 2%: the middle of the Bank of Thailand's 1-3% inflation target (keeps up with prices). |
-| Special dividend last year | no | yes | - | A year over 1.5x the median of the other years that paid (last 10): set by the owner. |
+| Special dividend last year | no | yes | - | A one-off spike: over 1.5x both the previous paid year and the next year; the last year: over 1.5x the median of the 3 paid years before. Set by the owner (2026-11-22). |
 
 FCF payout is skipped for banks, finance and insurance: their cash flow mixes in lending and deposits.
 Special years still count as paid in the streak, but are left out of the growth rate and of cut detection.
@@ -36,7 +36,7 @@ FCF_YEARS, FCF_BAD_YEARS, FCF_MIN_KNOWN = 3, 2, 2
 CUT_BAD_YEARS, CUT_GOOD_YEARS = 2, 5
 STREAK_OK, STREAK_GOOD = 3, 10
 CAGR_YEARS, CAGR_GOOD = 5, 0.02
-SPECIAL_FACTOR, HISTORY_YEARS = 1.5, 10
+SPECIAL_FACTOR, SPECIAL_LOOKBACK, HISTORY_YEARS = 1.5, 3, 10
 MIN_KNOWN = 3
 
 Status = Literal["good", "ok", "bad", "unknown", "skipped"]
@@ -79,15 +79,22 @@ def per_year(dividends: pd.Series, as_of) -> pd.Series:
 
 
 def special_years(per_year: pd.Series, factor: float = SPECIAL_FACTOR) -> set[int]:
-    """Years (of the last 10) whose dividend is more than `factor` × the median of the other years that paid one
-    (years without a dividend are left out, or a stock that skipped a few years would look special on return)."""
+    """Years (of the last 10) with a one-off spike: a dividend more than `factor` × the previous year that paid
+    one and more than `factor` × the following year. The last year has no following year yet: it is special when
+    over `factor` × the median of the 3 paid years before it."""
     window = per_year.tail(HISTORY_YEARS)
+    years, values = [int(cast(int, y)) for y in window.index], window.to_numpy()
     out = set()
-    for year, dps in window.items():
-        others = window.drop(year)
-        others = others[others > 0]
-        if len(others) >= 2 and others.median() > 0 and dps > factor * others.median():
-            out.add(int(cast(int, year)))
+    for i, (year, dps) in enumerate(zip(years, values)):
+        paid_before = [v for v in values[:i] if v > 0]
+        if not paid_before:
+            continue
+        if i == len(values) - 1:
+            spike = dps > factor * float(pd.Series(paid_before[-SPECIAL_LOOKBACK:]).median())
+        else:
+            spike = dps > factor * paid_before[-1] and dps > factor * values[i + 1]
+        if spike:
+            out.add(year)
     return out
 
 

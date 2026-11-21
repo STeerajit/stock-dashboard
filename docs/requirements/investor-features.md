@@ -40,8 +40,11 @@ special-dividend flag. (Net debt / EBITDA is left out: the data has no EBITDA.)
 - [ ] FCF payout is skipped for financial sectors (`Banking`, `Finance & Securities`, `Insurance`), and the
   reason text says so. (No leverage check: the data has no EBITDA, and thaifin's D/E is meaningless for banks.)
 - [ ] A check with missing data is "unknown", never "bad". Fewer than 3 known checks → "not enough data".
-- [ ] A year whose DPS is more than 1.5× the median of the other years (last 10 complete years) is flagged
-  special. It still counts as paid in the streak, but its amount is left out of the CAGR and of cut detection
+- [ ] A year whose DPS is more than 1.5× the previous paid year **and** more than 1.5× the following year (a
+  one-off spike, last 10 complete years) is flagged special. The latest complete year (no following year yet) is
+  special if its DPS is more than 1.5× the median of the previous 3 paid years. Exactly 1.5× is not special; a
+  steady grower or a recovery after a low year is never flagged. (Changed 2026-11-22: the first rule, 1.5× the
+  median of the other 10 years, flagged 31 of 96 SET100 stocks, mostly steady growers.) It still counts as paid in the streak, but its amount is left out of the CAGR and of cut detection
   (so the year after a special dividend is not a cut).
 - [ ] FCF payout = (DPS × Shares) / FCF. It is bad only if FCF ≤ 0 or payout > 100% in at least 2 of the last
   3 years, with at least 2 of those years known; otherwise unknown (thaifin's FCF includes acquisitions).
