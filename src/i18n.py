@@ -575,7 +575,7 @@ TEXT: dict[str, dict[str, str]] = {
     "pk.rule": {"en": 'Rule', "th": 'กฎ'},
     "pk.rule_cagr": {"en": 'With the rule (a year)', "th": 'ใช้กฎนี้ (ต่อปี)'},
     "pk.base_cagr": {"en": 'Plain picks (a year)', "th": 'ถือ 10 ตัวตามปกติ (ต่อปี)'},
-    "pk.passed": {"en": 'Beat the plain picks', "th": 'ชนะการถือตามปกติ'},
+    "pk.passed": {"en": 'Beat the plain picks by 0.5+ points a year', "th": 'ชนะการถือตามปกติ 0.5 จุดต่อปีขึ้นไป'},
     "pk.backtest_alt": {"en": 'Backtest result of each rule against the plain picks', "th": 'ผล backtest ของแต่ละกฎเทียบกับการถือ 10 ตัวตามปกติ'},
     "pk.limits_title": {"en": 'Limits', "th": 'ข้อจำกัด'},
     "pk.survivorship": {"en": "The backtest uses today's SET100 members, so stocks that fell out of the index are missing: past results look better than they were (survivorship bias). Prices and statements come from free sources and can be wrong.", "th": 'backtest ใช้รายชื่อ SET100 ปัจจุบัน จึงไม่นับหุ้นที่เคยหลุดดัชนีไป ผลย้อนหลังจึงดูดีกว่าความจริง (survivorship bias) ราคาและงบการเงินมาจากแหล่งฟรี อาจผิดพลาดได้'},

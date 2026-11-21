@@ -392,8 +392,9 @@ way to cover them; free float and XR dates may be available for free.
 
 ## 22. Dividend picks: 10 dividend stocks a day from research-based rules — P1 · L
 
-> **Done** on 2026-11-21. Rules and sources: `docs/research/dividend-picks.md`. Two open decisions in BLOCKED.md
-> (buybacks left out; an equal-weight SET100 index stands in for the SET index).
+> **Done** on 2026-11-21. Rules and sources: `docs/research/dividend-picks.md`. Decided with the owner on 2026-11-21:
+> buybacks stay left out (unreliable share counts) and the equal-weight SET100 index keeps standing in for the SET
+> index (Yahoo has no history for it; the market-trend signal did not beat the picks in the backtest anyway).
 
 **Why:** A short daily list of dividend stocks worth holding, picked by rules that come from research rather than
 opinion, with signals that say when to buy or sell and an honest test of whether those signals help.

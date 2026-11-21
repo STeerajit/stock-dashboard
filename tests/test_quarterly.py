@@ -87,3 +87,26 @@ def test_get_quarterly_is_empty_when_thaifin_fails(monkeypatch, caplog):
     monkeypatch.setattr(thaifin, "Stock", down)
     assert qt.get_quarterly("PTT").empty
     assert "thaifin down" in caplog.text
+
+
+def test_fiscal_year_end_is_found_from_net_income():
+    q = quarters(12)  # Q4 2023 .. Q3 2026, net income 10 a quarter
+    q.loc[pd.Timestamp("2024-12-31"), "Net income"] = 20.0
+    december = pd.DataFrame({"Net income": [40.0, 50.0, 40.0]}, index=[2023, 2024, 2025])
+    september = pd.DataFrame({"Net income": [50.0, 40.0]}, index=[2025, 2026])  # years to Sep 2025, Sep 2026
+    assert qt.fiscal_year_end(december.iloc[1:], q) == 12
+    assert qt.fiscal_year_end(september, q) == 9
+    assert qt.fiscal_year_end(pd.DataFrame({"Net income": [99.0]}, index=[2025]), q) is None  # nothing within 5%
+    assert qt.fiscal_year_end(december, pd.DataFrame()) is None
+
+
+def test_the_last_quarter_of_the_fiscal_year_waits_three_months():
+    q = quarters(2)  # Q2 and Q3 2026
+    # For a fiscal year ending in September, Q3 2026 is the yearly statement: out by 31 Dec, not 14 Nov.
+    assert qt.published(q, "2026-11-21", fy_end_month=9).index[-1] == pd.Timestamp("2026-06-30")
+    assert qt.published(q, "2026-12-30", fy_end_month=9).index[-1] == pd.Timestamp("2026-09-30")
+
+
+def test_published_keeps_an_index_only_frame():
+    ends = pd.DatetimeIndex(["2026-06-30", "2026-09-30", "2026-12-31"])
+    assert qt.published(pd.DataFrame(index=ends), "2026-11-21").index.tolist() == list(ends[:2])

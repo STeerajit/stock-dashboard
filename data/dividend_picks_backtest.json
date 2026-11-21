@@ -6,16 +6,16 @@
   "cost_per_trade": 0.0017,
   "stocks": 100,
   "base": {
-    "cagr": 0.08006029706458273,
-    "volatility": 0.1638685859456927,
+    "cagr": 0.0795817842934281,
+    "volatility": 0.1640094231552711,
     "max_drawdown": -0.38489764368108925,
-    "turnover": 4.8014592546963915
+    "turnover": 4.820797721891364
   },
   "benchmark": {
     "cagr": 0.07229222500474197,
     "volatility": 0.19279849742112726,
     "max_drawdown": -0.3685442361682242,
-    "turnover": 0.8552910915646782
+    "turnover": 0.8552910915646781
   },
   "rules": {
     "trend": {
@@ -40,17 +40,17 @@
       "passed": false
     },
     "macd": {
-      "cagr": 0.06747835422450676,
-      "volatility": 0.1462292315499247,
+      "cagr": 0.06626701131399426,
+      "volatility": 0.14661367266210537,
       "max_drawdown": -0.3874383024429794,
-      "turnover": 3.4238930000788685,
+      "turnover": 3.443530012197651,
       "passed": false
     },
     "obv": {
-      "cagr": 0.06502667431916476,
-      "volatility": 0.1408126772403531,
+      "cagr": 0.06531376670258604,
+      "volatility": 0.14087546370510676,
       "max_drawdown": -0.3393386071319515,
-      "turnover": 3.6066418584194735,
+      "turnover": 3.6055345113562822,
       "passed": false
     },
     "near_support": {
@@ -61,10 +61,10 @@
       "passed": false
     },
     "pullback": {
-      "cagr": 0.07167224667914929,
-      "volatility": 0.15186023533814708,
+      "cagr": 0.07048580978444585,
+      "volatility": 0.1520676320848194,
       "max_drawdown": -0.3732043355764282,
-      "turnover": 3.8198320285013216,
+      "turnover": 3.838929594976547,
       "passed": false
     },
     "dividend_month": {
@@ -75,10 +75,10 @@
       "passed": false
     },
     "rank_out": {
-      "cagr": 0.0947681465654504,
-      "volatility": 0.1649921259906692,
+      "cagr": 0.09946146795947541,
+      "volatility": 0.16366931860114184,
       "max_drawdown": -0.3879146164350785,
-      "turnover": 1.8419839376624687,
+      "turnover": 1.8085661679804907,
       "passed": true
     },
     "below_trend": {
@@ -92,14 +92,14 @@
       "cagr": 0.06839712583933633,
       "volatility": 0.12515601072835883,
       "max_drawdown": -0.2956293008782368,
-      "turnover": 2.9040929895550276,
+      "turnover": 2.904092989555028,
       "passed": false
     },
     "sell_now": {
-      "cagr": 0.07576493841946697,
-      "volatility": 0.1059456175837704,
+      "cagr": 0.07983383212633477,
+      "volatility": 0.10631373096103076,
       "max_drawdown": -0.2650747234867765,
-      "turnover": 3.0721123796120695,
+      "turnover": 3.035823247753607,
       "passed": false
     }
   }

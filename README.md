@@ -44,6 +44,16 @@ fresh numbers, e.g. each evening after the close):
 
 The sidebar then shows "Data as of …". Without a local copy, the app fetches everything live.
 
+To look for figures that seem wrong in the local copy (nothing is changed or downloaded):
+
+```bash
+.venv/bin/python scripts/audit_data.py > audit.md   # suspect data + 5 random stocks to check on SET's website
+```
+
+It reports one-day moves over 30%, closes outside the day's high-low, missing days, dividends at or above the price,
+quarters that do not add up to the year within 5%, late statements and past XD dates. These are leads to check by
+hand, not errors to fix automatically.
+
 The interface is in English or Thai (sidebar toggle, or add `?lang=th` to a link).
 
 Share a stock directly with `http://localhost:8501/stock?symbol=PTT` (any SET symbol works, e.g. `?symbol=MAJOR`).
@@ -64,8 +74,9 @@ Blitz & van Vliet 2018). Each pick shows its buy, info and sell signals with how
 one is. Where every rule comes from, and which papers could not be checked: [docs/research/dividend-picks.md](docs/research/dividend-picks.md).
 
 10-year backtest (`scripts/report_dividend_picks.py`, saved in `data/dividend_picks_backtest.json`): the picks
-returned 8.0% a year against 7.2% for an equal-weight SET100, with lower volatility. Only one rule beat the plain
-picks (sell only below rank 20), and the summary "buy now" / "sell" labels did not, so the app does not show them.
+returned 8.0% a year against 7.2% for an equal-weight SET100, with lower volatility. A rule counts as a win only when it beats the
+plain picks by at least 0.5 percentage points a year. Only one rule did (sell only below rank 20); the summary
+"buy now" / "sell" labels did not, so the app does not show them.
 Payout uses the EPS of the last 4 published quarters (thaifin) when newer than the last yearly statements. Today's SET100 members are used for the whole period, so these results look
 better than they were (survivorship bias).
 
@@ -113,7 +124,7 @@ main file `app.py`, Python 3.11 → **Advanced settings → Secrets**: `STOCKS_P
   `SET100_PERIOD_END`, both pages warn that the list may be out of date.
   The stock page also opens stocks outside SET100 (`?symbol=MAJOR`); their sector shows as "Outside SET100".
 - **Local store:** `data/market.duckdb` (gitignored), written by `scripts/update_data.py`: prices as traded,
-  dividends, the latest snapshot per day and yearly financials. Adjusted prices are computed from prices and
+  dividends, the latest snapshot per day, and yearly and quarterly financials. Adjusted prices are computed from prices and
   dividends when read, so each update downloads only the new days. An update that fails for more than 20% of
   the stocks, or sees a zero or negative price, changes nothing.
 - **Your portfolio:** `data/portfolio.csv`, written by the Portfolio page. It is in `.gitignore`, so your real
@@ -148,7 +159,8 @@ src/today.py                   # rules that flag a stock on the Today page
 src/set_links.py               # links to the SET website + free float
 src/valuation.py               # fair value: DDM, DCF, sensitivity table
 src/scoring.py                 # Piotroski F-score, Magic Formula rank
-src/quarterly.py               # quarterly statements, publication lag, trailing-12-month EPS
+src/quarterly.py               # quarterly statements, fiscal year end, publication lag, trailing-12-month EPS
+src/audit.py                   # data checks on the store (suspect prices, dividends, statements)
 src/dividend_picks.py          # Dividend Picks: low volatility, dividend-trap filters, rank
 src/signals.py                 # Dividend Picks buy/info/sell signals with their evidence
 src/picks_backtest.py          # Dividend Picks backtest results (data/dividend_picks_backtest.json)
@@ -161,6 +173,7 @@ data/dividend_picks_backtest.json # saved Dividend Picks backtest results (read 
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
 scripts/stocks.sh              # start/stop the app in the background (macOS)
 scripts/update_data.py         # download today's SET100 data into data/market.duckdb
+scripts/audit_data.py          # report suspect data in the store + a list to check by hand on SET's website
 scripts/report_backtest.py     # results table (+ figures) for docs/article.md
 scripts/report_dividend_picks.py # 10-year Dividend Picks backtest -> data/dividend_picks_backtest.json
 .github/workflows/ci.yml       # GitHub Actions CI
@@ -177,7 +190,8 @@ tests/test_today.py            # Today rules at their boundaries; sell signals f
 tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank
-tests/test_quarterly.py        # quarterly publication lag, TTM EPS, thaifin parsing
+tests/test_quarterly.py        # quarterly publication lag, fiscal year end, TTM EPS, thaifin parsing
+tests/test_audit.py            # each data check at its boundary
 tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
 tests/test_signals.py          # each signal at its boundary; summary buy/sell labels

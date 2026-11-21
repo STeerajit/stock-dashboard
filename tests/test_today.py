@@ -217,7 +217,8 @@ def picks_universe(**special):
     return {**data, **special}
 
 
-def test_page_warns_about_sell_signals_for_held_stocks_only(today_page):
+def test_page_warns_about_sell_signals_for_held_stocks_only(today_page, monkeypatch):
+    monkeypatch.setattr(picks_backtest, "load_results", lambda path=None: None)  # not the real saved file
     cut = dividends(range(2019, 2025), amount=2.0)  # paid 2.0 until 2024, then 1.0 in 2025: a cut
     cut = pd.concat([cut, dividends([2025, 2026], amount=1.0)])
     today_page["picks"] = picks_universe(PTT=stock(div=cut, fin=financials(eps=(5,) * 5)),

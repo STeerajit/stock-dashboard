@@ -63,7 +63,7 @@ def test_run_reports_base_benchmark_and_every_rule():
     assert results["months"] == 3 and results["stocks"] == 15
     assert set(results["rules"]) == {*bt.BUY_RULES, "rank_out", "below_trend", "buy_now", "sell_now"}
     for r in results["rules"].values():
-        assert r["passed"] == (r["cagr"] > results["base"]["cagr"])
+        assert r["passed"] == (r["cagr"] >= results["base"]["cagr"] + bt.MIN_MARGIN)
     json.dumps(results)  # saveable as is
 
 
@@ -83,3 +83,15 @@ def test_saved_results_match_the_rules_the_app_knows():
         pytest.skip("backtest not run yet")
     assert set(results["rules"]) == {*bt.BUY_RULES, "rank_out", "below_trend", "buy_now", "sell_now"}
     assert {"cagr", "volatility", "max_drawdown", "turnover"} <= set(results["base"])
+
+
+def test_a_rule_must_beat_the_plain_picks_by_half_a_point(monkeypatch):
+    data = {f"S{i:02d}": stock(vol=0.005 + i * 0.0003, seed=i, div=dividends(amount=1 + i / 20),
+                               fin=financials(eps=(5,) * 5)) for i in range(15)}
+    dates = list(pd.date_range("2025-10-31", periods=4, freq="ME"))
+    base = bt.run(data, dates)["base"]["cagr"]
+    lead = {"base": base}
+    monkeypatch.setattr(bt, "stats", lambda *a: {"cagr": lead.pop("base", None) or lead["rule"]})
+    for margin, passed in ((0.004, False), (0.005, True)):
+        lead.update(base=base, rule=base + margin)
+        assert all(r["passed"] is passed for r in bt.run(data, dates)["rules"].values())

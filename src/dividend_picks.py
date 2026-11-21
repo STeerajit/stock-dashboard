@@ -110,7 +110,8 @@ def screen(data: dict[str, StockData], as_of) -> pd.DataFrame:
         dps = trailing_dividends(d.dividends, as_of)
         div_yield = dps / price if price > 0 else float("nan")
         # Latest EPS (for "EPS negative" and payout): the last 4 published quarters when newer than the year.
-        latest_eps = qt.latest_eps(eps, qt.published(d.quarterly, as_of))
+        month = qt.fiscal_year_end(d.financials, d.quarterly) or 12  # a fixed fact, so all history may be used
+        latest_eps = qt.latest_eps(eps, qt.published(d.quarterly, as_of, month))
         rows.append({
             "symbol": symbol,
             "volatility": weekly_volatility(d.prices, as_of),

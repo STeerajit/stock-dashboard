@@ -8,7 +8,8 @@ The plain picks are the base. Each rule is a variant of it:
 - a buy rule lets a new pick in only when its signal is on (stocks already held are kept while they stay picks);
 - "rank_out" keeps a held stock until its rank falls below 20, filling free slots with the best new picks;
 - "below_trend" holds the picks minus those below their 10-month average.
-A rule passes when its yearly return after costs is higher than the plain picks'.
+A rule passes when its yearly return after costs beats the plain picks' by at least MIN_MARGIN (0.5 percentage
+points, set by the project owner on 2026-11-22: a smaller lead can flip with a small change in the data).
 
 The results file is committed, so the app (and the public demo) can say whether each rule beat the plain picks
 without re-running a 10-year backtest on every visit.
@@ -27,6 +28,7 @@ from src import signals as sg
 RESULTS_PATH = Path(__file__).resolve().parent.parent / "data" / "dividend_picks_backtest.json"
 COST_PER_TRADE = 0.0017  # Thai online broker commission + VAT, per buy or per sell (as in docs/article.md)
 YEARS = 10
+MIN_MARGIN = 0.005  # a rule must beat the plain picks by 0.5 percentage points a year (owner-set)
 BUY_RULES = ("trend", "market_trend", "rsi_low", "macd", "obv", "near_support", "pullback", "dividend_month")
 
 
@@ -141,5 +143,5 @@ def run(data: dict[str, dp.StockData], dates: list[pd.Timestamp]) -> dict:
         "start": f"{dates[0]:%Y-%m}", "end": f"{dates[-1]:%Y-%m}", "months": len(dates) - 1,
         "cost_per_trade": COST_PER_TRADE, "stocks": len(data),
         "base": base, "benchmark": benchmark,
-        "rules": {name: {**r, "passed": r["cagr"] > base["cagr"]} for name, r in out.items()},
+        "rules": {name: {**r, "passed": r["cagr"] >= base["cagr"] + MIN_MARGIN} for name, r in out.items()},
     }
