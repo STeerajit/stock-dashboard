@@ -180,7 +180,7 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 
 ## 10. Data pipeline: daily data store (DuckDB) — P2 · L
 
-> **Done** on 2026-11-21, except running the scheduled GitHub job, which needs the repo on GitHub (like #7).
+> **Done** on 2026-11-21. The GitHub job, started by hand once, updated all 100 stocks in 126 s and saved the artifact.
 > First real update: 99 of 100 stocks in 61 s (8 in parallel, one retry each). Screener first load from the
 > store: 2.5 s in a real browser (10 s live). Adjusted prices are computed from stored raw prices and dividends,
 > because fetching only new days would leave stored adjusted prices wrong after each new dividend.
@@ -196,7 +196,7 @@ A small daily pipeline fixes all three and shows data-engineering skill.
 - [x] Safety: if more than 20% of symbols fail, or any stored price is ≤ 0, the script exits non-zero and leaves the existing store untouched.
 - [x] The app reads through `src/cache.py` from the store, not the network. With Wi-Fi off, both pages still render the last stored data and show "Data as of <date>".
 - [x] The screener's first load from the store takes under 3 seconds.
-- [ ] A scheduled GitHub Actions job runs the script on weekdays after market close (18:30 Bangkok = 11:30 UTC) and can also be started manually. Depends on #7.
+- [x] A scheduled GitHub Actions job runs the script on weekdays after market close (18:30 Bangkok = 11:30 UTC) and can also be started manually. Depends on #7.
 
 ---
 

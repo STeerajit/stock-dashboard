@@ -2,8 +2,8 @@
 
 ## Backlog #7 — prove the GitHub Actions workflow fails on a failing test
 
-**Status:** the workflow file is written, but it has **never run**. The repo has no GitHub remote yet, and
-pushing was not allowed. What was checked instead: `scripts/check.sh`, the exact command the workflow runs,
+**Status:** since 2026-11-21 the repo is on GitHub and the CI workflow runs green on `main`. Still unchecked:
+that a failing test turns it red. What was checked instead: `scripts/check.sh`, the exact command the workflow runs,
 exits 1 with a deliberately failing test and 0 after reverting it (locally, 2026-11-20).
 
 **What you need to do** (after the repo is on GitHub, e.g. as part of #8):
@@ -33,15 +33,6 @@ the year-end price used.
 **What you need to do** (optional): log in to set.or.th (or open SETSMART if you have it), find PTT and ADVANC
 dividend yield at year-end 2022 and 2023, and check they are within ±1 pp of the app (PTT 6.32%, 4.20%;
 ADVANC 3.94%, 3.80%). Then tick the spot-check box in BACKLOG.md #14.
-
-## Backlog #10 — the scheduled "Update data" GitHub job has never run
-
-**Status:** `.github/workflows/update-data.yml` is written (weekdays 18:30 Bangkok + manual run, uploads
-`market.duckdb` as an artifact), but the repo is not on GitHub, so it has never run. The same script works
-locally: `scripts/update_data.py` updated 99 of 100 stocks in 61 s on 2026-11-21.
-
-**What you need to do** (after the repo is on GitHub): open **Actions → Update data → Run workflow** once and
-check it ends green with a `market-duckdb` artifact. Then tick the last box in BACKLOG.md #10.
 
 ## Backlog #12 — publish the article
 
