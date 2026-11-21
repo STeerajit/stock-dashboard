@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src import cache
+from src import cache, safety
+from src import dividend_picks as dp
 from src.charts import EXTRAS, price_chart
 from src.fundamentals import (SCORE_COLUMNS, SnapshotError, growth_quality, pe_history, sector_medians, snapshot_for,
                               yield_history)
@@ -267,6 +268,13 @@ if t_div.open:
             st.subheader(t("div.per_year"))
             st.bar_chart(div.tail(15).rename(index=str), alt=t("div.alt", symbol=symbol))
             st.caption(t("div.note"))
+        st.subheader(t("safety.title"))
+        st.caption(t("safety.caption"))
+        # Only dividends and statements feed the grade, so no prices are loaded for it.
+        events = dp.StockData(pd.DataFrame(), pd.Series(dtype=float), cache.dividend_events(symbol),
+                              cache.financials(symbol), cache.quarterly(symbol))
+        grade = safety.grade(events, sector, pd.Timestamp(date.today()), lang=lang)
+        st.markdown(safety.badge(grade.level, lang) + "  \n" + "  \n".join(safety.reason_lines(grade)))
 
 # ============ Fair value and F-score (backlog #13) ============
 FINANCIAL_SECTORS = ("Banking", "Finance & Securities", "Insurance")

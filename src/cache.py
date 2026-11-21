@@ -104,6 +104,11 @@ def _quarterly(symbol: str) -> pd.DataFrame:
     return store.load_quarterly(store.STORE_PATH, symbol) if _stored(symbol) else qt.get_quarterly(symbol)
 
 
+@st.cache_data(ttl="24h", max_entries=100)
+def quarterly(symbol: str) -> pd.DataFrame:
+    return _quarterly(symbol)
+
+
 @st.cache_data(ttl="24h", show_spinner="Loading 5-year growth for SET100 (about 10 seconds, once a day)...")
 def growth() -> pd.DataFrame:
     """Per SET100 stock: 5-year revenue / net-income CAGR, average ROE and the Piotroski F-score (points, available)."""
@@ -124,6 +129,14 @@ def dividends(symbol: str) -> pd.Series:
     if _stored(symbol):
         return store.load_dividends_per_year(store.STORE_PATH, symbol)
     return fd.get_dividends_per_year(symbol)
+
+
+@st.cache_data(ttl="24h", max_entries=100)
+def dividend_events(symbol: str) -> pd.Series:
+    """Cash dividend per share, one row per XD date, as traded."""
+    if _stored(symbol):
+        return store.load_dividends(store.STORE_PATH, symbol)
+    return fd.get_dividends(symbol)
 
 
 @st.cache_data(ttl="24h", max_entries=50)

@@ -3,7 +3,8 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-from src import cache, portfolio
+from src import cache, portfolio, safety
+from src import dividend_picks as dp
 from src.fundamentals import SnapshotError
 from src.i18n import current_lang, t
 from src.universe import describe
@@ -33,6 +34,17 @@ def quotes(symbols: list[str]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["symbol", "price", "dps", "sector"])
 
 
+def safety_level(symbol: str, sector: str) -> str | None:
+    """The dividend safety grade of a held stock, as text. In public mode a stock not in the store costs about
+    2 thaifin fetches (yearly and quarterly statements), once a day. None if its data can't be loaded."""
+    try:
+        d = dp.StockData(pd.DataFrame(), pd.Series(dtype=float), cache.dividend_events(symbol),
+                         cache.financials(symbol), cache.quarterly(symbol))
+    except Exception:  # one stock failing (network, bad data) must not break the page
+        return None
+    return t(f"safety.level.{safety.grade(d, sector, pd.Timestamp(date.today()), lang=current_lang()).level}")
+
+
 if saved.empty:
     st.info(t("port.empty"), title=t("port.empty_title"))
 else:
@@ -41,6 +53,8 @@ else:
     except SnapshotError as e:
         st.warning(str(e), title=SnapshotError.title)
     else:
+        pos["safety"] = [safety_level(sym, sector) if shares > 0 else None
+                         for sym, sector, shares in zip(pos["symbol"], pos["sector"], pos["shares"])]
         tot = portfolio.totals(pos)
         with st.container(horizontal=True):
             st.metric(t("port.value"), f"{tot['value']:,.0f}", border=True, height="stretch")
@@ -60,7 +74,7 @@ else:
             pos.sort_values(["value", "symbol"], ascending=[False, True]),
             hide_index=True,
             column_order=["symbol", "sector", "shares", "avg_cost", "price", "value", "pnl", "pnl_pct",
-                          "est_dividend", "yield_on_cost"],
+                          "est_dividend", "yield_on_cost", "safety"],
             column_config={
                 "symbol": st.column_config.TextColumn(t("common.symbol"), pinned=True),
                 "sector": st.column_config.TextColumn(t("common.sector")),
@@ -73,6 +87,7 @@ else:
                 "est_dividend": nc(t("port.col_dividend"), format="localized",
                                    help=t("port.col_dividend_help", year=last_year)),
                 "yield_on_cost": nc(t("port.yoc"), format="percent"),
+                "safety": st.column_config.TextColumn(t("safety.col"), help=t("safety.col_help")),
             },
             alt=t("port.table_alt"),
         )

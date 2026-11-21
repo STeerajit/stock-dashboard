@@ -165,6 +165,7 @@ src/quarterly.py               # quarterly statements, fiscal year end, publicat
 src/audit.py                   # data checks on the store (suspect prices, dividends, statements)
 src/dividend_picks.py          # Dividend Picks: low volatility, dividend-trap filters, rank
 src/signals.py                 # Dividend Picks buy/info/sell signals with their evidence
+src/safety.py                  # dividend safety grade: payout, FCF, cuts, years paid, growth, special dividends
 src/picks_backtest.py          # Dividend Picks backtest results (data/dividend_picks_backtest.json)
 src/store.py                   # local DuckDB data store: safe incremental update, reads
 src/i18n.py                    # every user-facing string, English and Thai
@@ -197,6 +198,7 @@ tests/test_audit.py            # each data check at its boundary
 tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
 tests/test_signals.py          # each signal at its boundary; summary buy/sell labels
+tests/test_safety.py           # dividend safety checks at their thresholds; missing data, banks, special years
 tests/test_picks_page.py       # Dividend picks page: list, signals, backtest, Thai, outages
 tests/test_picks_backtest.py   # backtest: weights, costs, stats, every rule reported
 tests/test_store.py            # store: idempotent, incremental, safe; offline app

@@ -252,7 +252,7 @@ def pe_history(prices: pd.DataFrame, financials: pd.DataFrame) -> pd.Series:
     return (year_end / eps).dropna()
 
 
-def _cagr(series: pd.Series, years: int) -> float:
+def cagr(series: pd.Series, years: int) -> float:
     """Yearly growth rate from `years` before the last year to the last year; NaN without both values,
     or when either is zero or negative (growth rates mean nothing across losses)."""
     s = series.dropna()
@@ -266,8 +266,8 @@ def growth_quality(financials: pd.DataFrame, years: int = 5) -> dict[str, float]
     """5-year revenue CAGR, net-income CAGR and average ROE from yearly financials (NaN when not computable)."""
     roe = financials["ROE"].dropna() if "ROE" in financials else pd.Series(dtype=float)
     return {
-        "rev_cagr5": _cagr(financials["Revenue"], years) if not financials.empty else float("nan"),
-        "ni_cagr5": _cagr(financials["Net income"], years) if not financials.empty else float("nan"),
+        "rev_cagr5": cagr(financials["Revenue"], years) if not financials.empty else float("nan"),
+        "ni_cagr5": cagr(financials["Net income"], years) if not financials.empty else float("nan"),
         "roe_avg5": float(roe.tail(years).mean()) if len(roe) >= years else float("nan"),
     }
 

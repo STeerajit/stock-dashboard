@@ -3,7 +3,7 @@ from typing import cast
 import pandas as pd
 import streamlit as st
 
-from src import cache
+from src import cache, safety
 from src import dividend_picks as dp
 from src import signals as sg
 from src.fundamentals import SnapshotError
@@ -121,6 +121,10 @@ for _, r in table.iterrows():
         sell.markdown(side_text(sig, "sell"))
         if "yield_vs_5y" in sig:
             st.markdown(f"{INFO_MARK} {sig['yield_vs_5y'].label}")
+        grade = safety.grade(data[symbol], r["sector"], today, lang=lang)
+        # Only the checks that are not good, to keep the card short (the stock page lists all of them).
+        concerns = [line for c, line in zip(grade.checks, safety.reason_lines(grade)) if c.status != "good"]
+        st.markdown("  \n".join([f"**{t('safety.label')}** {safety.badge(grade.level, lang)}", *concerns]))
         st.page_link("app_pages/stock.py", label=t("today.open", symbol=symbol), icon=":material/arrow_forward:",
                      query_params={"symbol": symbol})
 

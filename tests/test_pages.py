@@ -72,6 +72,9 @@ def fake_cache(monkeypatch):
     monkeypatch.setattr(cache, "backtest", lambda symbol: train_and_backtest(PRICES))
     monkeypatch.setattr(cache, "unadjusted_close", lambda symbol: pd.Series(
         [20.0, 30.0, 35.0], index=pd.to_datetime(["2023-12-29", "2024-12-30", "2025-12-30"])))
+    monkeypatch.setattr(cache, "dividend_events", lambda symbol: pd.Series(
+        [1.0, 1.2, 1.4], index=pd.to_datetime(["2023-04-10", "2024-04-10", "2025-04-10"])))
+    monkeypatch.setattr(cache, "quarterly", lambda symbol: pd.DataFrame())
     return state
 
 
@@ -269,3 +272,11 @@ def test_chart_tab_switches_extra_indicators_on(fake_cache):
     assert not at.exception
     names = {tr["name"] for tr in json.loads(at.get("plotly_chart")[0].proto.spec)["data"]}
     assert {"SMA200", "MACD", "OBV"} <= names
+
+
+def test_dividends_tab_shows_the_safety_grade_with_its_reasons(fake_cache):
+    at = open_stock("PTT", tab_label("Dividends"))
+    assert not at.exception
+    assert "Dividend safety" in [h.value for h in at.subheader]
+    text = " ".join(m.value for m in at.markdown)
+    assert "-badge[" in text and "in a row" in text  # the level, then one line per check

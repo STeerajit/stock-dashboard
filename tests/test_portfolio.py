@@ -166,6 +166,11 @@ def fake_market(monkeypatch):
     monkeypatch.setattr(cache, "snapshots", lambda: snaps(["PTT", "KBANK"]))
     monkeypatch.setattr(cache, "snapshot", lambda symbol: snaps([symbol]))
     monkeypatch.setattr(cache, "dividends", lambda symbol: pd.Series([1.0, 2.0], index=[2020, 2021]))
+    monkeypatch.setattr(cache, "dividend_events", lambda symbol: pd.Series(
+        1.0, index=pd.to_datetime([f"{y}-04-10" for y in range(2010, 2026)])))
+    monkeypatch.setattr(cache, "financials", lambda symbol: pd.DataFrame(
+        {"EPS": 2.0, "Free cash flow": 4e9, "Shares": 1e9}, index=[2023, 2024, 2025]))
+    monkeypatch.setattr(cache, "quarterly", lambda symbol: pd.DataFrame())
 
 def run_page_with_edits(monkeypatch, edited: pd.DataFrame) -> AppTest:
     """Open the page, make the table editor return `edited` (AppTest can't type into cells), and press Save."""
@@ -190,6 +195,15 @@ def test_page_shows_the_numbers_of_a_saved_portfolio(csv_path, fake_market):
     assert metrics["Profit / loss (THB)"] == "+0"
     assert set(at.dataframe[0].value["symbol"]) == {"PTT", "KBANK", "MAJOR"}
     assert any("No trading fees" in c.value for c in at.caption)
+
+
+def test_page_shows_the_dividend_safety_of_held_stocks_only(csv_path, fake_market):
+    portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0), ("MAJOR", 0, np.nan)]))
+    at = AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run()
+    assert not at.exception
+    safety = at.dataframe[0].value.set_index("symbol")["safety"]
+    assert safety["PTT"] and safety["KBANK"]  # 16 years paid, no cut, low payout
+    assert pd.isna(safety["MAJOR"])  # watchlist row: not graded
 
 
 def test_page_saves_edited_table(csv_path, fake_market, monkeypatch):

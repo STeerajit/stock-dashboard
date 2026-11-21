@@ -106,3 +106,11 @@ def test_equal_weight_index_averages_daily_returns():
     index = equal_weight_index({"A": StockData(a, a["Close"], empty, pd.DataFrame()),
                                 "B": StockData(b, b["Close"], empty, pd.DataFrame())})
     assert index.tolist() == pytest.approx([100.0, 105.0, 99.75])
+
+
+def test_each_pick_card_shows_its_dividend_safety(fake_picks):
+    at = run()
+    assert not at.exception
+    lines = [m.value for m in at.markdown if m.value.startswith("**Dividend safety:**")]
+    assert len(lines) == 10 and all("-badge[" in v for v in lines)
+    assert all("banks" in v for v in lines)  # every fake stock is a bank: FCF payout is skipped, and it says so

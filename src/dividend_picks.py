@@ -98,6 +98,18 @@ def _eps_declining(eps: pd.Series) -> bool:
     return len(last) == EPS_DECLINE_YEARS + 1 and bool((last.diff().dropna() < 0).all())
 
 
+def ttm_payout(d: StockData, as_of: pd.Timestamp) -> tuple[float, float, float]:
+    """(dividends of the last 12 months, latest EPS, payout = their ratio) on `as_of`.
+    The EPS is of the last 4 published quarters when newer than the last published year. Payout is NaN unless
+    the EPS is positive."""
+    fin = published_financials(d.financials, as_of)
+    eps = fin["EPS"].dropna() if "EPS" in fin else pd.Series(dtype=float)
+    dps = trailing_dividends(d.dividends, as_of)
+    month = qt.fiscal_year_end(d.financials, d.quarterly) or 12  # a fixed fact, so all history may be used
+    latest_eps = qt.latest_eps(eps, qt.published(d.quarterly, as_of, month))
+    return dps, latest_eps, dps / latest_eps if latest_eps > 0 else float("nan")
+
+
 def screen(data: dict[str, StockData], as_of) -> pd.DataFrame:
     """Every symbol with its figures on `as_of`, the step it stopped at (`stage`, see STAGES) and,
     if it passed every step, its `rank` (1 = best). Sorted by rank, unranked last."""
@@ -107,18 +119,15 @@ def screen(data: dict[str, StockData], as_of) -> pd.DataFrame:
         fin = published_financials(d.financials, as_of)
         eps = fin["EPS"].dropna() if "EPS" in fin else pd.Series(dtype=float)  # yearly: for "EPS down 3 years"
         price = _price_on(d.close, as_of)
-        dps = trailing_dividends(d.dividends, as_of)
+        dps, latest_eps, payout = ttm_payout(d, as_of)  # latest EPS: also for "EPS negative"
         div_yield = dps / price if price > 0 else float("nan")
-        # Latest EPS (for "EPS negative" and payout): the last 4 published quarters when newer than the year.
-        month = qt.fiscal_year_end(d.financials, d.quarterly) or 12  # a fixed fact, so all history may be used
-        latest_eps = qt.latest_eps(eps, qt.published(d.quarterly, as_of, month))
         rows.append({
             "symbol": symbol,
             "volatility": weekly_volatility(d.prices, as_of),
             "div_yield": div_yield,
             "buyback_yield": buyback_yield(fin),
             "momentum": momentum_12_1(d.prices, as_of),
-            "payout": dps / latest_eps if latest_eps > 0 else float("nan"),
+            "payout": payout,
             "eps": latest_eps,
             "paid_5y": paid_every_year(d.dividends, as_of),
             "eps_declining": _eps_declining(eps),
