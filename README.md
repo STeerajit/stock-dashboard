@@ -141,10 +141,12 @@ src/store.py                   # local DuckDB data store: safe incremental updat
 src/i18n.py                    # every user-facing string, English and Thai
 src/cache.py                   # Streamlit caching of all loaders
 data/set100.csv                # SET100 constituents (with an in_set50 flag)
+data/dividend_picks_backtest.json # saved Dividend Picks backtest results (read by the app)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
 scripts/stocks.sh              # start/stop the app in the background (macOS)
 scripts/update_data.py         # download today's SET100 data into data/market.duckdb
 scripts/report_backtest.py     # results table (+ figures) for docs/article.md
+scripts/report_dividend_picks.py # 10-year Dividend Picks backtest -> data/dividend_picks_backtest.json
 .github/workflows/ci.yml       # GitHub Actions CI
 tests/conftest.py              # blocks network access; fake Yahoo fixture
 tests/fakes.py                 # offline fakes for yfinance
@@ -163,6 +165,7 @@ tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
 tests/test_signals.py          # each signal at its boundary; summary buy/sell labels
 tests/test_picks_page.py       # Dividend picks page: list, signals, backtest, Thai, outages
+tests/test_picks_backtest.py   # backtest: weights, costs, stats, every rule reported
 tests/test_store.py            # store: idempotent, incremental, safe; offline app
 tests/test_i18n.py             # translations complete; no hard-coded text in pages
 tests/test_set_links.py        # SET links and free float
