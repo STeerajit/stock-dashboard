@@ -50,6 +50,7 @@ class Signal(NamedTuple):
     key: str
     on: bool
     label: str  # what it says today, with its numbers
+    short: str = ""  # the same in a few plain words (on: what it means; off: the signal's short name)
 
 
 def _above_10_month(close: pd.Series, as_of: pd.Timestamp) -> tuple[bool | None, float, float]:
@@ -83,29 +84,38 @@ def compute(d: StockData, as_of, *, rank, stage: str, market_close: pd.Series | 
     tx = lambda key, **kw: text(f"sig.{key}", lang, **kw)  # noqa: E731
     out: dict[str, Signal] = {}
 
-    def put(key, on, label):
-        out[key] = Signal(key, bool(on), label)
+    def put(key, on, label, short=""):
+        out[key] = Signal(key, bool(on), label, short)
 
     above, close_m, sma_m = _above_10_month(prices["Close"], as_of)
     put("trend", above, tx("no_trend") if above is None else
-        tx("trend_up" if above else "trend_down", close=close_m, sma=sma_m))
+        tx("trend_up" if above else "trend_down", close=close_m, sma=sma_m),
+        tx("s.trend", close=close_m, sma=sma_m) if above else tx("short.trend"))
     if market_close is not None:
         m_above, m_close, m_sma = _above_10_month(market_close, as_of)
         put("market_trend", m_above, tx("no_trend") if m_above is None else
-            tx("market_up" if m_above else "market_down", close=m_close, sma=m_sma))
-    put("rsi_low", last["RSI14"] < RSI_LOW, tx("rsi", rsi=last["RSI14"], low=RSI_LOW))
-    put("macd", last["MACD"] > last["MACD_signal"], tx("macd_up" if last["MACD"] > last["MACD_signal"] else "macd_down"))
-    put("obv", last["OBV"] > last["OBV_SMA20"], tx("obv_up" if last["OBV"] > last["OBV_SMA20"] else "obv_down"))
+            tx("market_up" if m_above else "market_down", close=m_close, sma=m_sma),
+            tx("s.market_trend") if m_above else tx("short.market_trend"))
+    rsi_low = last["RSI14"] < RSI_LOW
+    put("rsi_low", rsi_low, tx("rsi", rsi=last["RSI14"], low=RSI_LOW),
+        tx("s.rsi_low" if rsi_low else "short.rsi_low", rsi=last["RSI14"]))
+    macd_up = last["MACD"] > last["MACD_signal"]
+    put("macd", macd_up, tx("macd_up" if macd_up else "macd_down"), tx("s.macd" if macd_up else "short.macd"))
+    obv_up = last["OBV"] > last["OBV_SMA20"]
+    put("obv", obv_up, tx("obv_up" if obv_up else "obv_down"), tx("s.obv" if obv_up else "short.obv"))
     price, support, _ = price_levels(prices.tail(250))
     near = support is not None and 0 < support <= price <= support * (1 + NEAR_SUPPORT)
-    put("near_support", near, tx("support", support=support, gap=price / support - 1) if support else tx("no_support"))
+    put("near_support", near, tx("support", support=support, gap=price / support - 1) if support else tx("no_support"),
+        tx("s.near_support", support=support, gap=price / support - 1) if near else tx("short.near_support"))
     month_ago = prices["Close"][prices.index <= as_of - pd.DateOffset(months=1)]
     one_month = float(prices["Close"].iloc[-1] / month_ago.iloc[-1] - 1) if len(month_ago) else float("nan")
-    put("pullback", one_month < 0, tx("pullback", ret=one_month))
+    put("pullback", one_month < 0, tx("pullback", ret=one_month),
+        tx("s.pullback", ret=one_month) if one_month < 0 else tx("short.pullback"))
     xd = d.dividends[d.dividends.index <= as_of]
     paid_months = {(t.year, t.month) for t in pd.DatetimeIndex(xd[xd > 0].index)}
     expected = (as_of.year - 1, as_of.month) in paid_months
-    put("dividend_month", expected, tx("div_month" if expected else "no_div_month"))
+    put("dividend_month", expected, tx("div_month" if expected else "no_div_month"),
+        tx("s.dividend_month" if expected else "short.dividend_month"))
 
     if ex_div_date is not None and not pd.isna(ex_div_date) and today is not None:
         days = (pd.Timestamp(ex_div_date).date() - today).days
@@ -121,11 +131,16 @@ def compute(d: StockData, as_of, *, rank, stage: str, market_close: pd.Series | 
             put("yield_vs_5y", now > avg, tx("yield_vs_5y", now=now, avg=avg))
 
     cut, last_dps, before_dps = dividend_cut(d.dividends, as_of)
-    put("dividend_cut", cut, tx("cut", last=last_dps, before=before_dps, year=as_of.year - 1) if cut else tx("no_cut"))
-    put("trap", stage in TRAP_STAGES, tx(f"trap_{stage}") if stage in TRAP_STAGES else tx("no_trap"))
+    cut_text = tx("cut", last=last_dps, before=before_dps, year=as_of.year - 1)
+    put("dividend_cut", cut, cut_text if cut else tx("no_cut"),
+        tx("s.dividend_cut", last=last_dps, before=before_dps) if cut else "")
+    trap = stage in TRAP_STAGES
+    put("trap", trap, tx(f"trap_{stage}") if trap else tx("no_trap"), tx(f"trap_{stage}") if trap else "")
     out_of_rank = pd.isna(rank) or rank > SELL_RANK
-    put("rank_out", out_of_rank, tx("unranked") if pd.isna(rank) else tx("rank", rank=int(rank), limit=SELL_RANK))
-    put("below_trend", above is False, out["trend"].label)
+    put("rank_out", out_of_rank, tx("unranked") if pd.isna(rank) else tx("rank", rank=int(rank), limit=SELL_RANK),
+        "" if not out_of_rank else tx("unranked") if pd.isna(rank) else tx("s.rank_out", rank=int(rank)))
+    put("below_trend", above is False, out["trend"].label,
+        tx("s.below_trend", close=close_m, sma=sma_m) if above is False else "")
     return out
 
 

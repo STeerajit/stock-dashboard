@@ -124,3 +124,13 @@ def test_signals_ignore_prices_after_the_date():
     d = data(close)
     before = d.prices.index[1199]
     assert signals.compute(d, before, rank=1, stage="ok")["trend"].on
+
+
+def test_short_text_says_what_an_on_signal_means_and_names_an_off_one():
+    up = compute(data(rising()), rank=30)
+    assert up["trend"].short.startswith("Uptrend:") and up["macd"].short.startswith("MACD crossed up")
+    assert up["rsi_low"].short.startswith("RSI ") and not up["rsi_low"].on  # off: just its name and value
+    assert up["rank_out"].short == "Rank fell to 30"
+    assert up["below_trend"].short == "" and up["trap"].short == ""  # sell signals that are off say nothing
+    down = compute(data(falling()))
+    assert down["trend"].short == "Trend" and down["below_trend"].short.startswith("Below its 10-month average")

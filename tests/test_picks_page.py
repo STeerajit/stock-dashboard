@@ -43,14 +43,17 @@ def test_page_lists_ten_picks_with_their_signals(fake_picks):
     assert not at.exception
     table = at.dataframe[0].value
     assert len(table) == 10 and table["rank"].tolist() == list(range(1, 11))
-    assert len(at.expander) == 10
-    assert any("Strong evidence" in m.value for m in at.markdown)
+    heads = [m.value for m in at.markdown if m.value.startswith("#### ")]
+    assert len(heads) == 10 and heads[0].startswith(f"#### 1. {table['symbol'].iloc[0]} —")
+    assert len(at.columns) == 20  # buy and sell side by side in each card
+    assert sum("Buy signals" in m.value for m in at.markdown) == 10
+    assert not any("evidence" in m.value for m in at.markdown)  # sources are left out to keep it light
 
 
 def test_without_a_backtest_the_summary_labels_are_hidden(fake_picks):
     at = run()
     assert any("has not been run yet" in i.value for i in at.info)
-    assert not any("Buy now" in e.label for e in at.expander)
+    assert not any("Buy now" in m.value or "Sell" in m.value for m in at.markdown if m.value.startswith("#### "))
 
 
 def test_backtest_results_are_shown_when_saved(fake_picks):

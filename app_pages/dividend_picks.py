@@ -70,20 +70,31 @@ if event.selection.rows:
     st.switch_page("app_pages/stock.py", query_params={"symbol": symbol})
 
 
-def evidence(key: str) -> str:
-    meta = sg.SIGNALS[key]
-    color = {"strong": "green", "medium": "blue", "weak": "orange", "none": "gray"}[meta.evidence]
-    note = f" · {t(f'chk.{meta.checked}')}" if meta.checked != "none" else ""
-    source = f" — {meta.source}" if meta.source else ""
-    return f":{color}-badge[{t(f'ev.{meta.evidence}')}{note}]{source}"
+INFO_MARK = ":blue[:material/info:]"
 
 
-def show_signals(sig: dict[str, sg.Signal], side: str) -> None:
-    for key, s in sig.items():
-        if sg.SIGNALS[key].side != side:
-            continue
-        mark = (":material/check_circle:" if s.on else ":material/remove:") if side != "info" else ":material/info:"
-        st.markdown(f"{mark} **{t(f'sig.name.{key}')}** — {s.label}  \n{evidence(key)}")
+def side_text(sig: dict[str, sg.Signal], side: str) -> str:
+    """Markdown for one side of a card: a count, the signals that are on, then the rest in one grey line."""
+    mine = [s for s in sig.values() if sg.SIGNALS[s.key].side == side]
+    on = [s for s in mine if s.on]
+    lines = [f"**{t(f'pk.{side}_count', on=len(on), total=len(mine))}**"]
+    mark = ":green[:material/check_circle:]" if side == "buy" else ":red[:material/warning:]"
+    lines += [f"{mark} {s.short}" for s in on]
+    if not on:
+        lines.append(f":gray[{t('pk.no_buy')}]" if side == "buy"
+                     else f":green[:material/check_circle:] {t('pk.no_sell')}")
+    off = [s.short for s in mine if not s.on and s.short]
+    if off:
+        lines.append(f":gray[{t('pk.not_on', names=' · '.join(off))}]")
+    return "  \n".join(lines)
+
+
+def days_to_xd(snap) -> int | None:
+    ex = None if snap is None else snap.get("ex_div_date")
+    if ex is None or pd.isna(ex):
+        return None
+    days = (pd.Timestamp(ex).date() - today.date()).days
+    return days if days >= 0 else None
 
 
 st.subheader(t("pk.signals_title"))
@@ -93,18 +104,23 @@ for _, r in table.iterrows():
     snap = snaps.loc[symbol] if symbol in snaps.index else None
     sig = sg.compute(data[symbol], today, rank=r["rank"], stage=r["stage"], market_close=market,
                      ex_div_date=None if snap is None else snap.get("ex_div_date"), today=today.date(), lang=lang)
-    head = f"{int(r['rank'])}. {symbol} — {r['name']}"
+    head = f"#### {int(r['rank'])}. {symbol} — {r['name']}"
     if show_buy and sg.buy_now(sig, r["rank"]):
-        head += f"  ·  :green-badge[{t('pk.buy_now')}]"
+        head += f"  :green-badge[{t('pk.buy_now')}]"
     if show_sell and sg.sell_now(sig):
-        head += f"  ·  :red-badge[{t('pk.sell')}]"
-    with st.expander(head):
-        st.markdown(f"**{t('pk.buy_signals')}**")
-        show_signals(sig, "buy")
-        st.markdown(f"**{t('pk.info_signals')}**")
-        show_signals(sig, "info")
-        st.markdown(f"**{t('pk.sell_signals')}**")
-        show_signals(sig, "sell")
+        head += f"  :red-badge[{t('pk.sell')}]"
+    facts = t("pk.summary", price=float(data[symbol].close.iloc[-1]), yield_=r["div_yield"])
+    days = days_to_xd(snap)
+    if days is not None:
+        facts += " · " + t("pk.summary_xd", days=days)
+    with st.container(border=True):
+        st.markdown(head)
+        st.caption(facts)
+        buy, sell = st.columns(2)
+        buy.markdown(side_text(sig, "buy"))
+        sell.markdown(side_text(sig, "sell"))
+        if "yield_vs_5y" in sig:
+            st.markdown(f"{INFO_MARK} {sig['yield_vs_5y'].label}")
         st.page_link("app_pages/stock.py", label=t("today.open", symbol=symbol), icon=":material/arrow_forward:",
                      query_params={"symbol": symbol})
 
