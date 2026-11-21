@@ -124,7 +124,7 @@ src/__init__.py
 src/universe.py                # SET100 list + the SET sector names in use
 src/data.py                    # daily prices
 src/fundamentals.py            # snapshot, financials, dividends, P/E history, sector medians
-src/indicators.py              # SMA, RSI, volatility, support/resistance
+src/indicators.py              # SMA, RSI, MACD, Bollinger, OBV, 10-month SMA, support/resistance
 src/charts.py                  # Plotly price chart
 src/model.py                   # prediction model + backtest
 src/screener.py                # screener helpers (selected row -> symbol)
@@ -157,6 +157,7 @@ tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank
 tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
+tests/test_indicators.py       # MACD, Bollinger, OBV, SMA200, 10-month SMA; chart toggles
 tests/test_store.py            # store: idempotent, incremental, safe; offline app
 tests/test_i18n.py             # translations complete; no hard-coded text in pages
 tests/test_set_links.py        # SET links and free float

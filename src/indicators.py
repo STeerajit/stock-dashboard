@@ -7,6 +7,7 @@ Every indicator here uses only today's and past prices — never future
 prices — so the model cannot "cheat" by seeing tomorrow (data leakage).
 """
 
+import numpy as np
 import pandas as pd
 
 
@@ -22,7 +23,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """Return a copy of `df` with indicator columns added.
 
     Input columns: Open, High, Low, Close, Volume.
-    Every column whose name starts with "SMA" is drawn as a line on the chart.
+    SMA20 and SMA50 are always drawn on the chart; SMA200, the Bollinger bands, MACD and OBV can be switched on.
     """
     df = df.copy()
     close = df["Close"]
@@ -36,7 +37,32 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["RSI14"] = rsi(close, 14)
     df["Volume_change"] = df["Volume"].pct_change()
 
+    df["SMA200"] = close.rolling(window=200).mean()  # the long trend; ~ the 10-month average (Faber 2007)
+
+    # MACD 12/26/9: the gap between a fast and a slow average shows short-term momentum turning.
+    df["MACD"] = close.ewm(span=12, adjust=False).mean() - close.ewm(span=26, adjust=False).mean()
+    df["MACD_signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
+    df["MACD_hist"] = df["MACD"] - df["MACD_signal"]
+
+    # Bollinger bands 20/2: how far the price has swung from its usual range.
+    band = 2 * close.rolling(window=20).std(ddof=0)
+    df["BB_upper"], df["BB_lower"] = df["SMA20"] + band, df["SMA20"] - band
+
+    # On-balance volume: volume added on up days, subtracted on down days; compared with its 20-day average.
+    df["OBV"] = (np.sign(close.diff()).fillna(0) * df["Volume"]).cumsum()
+    df["OBV_SMA20"] = df["OBV"].rolling(window=20).mean()
+
     return df
+
+
+def sma_10_month(close: pd.Series) -> pd.DataFrame:
+    """Month-end close and its 10-month simple average (Faber 2007: checked once a month, on the last day).
+
+    The current, unfinished month counts with its latest close, like a month-end check made today.
+    """
+    month_end = close.groupby(pd.DatetimeIndex(close.index).to_period("M")).last()
+    month_end.index = pd.PeriodIndex(month_end.index).to_timestamp(how="end").normalize()
+    return pd.DataFrame({"Close": month_end, "SMA10M": month_end.rolling(10).mean()})
 
 
 def support_resistance(df: pd.DataFrame, window: int = 10, tolerance: float = 0.02) -> tuple[list, list]:

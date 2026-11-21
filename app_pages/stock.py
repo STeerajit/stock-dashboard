@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from src import cache
-from src.charts import price_chart
+from src.charts import EXTRAS, price_chart
 from src.fundamentals import (SCORE_COLUMNS, SnapshotError, growth_quality, pe_history, sector_medians, snapshot_for,
                               yield_history)
 from src.i18n import current_lang, t
@@ -126,8 +126,11 @@ if t_chart.open:
         except cache.NoPriceData as e:
             st.warning(str(e), title=t("chart.no_prices"))
             st.stop()
+        extras = st.pills(t("chart.extras"), EXTRAS, format_func=lambda e: t(f"chart.extra.{e}"),
+                          selection_mode="multi", key="extras", help=t("chart.extras_help"))
         supports, resistances = support_resistance(df)
-        st.plotly_chart(price_chart(df, symbol, supports, resistances, lang), alt=t("chart.alt", symbol=symbol))
+        st.plotly_chart(price_chart(df, symbol, supports, resistances, lang, set(extras)),
+                        alt=t("chart.alt", symbol=symbol))
         st.caption(t("chart.note"))
 
 # ============ 2. Financials: is the business good and strong? ============

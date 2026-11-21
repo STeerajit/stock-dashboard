@@ -4,6 +4,7 @@ All `src.cache` loaders are replaced with small in-memory fixtures, so the pages
 without Yahoo Finance, thaifin, or the network.
 """
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -258,3 +259,13 @@ def test_every_stock_tab_renders_in_thai(fake_cache):
         at.run()
         assert not at.exception, (label, at.exception)
         assert not at.error, label
+
+
+def test_chart_tab_switches_extra_indicators_on(fake_cache):
+    at = open_stock("PTT", tab_label("Chart"))
+    assert len(at.get("plotly_chart")) == 1 and not at.exception
+    at.session_state["extras"] = ["macd", "obv", "sma200", "bollinger"]
+    at.run()
+    assert not at.exception
+    names = {tr["name"] for tr in json.loads(at.get("plotly_chart")[0].proto.spec)["data"]}
+    assert {"SMA200", "MACD", "OBV"} <= names

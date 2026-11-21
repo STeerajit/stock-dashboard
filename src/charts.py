@@ -6,18 +6,32 @@ from plotly.subplots import make_subplots
 
 from src.i18n import text
 
+# Indicators the user can switch on, in the order of the toggle buttons.
+EXTRAS = ("sma200", "bollinger", "macd", "obv")
+
 
 def price_chart(df: pd.DataFrame, symbol: str, supports: list[float], resistances: list[float],
-                lang: str = "en") -> go.Figure:
-    """Candlestick + moving averages + S/R lines, with Volume and RSI panels below."""
-    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, row_heights=[0.6, 0.2, 0.2], vertical_spacing=0.03)
+                lang: str = "en", extras: frozenset[str] | set[str] = frozenset()) -> go.Figure:
+    """Candlestick + SMA20/50 + S/R lines, with Volume and RSI panels below.
+
+    `extras` (see EXTRAS) adds SMA200 and the Bollinger bands on the price panel, and a MACD and an OBV panel.
+    """
+    panels = ["volume", "rsi"] + [p for p in ("macd", "obv") if p in extras]
+    rows = 1 + len(panels)
+    fig = make_subplots(rows=rows, cols=1, shared_xaxes=True, vertical_spacing=0.03,
+                        row_heights=[0.5] + [0.5 / len(panels)] * len(panels))
+    row_of = {p: i + 2 for i, p in enumerate(panels)}
 
     fig.add_trace(
         go.Candlestick(x=df.index, open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"], name=symbol),
         row=1, col=1,
     )
-    for col in [c for c in df.columns if c.startswith("SMA")]:
+    for col in ["SMA20", "SMA50"] + (["SMA200"] if "sma200" in extras else []):
         fig.add_trace(go.Scatter(x=df.index, y=df[col], mode="lines", name=col, line=dict(width=1.5)), row=1, col=1)
+    if "bollinger" in extras:
+        for col in ("BB_upper", "BB_lower"):
+            fig.add_trace(go.Scatter(x=df.index, y=df[col], mode="lines", name=text(f"chart.{col}", lang),
+                                     line=dict(width=1, dash="dot", color="#7aa2f7")), row=1, col=1)
     for lv in supports:
         fig.add_hline(y=lv, line=dict(color="#2e9e6b", dash="dot", width=1), row=1, col=1,
                       annotation_text=f"S {lv:,.2f}", annotation_position="bottom right")
@@ -28,16 +42,31 @@ def price_chart(df: pd.DataFrame, symbol: str, supports: list[float], resistance
     up = df["Close"] >= df["Open"]
     fig.add_trace(
         go.Bar(x=df.index, y=df["Volume"], name=text("chart.volume", lang), marker_color=up.map({True: "#2e9e6b", False: "#d6455d"})),
-        row=2, col=1,
+        row=row_of["volume"], col=1,
     )
 
-    fig.add_trace(go.Scatter(x=df.index, y=df["RSI14"], name="RSI 14", line=dict(width=1.5)), row=3, col=1)
+    fig.add_trace(go.Scatter(x=df.index, y=df["RSI14"], name="RSI 14", line=dict(width=1.5)), row=row_of["rsi"], col=1)
     for y in (30, 70):
-        fig.add_hline(y=y, line=dict(color="gray", dash="dash", width=1), row=3, col=1)
+        fig.add_hline(y=y, line=dict(color="gray", dash="dash", width=1), row=row_of["rsi"], col=1)
 
-    fig.update_layout(height=700, xaxis_rangeslider_visible=False, margin=dict(t=10, b=10), showlegend=True,
-                      legend=dict(orientation="h", y=1.02, x=0))
+    if "macd" in extras:
+        r = row_of["macd"]
+        fig.add_trace(go.Bar(x=df.index, y=df["MACD_hist"], name=text("chart.macd_hist", lang),
+                             marker_color="#a9b1d6"), row=r, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df["MACD"], name="MACD", line=dict(width=1.5)), row=r, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df["MACD_signal"], name=text("chart.macd_signal", lang),
+                                 line=dict(width=1.5, dash="dot")), row=r, col=1)
+        fig.update_yaxes(title_text="MACD", row=r, col=1)
+    if "obv" in extras:
+        r = row_of["obv"]
+        fig.add_trace(go.Scatter(x=df.index, y=df["OBV"], name="OBV", line=dict(width=1.5)), row=r, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df["OBV_SMA20"], name=text("chart.obv_avg", lang),
+                                 line=dict(width=1, dash="dot")), row=r, col=1)
+        fig.update_yaxes(title_text="OBV", row=r, col=1)
+
+    fig.update_layout(height=700 + 150 * (rows - 3), xaxis_rangeslider_visible=False, margin=dict(t=10, b=10),
+                      showlegend=True, legend=dict(orientation="h", y=1.02, x=0))
     fig.update_yaxes(title_text=text("chart.price_axis", lang), row=1, col=1)
-    fig.update_yaxes(title_text=text("chart.volume", lang), row=2, col=1)
-    fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+    fig.update_yaxes(title_text=text("chart.volume", lang), row=row_of["volume"], col=1)
+    fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
     return fig

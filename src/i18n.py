@@ -290,6 +290,22 @@ TEXT: dict[str, dict[str, str]] = {
                          "(จุดสูงสุด/ต่ำสุดในช่วง ±10 วัน รวมเป็นระดับเดียวถ้าห่างกันไม่เกิน 2%)"},
     "chart.price_axis": {"en": "Price (THB)", "th": "ราคา (บาท)"},
     "chart.volume": {"en": "Volume", "th": "ปริมาณ"},
+    "chart.extras": {"en": "More indicators", "th": "indicator เพิ่มเติม"},
+    "chart.extras_help": {"en": "SMA200: the long trend. Bollinger bands (20 days, 2 standard deviations): how far the "
+                                "price swung from its usual range. MACD 12/26/9: short-term momentum. OBV: volume added "
+                                "on up days and subtracted on down days, with its 20-day average.",
+                          "th": "SMA200: แนวโน้มระยะยาว Bollinger Bands (20 วัน, 2 ส่วนเบี่ยงเบนมาตรฐาน): ราคาแกว่ง"
+                                "ออกจากช่วงปกติแค่ไหน MACD 12/26/9: โมเมนตัมระยะสั้น OBV: บวกปริมาณในวันที่ราคาขึ้น "
+                                "ลบในวันที่ราคาลง พร้อมค่าเฉลี่ย 20 วัน"},
+    "chart.extra.sma200": {"en": "SMA200", "th": "SMA200"},
+    "chart.extra.bollinger": {"en": "Bollinger bands", "th": "Bollinger Bands"},
+    "chart.extra.macd": {"en": "MACD", "th": "MACD"},
+    "chart.extra.obv": {"en": "OBV", "th": "OBV"},
+    "chart.BB_upper": {"en": "Bollinger upper", "th": "Bollinger บน"},
+    "chart.BB_lower": {"en": "Bollinger lower", "th": "Bollinger ล่าง"},
+    "chart.macd_hist": {"en": "MACD − signal", "th": "MACD − signal"},
+    "chart.macd_signal": {"en": "Signal (9)", "th": "Signal (9)"},
+    "chart.obv_avg": {"en": "OBV 20-day average", "th": "OBV เฉลี่ย 20 วัน"},
     # Financials
     "fin.none": {"en": "No financial statements found for this stock.", "th": "ไม่พบงบการเงินของหุ้นตัวนี้"},
     "fin.short_title": {"en": "Shorter history than usual", "th": "ข้อมูลย้อนหลังสั้นกว่าปกติ"},
