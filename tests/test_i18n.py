@@ -10,6 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 from src.fundamentals import FIN_COLUMNS, SCORE_COLUMNS
 from src.i18n import LANGS, TEXT, text
+from src.portfolio import DEFAULT_CAPS
 from src.safety import LEVELS, NOT_ENOUGH_DATA, REASONS
 from src.scoring import piotroski
 
@@ -47,6 +48,8 @@ def test_keys_built_at_run_time_exist():
     assert {f"pred.col_{k}" for k in ["period", "model", "baseline", "edge"]} <= set(TEXT)
     assert {f"safety.{k}.{v}" for k, variants in REASONS.items() for v in variants} <= set(TEXT)
     assert {f"safety.level.{k}" for k in (*LEVELS, NOT_ENOUGH_DATA)} <= set(TEXT)
+    assert {f"conc.{k}" for k in DEFAULT_CAPS} | {f"conc.cap_{k}" for k in DEFAULT_CAPS} | {
+        f"conc.cap_{k}_help" for k in DEFAULT_CAPS} <= set(TEXT)
 
 
 def _check_names() -> list[str]:

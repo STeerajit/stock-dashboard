@@ -5,6 +5,7 @@ and it works offline. Stocks not in the store (e.g. outside SET100), or no store
 """
 
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 
 import duckdb
 import pandas as pd
@@ -12,13 +13,14 @@ import streamlit as st
 
 from src import dividend_picks as dp
 from src import fundamentals as fd
+from src import portfolio
 from src import quarterly as qt
 from src import store
 from src.data import load_prices
 from src.indicators import add_indicators
 from src.model import BacktestResult, train_and_backtest
 from src.scoring import piotroski
-from src.universe import load_set100, yahoo_symbol
+from src.universe import describe, load_set100, yahoo_symbol
 
 
 def _stored(symbol: str) -> bool:
@@ -152,6 +154,20 @@ def snapshot_of(symbol: str) -> pd.Series:
     snaps = snapshots() if symbol in set(set100()["symbol"]) else snapshot(symbol)
     return fd.snapshot_for(snaps, symbol)
 
+
+def quotes(symbols: list[str]) -> pd.DataFrame:
+    """Price, sector and last full year's dividend per share for each symbol. Raises SnapshotError."""
+    universe = set100()
+    listed = set(universe["symbol"])
+    snaps = snapshots() if listed & set(symbols) else pd.DataFrame(columns=["symbol", "price"])
+    rows = []
+    for sym in symbols:
+        snap = snaps if sym in listed else snapshot(sym)
+        price = snap.loc[snap["symbol"] == sym, "price"]
+        rows.append({"symbol": sym, "price": price.iloc[0] if len(price) else float("nan"),
+                     "dps": portfolio.last_full_year_dps(dividends(sym), date.today().year),
+                     "sector": describe(universe, sym)[1]})
+    return pd.DataFrame(rows, columns=["symbol", "price", "dps", "sector"])
 
 
 def _picks_one(symbol: str) -> dp.StockData | None:

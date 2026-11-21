@@ -7,7 +7,6 @@ from src import cache, portfolio, safety
 from src import dividend_picks as dp
 from src.fundamentals import SnapshotError
 from src.i18n import current_lang, t
-from src.universe import describe
 
 st.title(t("port.title"))
 # Public demo: holdings stay in this visitor's session, never in a file on the server (see portfolio.public_mode).
@@ -17,21 +16,13 @@ if public:
     st.info(t("port.public"), title=t("port.public_title"), icon=":material/public:")
 saved = st.session_state.get("demo_holdings", portfolio.empty()) if public else portfolio.load()
 last_year = date.today().year - 1
+caps = st.session_state.get("conc_caps", portfolio.DEFAULT_CAPS)
 
 
-def quotes(symbols: list[str]) -> pd.DataFrame:
-    """Price, sector and last full year's dividend per share for each symbol. Raises SnapshotError."""
-    universe = cache.set100()
-    listed = set(universe["symbol"])
-    snaps = cache.snapshots() if listed & set(symbols) else pd.DataFrame(columns=["symbol", "price"])
-    rows = []
-    for sym in symbols:
-        snap = snaps if sym in listed else cache.snapshot(sym)
-        price = snap.loc[snap["symbol"] == sym, "price"]
-        rows.append({"symbol": sym, "price": price.iloc[0] if len(price) else float("nan"),
-                     "dps": portfolio.last_full_year_dps(cache.dividends(sym), date.today().year),
-                     "sector": describe(universe, sym)[1]})
-    return pd.DataFrame(rows, columns=["symbol", "price", "dps", "sector"])
+def keep_caps() -> None:
+    """Copy the cap inputs to a session key no widget owns: widget keys are dropped when another page is open,
+    and Today reads the caps too."""
+    st.session_state["conc_caps"] = {k: st.session_state[f"cap_{k}"] / 100 for k in portfolio.DEFAULT_CAPS}
 
 
 def safety_level(symbol: str, sector: str) -> str | None:
@@ -49,7 +40,7 @@ if saved.empty:
     st.info(t("port.empty"), title=t("port.empty_title"))
 else:
     try:
-        pos = portfolio.positions(saved, quotes(saved["symbol"].tolist()))
+        pos = portfolio.positions(saved, cache.quotes(saved["symbol"].tolist()))
     except SnapshotError as e:
         st.warning(str(e), title=SnapshotError.title)
     else:
@@ -68,6 +59,9 @@ else:
 
         if missing := pos.loc[(pos["shares"] > 0) & pos["price"].isna(), "symbol"].tolist():
             st.warning(t("port.missing", symbols=", ".join(missing)), title=t("port.missing_title"))
+        if breaches := portfolio.concentration(pos, caps):
+            st.warning("\n".join(f"- {portfolio.breach_text(b, current_lang())}" for b in breaches),
+                       title=t("conc.title"), icon=":material/pie_chart:")
 
         nc = st.column_config.NumberColumn
         st.dataframe(
@@ -98,6 +92,13 @@ else:
             st.bar_chart((alloc * 100).round(1).rename(t("port.alloc_series")), horizontal=True,
                          x_label=t("port.alloc_axis"), alt=t("port.alloc_alt"))
         st.caption(t("port.note", year=last_year))
+
+        st.subheader(t("conc.caps"))
+        with st.container(horizontal=True):
+            for kind in portfolio.DEFAULT_CAPS:
+                st.number_input(t(f"conc.cap_{kind}"), min_value=1, max_value=100, value=round(caps[kind] * 100),
+                                step=1, key=f"cap_{kind}", on_change=keep_caps, help=t(f"conc.cap_{kind}_help"))
+        st.caption(t("conc.caps_note"))
 
 st.subheader(t("port.edit"))
 with st.form("holdings_form", border=False):

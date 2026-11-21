@@ -152,6 +152,18 @@ def today_page(tmp_path, monkeypatch):
     monkeypatch.setattr(cache, "prices", lambda symbol, period="5y": flat_prices(rsi=market["rsi"].get(symbol, 50.0)))
     monkeypatch.setattr(cache, "financials", lambda symbol: pd.DataFrame({"P/E": [10.0, 10.0, 10.0]}))
     market["picks"] = {}  # Dividend Picks data: none unless a test adds some
+    # Concentration check: no price (so no position value, no warning) unless a test sets one.
+    market["price"] = {}
+    universe = pd.DataFrame({"symbol": ["PTT", "KBANK"], "name": ["PTT", "Kasikornbank"],
+                             "sector": ["Energy & Utilities", "Banking"], "in_set50": [True, True]})
+
+    def snaps(symbols):
+        return pd.DataFrame({"symbol": symbols, "price": [market["price"].get(s, np.nan) for s in symbols]})
+
+    monkeypatch.setattr(cache, "set100", lambda: universe)
+    monkeypatch.setattr(cache, "snapshots", lambda: snaps(["PTT", "KBANK"]))
+    monkeypatch.setattr(cache, "snapshot", lambda symbol: snaps([symbol]))
+    monkeypatch.setattr(cache, "dividends", lambda symbol: pd.Series([1.0, 1.0], index=[2020, date.today().year - 1]))
     monkeypatch.setattr(cache, "picks_data", lambda: market["picks"])
 
     def run(rows):
@@ -244,3 +256,23 @@ def test_no_sell_section_without_sell_signals(today_page):
     today_page["picks"] = picks_universe(TOP=top)
     at = today_page["run"]([("TOP", 100, 30.0)])
     assert not any("Sell signals" in h.value for h in at.subheader)
+
+
+# ---------- Today page: concentration ----------
+
+def test_page_shows_a_concentration_line_only_when_over_a_cap(today_page):
+    today_page["price"].update({"PTT": 30.0, "KBANK": 120.0})
+    at = today_page["run"]([("PTT", 100, 30.0), ("KBANK", 50, 120.0), ("AOT", 0, np.nan)])
+    lines = [w.value for w in at.warning if "Over a cap" in w.value]
+    assert len(lines) == 1  # PTT 3,000 / 9,000 = 33.3%, KBANK 66.7%: both over the 20% stock cap
+    assert "KBANK: 66.7% of market value (cap 20%)" in lines[0]
+
+
+def test_page_uses_the_caps_set_on_the_portfolio_page(today_page):
+    today_page["price"].update({"PTT": 30.0, "KBANK": 120.0})
+    portfolio.save(pd.DataFrame([("PTT", 100, 30.0), ("KBANK", 50, 120.0)], columns=portfolio.COLUMNS))
+    at = AppTest.from_file(ROOT / "app.py", default_timeout=30)
+    at.session_state["conc_caps"] = {"stock": 1.0, "sector": 1.0, "income": 1.0}
+    at.run()
+    assert not at.exception
+    assert not any("Over a cap" in w.value for w in at.warning)

@@ -6,11 +6,12 @@ Saved to data/portfolio.csv, which is gitignored: real holdings must never be co
 import os
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal, NamedTuple
 
 import pandas as pd
 
 from src.i18n import text
-from src.universe import is_valid_symbol
+from src.universe import OUTSIDE_SET100, is_valid_symbol
 
 PORTFOLIO_CSV = Path(__file__).resolve().parent.parent / "data" / "portfolio.csv"
 COLUMNS = ["symbol", "shares", "avg_cost"]
@@ -113,3 +114,42 @@ def allocation(pos: pd.DataFrame) -> pd.Series:
     """Share of the portfolio's market value per sector (sums to 1), largest first."""
     by_sector = pos.groupby("sector")["value"].sum(min_count=1).dropna()
     return (by_sector / by_sector.sum()).sort_values(ascending=False)
+
+
+class Breach(NamedTuple):
+    kind: Literal["stock", "sector", "income"]
+    name: str  # the stock or the sector
+    share: float  # of market value (stock, sector) or of estimated dividend income (income)
+    cap: float
+
+
+# Looser than the common 5-10% per stock and 20-25% per sector: a small personal portfolio holds fewer stocks.
+DEFAULT_CAPS = {"stock": 0.20, "sector": 0.35, "income": 0.25}
+
+
+def concentration(pos: pd.DataFrame, caps: Mapping[str, float] = DEFAULT_CAPS) -> list[Breach]:
+    """Every stock, sector or income source strictly above its cap, largest first within each kind.
+
+    Like `totals`, only held stocks with a price count. Stocks outside SET100 have no sector, so they are left out
+    of the sector check (but still count in the total). No income breach when the estimated income is 0.
+    """
+    priced = pos[pos["value"].notna()]
+    breaches = []
+
+    def over(kind: Literal["stock", "sector", "income"], amounts: pd.Series) -> None:
+        total = amounts.sum() if kind != "sector" else priced["value"].sum()
+        if not total:
+            return
+        for name, share in (amounts / total).sort_values(ascending=False).items():
+            if share > caps[kind]:
+                breaches.append(Breach(kind, str(name), float(share), caps[kind]))
+
+    over("stock", priced.set_index("symbol")["value"])
+    over("sector", priced[priced["sector"] != OUTSIDE_SET100].groupby("sector")["value"].sum())
+    over("income", priced.set_index("symbol")["est_dividend"])
+    return breaches
+
+
+def breach_text(b: Breach, lang: str = "en") -> str:
+    """One breach as a line, e.g. "Banking sector: 45.2% of market value (cap 35%)"."""
+    return text(f"conc.{b.kind}", lang, name=b.name, share=f"{b.share:.1%}", cap=f"{b.cap:.0%}")

@@ -149,6 +149,76 @@ def test_dps_of_last_complete_year():
     assert np.isnan(portfolio.last_full_year_dps(pd.Series(dtype=float), this_year=2026))
 
 
+# ---------- concentration: a stock, sector or income source above its cap ----------
+# example(): PTT 55% of value and 2,000 / 3,300 = 60.6% of income; KBANK 45% and 39.4%; sectors 55% / 45%.
+
+def spread(n: int, value: float = 10_000, sector=lambda i: f"Sector {i}") -> pd.DataFrame:
+    """n held stocks of equal value and dividend, each in its own sector."""
+    holdings = table([(f"S{i}", 100, 100.0) for i in range(n)])
+    quotes = pd.DataFrame({"symbol": [f"S{i}" for i in range(n)], "price": value / 100, "dps": 1.0,
+                           "sector": [sector(i) for i in range(n)]})
+    return portfolio.positions(holdings, quotes)
+
+
+def test_default_caps():
+    assert portfolio.DEFAULT_CAPS == {"stock": 0.20, "sector": 0.35, "income": 0.25}
+
+
+def test_breach_reports_name_share_cap():
+    breaches = portfolio.concentration(example())
+    assert breaches[0] == portfolio.Breach("stock", "PTT", pytest.approx(0.55), 0.20)
+    assert [(b.kind, b.name) for b in breaches] == [
+        ("stock", "PTT"), ("stock", "KBANK"), ("sector", "Energy & Utilities"), ("sector", "Banking"),
+        ("income", "PTT"), ("income", "KBANK")]
+    assert breaches[4].share == pytest.approx(2_000 / 3_300)
+
+
+def test_at_cap_is_not_a_breach():
+    assert portfolio.concentration(spread(5)) == []  # each stock exactly 20% of value and of income
+    assert portfolio.concentration(spread(4), {"stock": 0.25, "sector": 0.25, "income": 0.25}) == []
+    assert len(portfolio.concentration(spread(4), {"stock": 0.249, "sector": 1, "income": 1})) == 4
+
+
+def test_watchlist_and_unpriced_excluded():
+    holdings = table([("PTT", 1000, 30.0), ("NOSUCH", 100_000, 10.0), ("AOT", 0, np.nan)])
+    quotes = pd.DataFrame({"symbol": ["PTT", "NOSUCH", "AOT"], "price": [33.0, np.nan, 60.0],
+                           "dps": [2.0, 5.0, 1.0], "sector": ["Energy & Utilities", "Outside SET100", "Transport"]})
+    breaches = portfolio.concentration(portfolio.positions(holdings, quotes))
+    assert {(b.kind, b.name, b.share) for b in breaches} == {
+        ("stock", "PTT", 1.0), ("sector", "Energy & Utilities", 1.0), ("income", "PTT", 1.0)}
+
+
+def test_outside_set100_left_out_of_the_sector_check():
+    pos = spread(5, sector=lambda i: "Outside SET100" if i < 3 else f"Sector {i}")
+    assert portfolio.concentration(pos) == []  # 60% "Outside SET100" is not a sector
+
+
+def test_empty_portfolio_no_breaches():
+    assert portfolio.concentration(portfolio.positions(portfolio.empty(), pd.DataFrame(
+        columns=["symbol", "price", "dps", "sector"]))) == []
+
+
+def test_income_share_uses_est_dividend():
+    holdings = table([("A", 100, 10.0), ("B", 100, 10.0), ("C", 100, 10.0), ("D", 100, 10.0), ("E", 100, 10.0)])
+    quotes = pd.DataFrame({"symbol": list("ABCDE"), "price": 10.0, "dps": [4.0, 1.0, 1.0, 1.0, 1.0],
+                           "sector": list("ABCDE")})
+    breaches = portfolio.concentration(portfolio.positions(holdings, quotes))
+    assert breaches == [portfolio.Breach("income", "A", pytest.approx(0.5), 0.25)]  # values are equal: 20% each
+
+
+def test_zero_income_no_income_breach():
+    holdings = table([("A", 100, 10.0)])
+    quotes = pd.DataFrame({"symbol": ["A"], "price": [10.0], "dps": [np.nan], "sector": ["Banking"]})
+    kinds = [b.kind for b in portfolio.concentration(portfolio.positions(holdings, quotes))]
+    assert kinds == ["stock", "sector"]
+
+
+def test_breach_text_in_both_languages():
+    b = portfolio.Breach("sector", "Banking", 0.452, 0.35)
+    assert portfolio.breach_text(b) == "Banking sector: 45.2% of market value (cap 35%)"
+    assert "45.2%" in portfolio.breach_text(b, "th") and "35%" in portfolio.breach_text(b, "th")
+
+
 # ---------- Portfolio page ----------
 
 @pytest.fixture
@@ -189,7 +259,8 @@ def test_page_opens_with_no_saved_portfolio(csv_path):
 def test_page_shows_the_numbers_of_a_saved_portfolio(csv_path, fake_market):
     portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0), ("MAJOR", 0, np.nan)]))
     at = AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run()
-    assert not at.exception and not at.error and not at.warning
+    assert not at.exception and not at.error
+    assert [w.title for w in at.warning] == ["Too concentrated"]  # 2 stocks: each one is over the 20% cap
     metrics = {m.label: m.value for m in at.metric}
     assert metrics["Market value (THB)"] == "60,000"
     assert metrics["Profit / loss (THB)"] == "+0"
@@ -245,3 +316,27 @@ def test_public_mode_flag():
     assert portfolio.public_mode({"STOCKS_PUBLIC": "1"}) is True
     assert portfolio.public_mode({}) is False
     assert portfolio.public_mode(dict(os.environ, STOCKS_PUBLIC="0")) is False
+
+
+# ---------- Portfolio page: concentration warnings ----------
+
+def test_page_warns_about_concentration_with_stock_share_and_cap(csv_path, fake_market):
+    portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0)]))
+    at = AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run()
+    assert not at.exception
+    box = at.warning[0].value
+    assert "PTT: 55.0% of market value (cap 20%)" in box
+    assert "Energy & Utilities sector: 55.0% of market value (cap 35%)" in box
+    assert "dividend income" not in box  # the fake dividends were paid in 2020-21: no income, so no income check
+
+
+def test_page_cap_change_is_kept_for_other_pages(csv_path, fake_market):
+    portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0)]))
+    at = AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run()
+    at.number_input(key="cap_stock").set_value(60).run()
+    assert not at.exception
+    assert at.session_state["conc_caps"] == pytest.approx({"stock": 0.60, "sector": 0.35, "income": 0.25})
+    assert "PTT: 55.0%" not in at.warning[0].value
+    at.run()
+    assert at.session_state["conc_caps"]["stock"] == pytest.approx(0.60)
+    assert at.number_input(key="cap_stock").value == 60

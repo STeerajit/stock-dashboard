@@ -52,6 +52,15 @@ with st.spinner(t("today.checking")):
 if failed:
     st.warning(t("today.skipped", symbols=", ".join(failed)), title=t("today.skipped_title"))
 
+try:  # the caps set on the Portfolio page, if any
+    breaches = portfolio.concentration(portfolio.positions(holdings, cache.quotes(holdings["symbol"].tolist())),
+                                       st.session_state.get("conc_caps", portfolio.DEFAULT_CAPS))
+except SnapshotError:  # no prices: nothing to weigh
+    breaches = []
+if breaches:
+    st.warning(t("today.conc", items="; ".join(portfolio.breach_text(b, current_lang()) for b in breaches)),
+               icon=":material/pie_chart:")
+
 checked = len(holdings) - len(failed)
 if not flagged:
     if checked:
