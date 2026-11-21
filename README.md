@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml)
 
-Personal dashboard for Thai stocks: a Today page that lists which of your stocks deserve a look and why, a screener to compare the 100 largest (SET100), a detail page for
+Personal dashboard for Thai stocks: a Today page that lists which of your stocks deserve a look and why, a screener to compare the 100 largest (SET100), Dividend picks (10 SET100 dividend stocks a day, picked by rules from research, with buy and sell signals and a 10-year backtest), a detail page for
 any Thai stock covering trading activity, chart, financials, valuation vs. peers and dividends, and a
 portfolio page to track your holdings and watchlist — plus an honestly-evaluated price prediction model.
 
@@ -54,6 +54,20 @@ CI runs this same script on every push and pull request:
 ```bash
 scripts/check.sh
 ```
+
+## Dividend picks
+
+The **Dividend picks** page lists 10 SET100 dividend stocks worth holding, recomputed every day: the 50 least
+volatile stocks over 3 years, minus dividend traps (no dividend in any of the last 5 years, payout above 100%, EPS
+negative or down 3 years in a row), ranked by dividend yield and 12-1 month momentum (Conservative Formula,
+Blitz & van Vliet 2018). Each pick shows its buy, info and sell signals with how strong the evidence behind each
+one is. Where every rule comes from, and which papers could not be checked: [docs/research/dividend-picks.md](docs/research/dividend-picks.md).
+
+10-year backtest (`scripts/report_dividend_picks.py`, saved in `data/dividend_picks_backtest.json`): the picks
+returned 8.1% a year against 7.2% for an equal-weight SET100, with lower volatility. Only two rules beat the plain
+picks (buy only above the 10-month average; sell only below rank 20), and the summary "buy now" / "sell" labels did
+not, so the app does not show them. Today's SET100 members are used for the whole period, so these results look
+better than they were (survivorship bias).
 
 ## Public demo (Streamlit Community Cloud)
 

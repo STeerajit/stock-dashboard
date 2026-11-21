@@ -617,7 +617,8 @@ TEXT: dict[str, dict[str, str]] = {
     "sig.market_down": {"en": "An equal-weight SET100 index (our stand-in for the SET index) is below its 10-month "
                               "average.",
                         "th": "ดัชนี SET100 น้ำหนักเท่ากัน (ที่เราคำนวณแทนดัชนี SET) อยู่ใต้ค่าเฉลี่ย 10 เดือน"},
-    "sig.rsi": {"en": "RSI 14 is {rsi:.0f} (below {low} = oversold).", "th": "RSI 14 อยู่ที่ {rsi:.0f} (ต่ำกว่า {low} = ถูกขายมากเกินไป)"},
+    "sig.rsi": {"en": "RSI 14 is {rsi:.0f}; below {low} counts as oversold.",
+                "th": "RSI 14 อยู่ที่ {rsi:.0f} ถ้าต่ำกว่า {low} ถือว่าถูกขายมากเกินไป"},
     "sig.macd_up": {"en": "MACD is above its signal line: short-term momentum is up.",
                     "th": "MACD อยู่เหนือเส้น signal: โมเมนตัมระยะสั้นเป็นขาขึ้น"},
     "sig.macd_down": {"en": "MACD is below its signal line: short-term momentum is down.",

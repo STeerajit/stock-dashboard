@@ -387,3 +387,28 @@ way to cover them; free float and XR dates may be available for free.
   (investor types / NVDR / short sales, major shareholders, Form 59, warning signs, news).
 - [x] Free float % is shown if a free source has it; otherwise the link covers it.
 - [x] XR dates are shown in the calendar if a free source has them; otherwise the link covers them.
+
+---
+
+## 22. Dividend picks: 10 dividend stocks a day from research-based rules — P1 · L
+
+> **Done** on 2026-11-21. Rules and sources: `docs/research/dividend-picks.md`. Two open decisions in BLOCKED.md
+> (buybacks left out; an equal-weight SET100 index stands in for the SET index).
+
+**Why:** A short daily list of dividend stocks worth holding, picked by rules that come from research rather than
+opinion, with signals that say when to buy or sell and an honest test of whether those signals help.
+
+**Acceptance criteria**
+- [x] Every rule and number comes from a paper or from the user, and the research notes say which, with page
+  references where the original was read.
+- [x] 10 picks from SET100: 50 least volatile (156 weeks) → drop no dividend in each of the last 5 years, payout
+  above 100%, EPS negative or down 3 years in a row → rank by dividend yield and 12-1 momentum. Unit-tested at
+  every boundary; only data known on the date is used.
+- [x] New and dropped picks vs. the previous trading day, with the reason a stock dropped.
+- [x] Chart: SMA200, Bollinger 20/2, MACD 12/26/9 and OBV, each switched on separately.
+- [x] 8 buy signals, 2 info signals, 4 sell signals, each with its evidence level and whether the paper was read.
+- [x] The Today page warns about sell signals for held SET100 stocks.
+- [x] 10-year backtest with dividends and 0.17% costs vs. equal-weight SET100; each rule passes only if it beats
+  the plain picks; the summary buy/sell labels are shown only if they pass (they did not, 2026-11-21).
+- [x] English and Thai; survivorship-bias warning on the page.
+

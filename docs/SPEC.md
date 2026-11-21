@@ -63,6 +63,7 @@ The first request was "ต้องการทำสำหรับหุ้น
 | Portfolio numbers | P&L per stock and total (THB and %), allocation by sector, estimated dividend and yield on cost. **No fees or taxes** | Keeps the maths checkable; stated on screen. |
 | Estimated dividend | Dividend per share of the **last complete calendar year** × shares | A full year is known; the current year is partial. |
 | Sector of stocks outside SET100 | Shown as `Outside SET100` | Yahoo's sector names do not match SET's, so they cannot be mixed. |
+| Dividend picks | 10 SET100 stocks a day: Conservative Formula (low volatility, then dividend yield + 12-1 momentum) with SETHD-style trap filters, dividends required in each of the last **5** years (user's choice; SETHD uses 3). Buy/sell signals shown one by one with their evidence; summary labels only if the backtest supports them | Rules from research, not opinion; see docs/research/dividend-picks.md |
 | Today overview (planned) | Flags a held/watched stock when: price within 3% above support or broke resistance; RSI < 30 or > 70; XD or earnings date within 14 days; P/E more than 20% below its own historical median | One screen that says "look at these today". |
 
 ## Status of the 8 categories
@@ -72,7 +73,7 @@ The first request was "ต้องการทำสำหรับหุ้น
 | 1 | Price & trading | Done | Stock page → Trading tab; screener columns |
 | 2 | Financial statements (5+ years) | Done | Financials tab: up to ~16 years from thaifin (Yahoo fallback ~4 years, with a warning) |
 | 3 | Valuation | Done | Valuation tab: P/E, P/BV, yield vs. sector median and vs. own history (yield from dividends ÷ unadjusted year-end price) |
-| 4 | Chart | Done | Chart tab: adjusted candles, SMA20/50, support/resistance, volume, RSI |
+| 4 | Chart | Done | Chart tab: adjusted candles, SMA20/50, support/resistance, volume, RSI; SMA200, Bollinger, MACD and OBV on request |
 | 5 | Money flows | Partial | Links only: SET's all-stock pages for investor types, NVDR, short sales ("See on the SET website"). No per-stock free data (#16) |
 | 6 | Shareholders | Partial | Free float (Yahoo estimate) on the Trading tab; link to SET's major shareholders page. link to Form 59 on the SEC website |
 | 7 | Warning signs | Partial | Links only: SET's caution signs, cash balance / turnover list and Auto Pause pages (all stocks) |
@@ -85,3 +86,4 @@ Plus two parts that were not in the original list: the **screener** (compare all
 
 1. **Goal A** — data base and portfolio: SET100 list, any symbol on the stock page, Portfolio page with its numbers (BACKLOG #19). **Done 2026-11-21.**
 2. **Goal B** — today overview page (#20), yield vs. own history (#14), links to the SET website + free float + XR (#21). **Done 2026-11-21.**
+3. **Dividend picks** (#22) — research notes, the screen, new chart indicators, signals, the page, sell warnings on Today, 10-year backtest. **Done 2026-11-21.**
