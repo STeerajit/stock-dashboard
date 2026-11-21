@@ -1,5 +1,7 @@
 """Entry point. Run with:  streamlit run app.py"""
 
+from pathlib import Path
+
 import duckdb
 import streamlit as st
 
@@ -14,6 +16,7 @@ if "lang_choice" not in st.session_state:
     st.session_state["lang_choice"] = url_lang if url_lang in LANGS else DEFAULT
 
 st.set_page_config(page_title=t("app.page_title"), page_icon=":material/candlestick_chart:", layout="wide")
+st.html(Path(__file__).parent / "src" / "style.css")  # card surfaces; delete this line to switch the CSS off
 
 page = st.navigation(
     [

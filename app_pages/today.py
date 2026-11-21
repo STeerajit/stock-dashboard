@@ -59,7 +59,7 @@ if not flagged:
 else:
     st.subheader(t("today.count", flagged=len(flagged), checked=checked))
     for symbol, price, why in flagged:
-        with st.container(border=True):
+        with st.container(border=True, key=f"card-watch-{symbol}"):
             st.markdown(t("today.price", symbol=symbol, price=f"{price:,.2f}"))
             st.markdown("\n".join(f"- {w}" for w in why))
             st.page_link("app_pages/stock.py", label=t("today.open", symbol=symbol), icon=":material/arrow_forward:",
@@ -84,7 +84,7 @@ if held_set100:
         st.subheader(t("today.sell_title", count=len(warnings)))
         st.caption(t("today.sell_caption"))
         for symbol, on, sell in warnings:
-            with st.container(border=True):
+            with st.container(border=True, key=f"card-sell-{symbol}"):
                 st.markdown(f"**{symbol}**" + (f"  ·  :red-badge[{t('pk.sell')}]" if sell else ""))
                 st.markdown("\n".join(f"- **{t(f'sig.name.{s.key}')}**: {s.label}" for s in on))
                 st.page_link("app_pages/stock.py", label=t("today.open", symbol=symbol),

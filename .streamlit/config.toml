@@ -1,0 +1,51 @@
+# Look of the app: minimal "Trust Blue" theme, light and dark (follows the viewer's system setting).
+# Colours come from the UI UX Pro Max design database (style "Minimalism & Swiss", palettes
+# "Personal Finance Tracker" and "Banking/Traditional Finance"); green and red are only for up and down.
+# Font: IBM Plex Sans Thai, which has Thai and Latin letters in one family.
+
+[theme]
+font = "IBM Plex Sans Thai:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap, sans-serif"
+headingFontWeights = 600
+headingFontSizes = ["2.25rem", "1.5rem", "1.25rem", "1.125rem"]
+baseRadius = "0.5rem"
+showSidebarBorder = true
+
+[theme.light]
+primaryColor = "#1E40AF"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#E8ECF1"
+textColor = "#020617"
+borderColor = "#E2E8F0"
+linkColor = "#1E40AF"
+blueColor = "#1E40AF"
+greenColor = "#059669"
+redColor = "#DC2626"
+grayColor = "#475569"
+# Text versions: Streamlit would darken these until green looks black and grey looks like body text.
+# #047857 is one Tailwind shade darker than #059669, for 4.5:1 contrast on white.
+greenTextColor = "#047857"
+redTextColor = "#DC2626"
+grayTextColor = "#475569"
+chartCategoricalColors = ["#1E40AF", "#3B82F6", "#475569", "#A16207"]
+
+[theme.light.sidebar]
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8FAFC"
+
+[theme.dark]
+primaryColor = "#3B82F6"
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#192134"
+textColor = "#FFFFFF"
+borderColor = "rgba(255,255,255,0.08)"
+linkColor = "#3B82F6"
+blueColor = "#3B82F6"
+greenColor = "#059669"
+redColor = "#EF4444"
+grayColor = "#94A3B8"
+grayTextColor = "#94A3B8"
+chartCategoricalColors = ["#3B82F6", "#1E40AF", "#94A3B8", "#A16207"]
+
+[theme.dark.sidebar]
+backgroundColor = "#101A34"
+secondaryBackgroundColor = "#192134"

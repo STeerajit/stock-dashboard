@@ -1,0 +1,12 @@
+/* The little the theme (.streamlit/config.toml) cannot do. Loaded once in app.py; delete that one line
+   to switch it all off if a Streamlit update ever breaks the look.
+
+   light-dark() picks the colour from .stApp's color-scheme, so it follows the theme the viewer has chosen. */
+
+/* Cards (st.container(border=True, key="card-...")) and bordered metrics: a white surface that lifts
+   off the page in light mode, the theme's card colour in dark mode. */
+.stApp [class*="st-key-card-"],
+.stApp [data-testid="stMetric"] {
+  background: light-dark(#FFFFFF, #192134);
+  box-shadow: 0 1px 2px light-dark(rgba(2, 6, 23, 0.06), rgba(0, 0, 0, 0.3));
+}

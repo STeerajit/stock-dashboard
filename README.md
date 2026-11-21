@@ -154,6 +154,7 @@ src/picks_backtest.py          # Dividend Picks backtest results (data/dividend_
 src/store.py                   # local DuckDB data store: safe incremental update, reads
 src/i18n.py                    # every user-facing string, English and Thai
 src/cache.py                   # Streamlit caching of all loaders
+src/style.css                  # the few looks the theme (.streamlit/config.toml) can't set: card surfaces
 data/set100.csv                # SET100 constituents (with an in_set50 flag)
 data/dividend_picks_backtest.json # saved Dividend Picks backtest results (read by the app)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script

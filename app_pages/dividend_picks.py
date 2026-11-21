@@ -113,7 +113,7 @@ for _, r in table.iterrows():
     days = days_to_xd(snap)
     if days is not None:
         facts += " · " + t("pk.summary_xd", days=days)
-    with st.container(border=True):
+    with st.container(border=True, key=f"card-pick-{symbol}"):
         st.markdown(head)
         st.caption(facts)
         buy, sell = st.columns(2)
