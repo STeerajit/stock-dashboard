@@ -3,8 +3,11 @@ from datetime import date
 import streamlit as st
 
 from src import cache, portfolio
+from src import dividend_picks as dp
+from src import signals as sg
 from src.fundamentals import SnapshotError, pe_history
 from src.i18n import current_lang, t
+from src.picks_backtest import load_results, rule_passed
 from src.today import price_levels, reasons
 
 st.title(t("today.title"))
@@ -61,6 +64,31 @@ else:
             st.markdown("\n".join(f"- {w}" for w in why))
             st.page_link("app_pages/stock.py", label=t("today.open", symbol=symbol), icon=":material/arrow_forward:",
                          query_params={"symbol": symbol})
+
+# Sell signals from Dividend Picks, for the SET100 stocks you own (not the watchlist).
+held = holdings.loc[holdings["shares"] > 0, "symbol"].tolist()
+data = cache.picks_data() if held else {}
+held_set100 = [s for s in held if s in data]
+if held_set100:
+    day = max(d.close.index[-1] for d in data.values())
+    screened = dp.screen(data, day).set_index("symbol")
+    show_sell = rule_passed(load_results(), "sell_now")
+    warnings = []
+    for symbol in held_set100:
+        sig = sg.compute(data[symbol], day, rank=screened.at[symbol, "rank"], stage=str(screened.at[symbol, "stage"]),
+                         lang=current_lang())
+        on = [s for key, s in sig.items() if sg.SIGNALS[key].side == "sell" and s.on]
+        if on:
+            warnings.append((symbol, on, show_sell and sg.sell_now(sig)))
+    if warnings:
+        st.subheader(t("today.sell_title", count=len(warnings)))
+        st.caption(t("today.sell_caption"))
+        for symbol, on, sell in warnings:
+            with st.container(border=True):
+                st.markdown(f"**{symbol}**" + (f"  ·  :red-badge[{t('pk.sell')}]" if sell else ""))
+                st.markdown("\n".join(f"- **{t(f'sig.name.{s.key}')}**: {s.label}" for s in on))
+                st.page_link("app_pages/stock.py", label=t("today.open", symbol=symbol),
+                             icon=":material/arrow_forward:", query_params={"symbol": symbol})
 
 with st.expander(t("today.legend_title")):
     st.markdown(t("today.legend"))

@@ -155,7 +155,7 @@ tests/test_outage.py           # behaviour when Yahoo is down
 tests/test_pages.py            # AppTest smoke tests for both pages
 tests/test_navigation.py       # screener row -> stock page
 tests/test_portfolio.py        # holdings: input checks, saving, Portfolio page
-tests/test_today.py            # Today rules at their boundaries
+tests/test_today.py            # Today rules at their boundaries; sell signals for holdings
 tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank

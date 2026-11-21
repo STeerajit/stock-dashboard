@@ -151,6 +151,8 @@ def today_page(tmp_path, monkeypatch):
     monkeypatch.setattr(cache, "snapshot_of", snapshot_of)
     monkeypatch.setattr(cache, "prices", lambda symbol, period="5y": flat_prices(rsi=market["rsi"].get(symbol, 50.0)))
     monkeypatch.setattr(cache, "financials", lambda symbol: pd.DataFrame({"P/E": [10.0, 10.0, 10.0]}))
+    market["picks"] = {}  # Dividend Picks data: none unless a test adds some
+    monkeypatch.setattr(cache, "picks_data", lambda: market["picks"])
 
     def run(rows):
         if rows:
@@ -200,3 +202,44 @@ def test_page_when_yahoo_is_down_for_everything(today_page):
     at = today_page["run"]([("PTT", 100, 30.0), ("KBANK", 50, 120.0)])
     assert "PTT, KBANK" in at.warning[0].value
     assert not at.subheader and not at.success
+
+
+# ---------- Today page: sell signals from Dividend Picks ----------
+
+from src import picks_backtest  # noqa: E402
+from tests.test_dividend_picks import dividends, financials, stock  # noqa: E402
+
+
+def picks_universe(**special):
+    """60 steady dividend payers (all ranked) plus the stocks in `special`."""
+    data = {f"S{i:02d}": stock(seed=i, div=dividends(amount=1 + i / 20), fin=financials(eps=(5,) * 5))
+            for i in range(60)}
+    return {**data, **special}
+
+
+def test_page_warns_about_sell_signals_for_held_stocks_only(today_page):
+    cut = dividends(range(2019, 2025), amount=2.0)  # paid 2.0 until 2024, then 1.0 in 2025: a cut
+    cut = pd.concat([cut, dividends([2025, 2026], amount=1.0)])
+    today_page["picks"] = picks_universe(PTT=stock(div=cut, fin=financials(eps=(5,) * 5)),
+                                         AOT=stock(div=cut, fin=financials(eps=(5,) * 5)))
+    at = today_page["run"]([("PTT", 100, 30.0), ("AOT", 0, np.nan)])  # AOT is only watched
+    assert at.subheader[-1].value == "Sell signals: 1 of your stocks"
+    text = " ".join(m.value for m in at.markdown)
+    assert "**PTT**" in text and "Dividend cut" in text and "**AOT**" not in text
+    assert "Sell" not in text.split("**PTT**")[1].split("\n")[0]  # no summary label without a backtest
+
+
+def test_summary_sell_label_shows_when_the_backtest_supports_it(today_page, monkeypatch):
+    monkeypatch.setattr(picks_backtest, "load_results",
+                        lambda path=None: {"rules": {"sell_now": {"passed": True}}})
+    falling = stock(drift=-0.003, fin=financials(eps=(5,) * 5))
+    today_page["picks"] = picks_universe(PTT=falling)
+    at = today_page["run"]([("PTT", 100, 30.0)])
+    assert any(":red-badge[Sell]" in m.value for m in at.markdown)
+
+
+def test_no_sell_section_without_sell_signals(today_page):
+    top = stock(seed=1, drift=0.001, div=dividends(amount=6.0), fin=financials(eps=(8,) * 5))  # rank 1, rising
+    today_page["picks"] = picks_universe(TOP=top)
+    at = today_page["run"]([("TOP", 100, 30.0)])
+    assert not any("Sell signals" in h.value for h in at.subheader)

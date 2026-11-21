@@ -83,6 +83,11 @@ TEXT: dict[str, dict[str, str]] = {
     "today.count": {"en": "{flagged} of {checked} stocks to look at", "th": "หุ้นที่น่าดู {flagged} จาก {checked} ตัว"},
     "today.price": {"en": "**{symbol}** · {price} THB", "th": "**{symbol}** · {price} บาท"},
     "today.open": {"en": "Open {symbol}", "th": "เปิด {symbol}"},
+    "today.sell_title": {"en": "Sell signals: {count} of your stocks", "th": "สัญญาณขาย: หุ้นในพอร์ต {count} ตัว"},
+    "today.sell_caption": {"en": "From Dividend Picks, for the SET100 stocks you own. Each one is a reason to look "
+                                 "again, not an instruction to sell.",
+                           "th": "จากหน้าหุ้นปันผลน่าถือ สำหรับหุ้น SET100 ที่คุณถืออยู่ แต่ละข้อเป็นเหตุผลให้กลับไปดู"
+                                 "อีกครั้ง ไม่ใช่คำสั่งให้ขาย"},
     "today.legend_title": {"en": "What the signals mean", "th": "สัญญาณแต่ละข้อหมายถึงอะไร"},
     "today.legend": {
         "en": "- **Near support:** price is at most 3% above the nearest support level (a price where it turned up "
