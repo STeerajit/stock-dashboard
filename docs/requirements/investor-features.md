@@ -42,7 +42,8 @@ special-dividend flag. (Net debt / EBITDA is left out: the data has no EBITDA.)
 - [ ] A check with missing data is "unknown", never "bad". Fewer than 3 known checks → "not enough data".
 - [ ] A year whose DPS is more than 1.5× the previous paid year **and** more than 1.5× the following year (a
   one-off spike, last 10 complete years) is flagged special. The latest complete year (no following year yet) is
-  special if its DPS is more than 1.5× the median of the previous 3 paid years. Exactly 1.5× is not special; a
+  special if its DPS is more than 1.5× the previous paid year **and** more than 1.5× the median of the previous 3
+  paid years. Exactly 1.5× is not special; a
   steady grower or a recovery after a low year is never flagged. (Changed 2026-11-22: the first rule, 1.5× the
   median of the other 10 years, flagged 31 of 96 SET100 stocks, mostly steady growers.) It still counts as paid in the streak, but its amount is left out of the CAGR and of cut detection
   (so the year after a special dividend is not a cut).

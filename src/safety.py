@@ -9,7 +9,7 @@ Six checks, each "good", "ok", "bad", "unknown" (data missing: never counted as 
 | Years since the last cut | >= 5 or none | 2-4 | 0-1 (a cut in the last 2 complete years) | Set by us; cuts are bad news (Michaely, Thaler & Womack 1995, not checked). |
 | Years paid in a row | >= 10 | 3-9 | < 3 | 3: SETHD's "paid for 3 years"; 10: set by us (like the 10 years of Dividend Achiever lists). |
 | 5-year DPS growth (CAGR) | >= 2% | 0-2% | < 0 | 2%: the middle of the Bank of Thailand's 1-3% inflation target (keeps up with prices). |
-| Special dividend last year | no | yes | - | A one-off spike: over 1.5x both the previous paid year and the next year; the last year: over 1.5x the median of the 3 paid years before. Set by the owner (2026-11-22). |
+| Special dividend last year | no | yes | - | A one-off spike: over 1.5x both the previous paid year and the next year; the last year: over 1.5x the previous paid year and the median of the 3 paid years before. Set by the owner (2026-11-22). |
 
 FCF payout is skipped for banks, finance and insurance: their cash flow mixes in lending and deposits.
 Special years still count as paid in the streak, but are left out of the growth rate and of cut detection.
@@ -81,7 +81,7 @@ def per_year(dividends: pd.Series, as_of) -> pd.Series:
 def special_years(per_year: pd.Series, factor: float = SPECIAL_FACTOR) -> set[int]:
     """Years (of the last 10) with a one-off spike: a dividend more than `factor` × the previous year that paid
     one and more than `factor` × the following year. The last year has no following year yet: it is special when
-    over `factor` × the median of the 3 paid years before it."""
+    over `factor` × the previous paid year and over `factor` × the median of the 3 paid years before it."""
     window = per_year.tail(HISTORY_YEARS)
     years, values = [int(cast(int, y)) for y in window.index], window.to_numpy()
     out = set()
@@ -90,7 +90,8 @@ def special_years(per_year: pd.Series, factor: float = SPECIAL_FACTOR) -> set[in
         if not paid_before:
             continue
         if i == len(values) - 1:
-            spike = dps > factor * float(pd.Series(paid_before[-SPECIAL_LOOKBACK:]).median())
+            spike = (dps > factor * paid_before[-1]
+                     and dps > factor * float(pd.Series(paid_before[-SPECIAL_LOOKBACK:]).median()))
         else:
             spike = dps > factor * paid_before[-1] and dps > factor * values[i + 1]
         if spike:

@@ -171,9 +171,14 @@ def test_previous_paid_year_skips_years_without_a_dividend():
 
 
 def test_latest_year_is_special_above_1_5x_the_median_of_the_3_paid_years_before():
-    base = {2021: 5.0, 2022: 1.0, 2023: 1.0, 2024: 1.2}  # median of 2022-2024: 1.0
+    base = {2021: 5.0, 2022: 1.0, 2023: 1.2, 2024: 1.0}  # median of 2022-2024 and the year before: 1.0
     assert special({**base, 2025: 1.5}) == set()
     assert special({**base, 2025: 1.51}) == {2025}
+
+
+def test_latest_year_must_also_beat_the_previous_paid_year():
+    assert special({2020: 0.19, 2021: 0.0, 2022: 0.0, 2023: 0.36, 2024: 0.79, 2025: 0.81}) == set()  # like AOT
+    assert special({2022: 1.0, 2023: 1.0, 2024: 1.0, 2025: 1.51}) == {2025}
 
 
 def test_steady_grower_is_never_special():
