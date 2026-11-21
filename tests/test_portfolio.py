@@ -340,3 +340,39 @@ def test_page_cap_change_is_kept_for_other_pages(csv_path, fake_market):
     at.run()
     assert at.session_state["conc_caps"]["stock"] == pytest.approx(0.60)
     assert at.number_input(key="cap_stock").value == 60
+
+
+# ---------- Portfolio page: dividend income calendar ----------
+
+def open_income_tab(at: AppTest) -> AppTest:
+    at.session_state["port_tab"] = next(tab.label for tab in at.tabs if "Income calendar" in tab.label)
+    return at.run()
+
+
+def test_income_calendar_loads_only_when_its_tab_opens(csv_path, fake_market, monkeypatch):
+    from src import income
+
+    calls = []
+    real = income.monthly
+    monkeypatch.setattr(income, "monthly", lambda *a, **k: calls.append(1) or real(*a, **k))
+    portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0), ("MAJOR", 0, np.nan)]))
+    at = AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run()
+    assert not at.exception and calls == []
+    assert not any("expected XD month" in c.value for c in at.caption)
+    at = open_income_tab(at)
+    assert not at.exception and not at.error and calls
+    assert any("expected XD month; payment usually about a month later" in c.value for c in at.caption)
+
+
+def test_income_calendar_shows_gross_tax_net_and_net_yield(csv_path, fake_market):
+    portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0), ("MAJOR", 0, np.nan)]))
+    at = open_income_tab(AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run())
+    assert not at.exception
+    metrics = {m.label: m.value for m in at.metric}
+    # fake_market: 1.00 per share every April, so 1,200 gross, 120 tax, 1,080 net
+    assert metrics["Gross dividend, next 12 months (THB)"] == "1,200"
+    assert metrics["Withholding tax 10% (THB)"] == "120"
+    assert metrics["Net dividend (THB)"] == "1,080"
+    per_stock = next(d.value for d in at.dataframe if "net_yield_on_cost" in d.value).set_index("symbol")
+    assert "MAJOR" not in per_stock.index  # watchlist row
+    assert per_stock.loc["PTT", "net_yield_on_cost"] == pytest.approx(900 / 30_000)

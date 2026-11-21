@@ -3,7 +3,7 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-from src import cache, portfolio, safety
+from src import cache, income, portfolio, safety
 from src import dividend_picks as dp
 from src.fundamentals import SnapshotError
 from src.i18n import current_lang, t
@@ -86,11 +86,52 @@ else:
             alt=t("port.table_alt"),
         )
 
-        alloc = portfolio.allocation(pos)
-        if not alloc.empty:
-            st.subheader(t("port.allocation"))
-            st.bar_chart((alloc * 100).round(1).rename(t("port.alloc_series")), horizontal=True,
-                         x_label=t("port.alloc_axis"), alt=t("port.alloc_alt"))
+        # The calendar loads only when its tab is open (an expander would run its code on every rerun).
+        t_alloc, t_income = st.tabs([t("port.allocation"), t("income.tab")], key="port_tab", on_change="rerun")
+        if t_alloc.open:
+            with t_alloc:
+                alloc = portfolio.allocation(pos)
+                if not alloc.empty:
+                    st.bar_chart((alloc * 100).round(1).rename(t("port.alloc_series")), horizontal=True,
+                                 x_label=t("port.alloc_axis"), alt=t("port.alloc_alt"))
+        if t_income.open:
+            with t_income:
+                priced = pos[pos["value"].notna()]  # like the totals: held stocks with a price
+                shares = dict(zip(priced["symbol"], priced["shares"]))
+                events = {sym: cache.dividend_events(sym) for sym in shares}
+                cal = income.monthly(events, shares, date.today().year)
+                months = income.by_month(cal)
+                st.caption(t("income.note", year=last_year))
+                with st.container(horizontal=True):
+                    for key, col in [("income.gross", "gross"), ("income.tax", "tax"), ("income.net", "net")]:
+                        st.metric(t(key), f"{months[col].sum():,.0f}", border=True, height="stretch")
+                names = t("income.months").split()
+                st.bar_chart((cal * (1 - income.TAX)).set_axis(names), sort=False, x_label=t("income.axis"),
+                             y_label=t("income.net"), alt=t("income.chart_alt"))
+                st.dataframe(
+                    months.set_axis(names).rename_axis("month").reset_index(), hide_index=True,
+                    column_config={"month": st.column_config.TextColumn(t("income.col_month")),
+                                   "gross": nc(t("income.col_gross"), format="localized"),
+                                   "tax": nc(t("income.col_tax"), format="localized"),
+                                   "net": nc(t("income.col_net"), format="localized")},
+                    alt=t("income.months_alt"),
+                )
+                st.dataframe(
+                    income.summary(pos, cal, events, date.today().year), hide_index=True,
+                    column_config={
+                        "symbol": st.column_config.TextColumn(t("common.symbol"), pinned=True),
+                        "gross": nc(t("income.col_gross"), format="localized"),
+                        "net": nc(t("income.col_net"), format="localized"),
+                        "net_yield_on_cost": nc(t("income.col_net_yoc"), format="percent",
+                                                help=t("income.col_net_yoc_help")),
+                        "no_recent": st.column_config.CheckboxColumn(
+                            t("income.col_no_recent"), help=t("income.col_no_recent_help", year=last_year)),
+                        "may_shift": st.column_config.CheckboxColumn(
+                            t("income.col_may_shift"),
+                            help=t("income.col_may_shift_help", before=last_year - 1, year=last_year)),
+                    },
+                    alt=t("income.stocks_alt"),
+                )
         st.caption(t("port.note", year=last_year))
 
         st.subheader(t("conc.caps"))
