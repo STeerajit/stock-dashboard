@@ -179,10 +179,13 @@ TEXT: dict[str, dict[str, str]] = {
     "income.tab": {"en": "Income calendar", "th": "ปฏิทินรายได้ปันผล"},
     "income.note": {"en": "Each bar is an expected XD month; payment usually about a month later. Amounts are the "
                           "dividends per share paid in {year} × shares you hold now. No payment dates are shown: "
-                          "the free data has none.",
+                          "the free data has none. An XD date that moves across New Year can make a payment drop out of "
+                          "the estimate.",
                     "th": "แต่ละแท่งคือเดือน XD ที่คาดไว้ เงินมักเข้าประมาณหนึ่งเดือนหลังจากนั้น ยอดเงินคือปันผลต่อหุ้นที่จ่ายในปี "
-                          "{year} × จำนวนหุ้นที่ถืออยู่ตอนนี้ ไม่แสดงวันจ่ายเงิน เพราะข้อมูลฟรีไม่มี"},
-    "income.gross": {"en": "Gross dividend, next 12 months (THB)", "th": "ปันผลก่อนภาษี 12 เดือนข้างหน้า (บาท)"},
+                          "{year} × จำนวนหุ้นที่ถืออยู่ตอนนี้ ไม่แสดงวันจ่ายเงิน เพราะข้อมูลฟรีไม่มี "
+                          "หากวัน XD เลื่อนข้ามปีใหม่ ปันผลครั้งนั้นอาจหายไปจากยอดคาดการณ์"},
+    "income.gross": {"en": "Estimated yearly dividends, based on last year (THB)",
+                     "th": "ปันผลคาดการณ์ต่อปี จากปีที่แล้ว (บาท)"},
     "income.tax": {"en": "Withholding tax 10% (THB)", "th": "ภาษีหัก ณ ที่จ่าย 10% (บาท)"},
     "income.net": {"en": "Net dividend (THB)", "th": "ปันผลสุทธิ (บาท)"},
     "income.months": {"en": "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec",
@@ -482,12 +485,19 @@ TEXT: dict[str, dict[str, str]] = {
                                       "th": "สัดส่วนการจ่ายจากกำไร: ไม่มีปันผลใน 12 เดือนล่าสุด"},
     "safety.eps_payout.unknown": {"en": "Earnings payout: unknown (no EPS)",
                                   "th": "สัดส่วนการจ่ายจากกำไร: ไม่ทราบ (ไม่มีข้อมูลกำไรต่อหุ้น)"},
-    "safety.fcf_payout.good": {"en": "Free cash flow covered the dividend in most years ({bad} of {known} not covered)",
-                               "th": "กระแสเงินสดอิสระพอจ่ายปันผลเกือบทุกปี (ไม่พอ {bad} จาก {known} ปี)"},
+    "safety.fcf_payout.good": {"en": "Free cash flow covered the dividend in each of the last {known} years",
+                               "th": "กระแสเงินสดอิสระพอจ่ายปันผลทุกปีใน {known} ปีล่าสุด"},
+    "safety.fcf_payout.good_one": {"en": "Free cash flow covered the dividend in {covered} of the last {known} years "
+                                         "(one bad year is allowed)",
+                                   "th": "กระแสเงินสดอิสระพอจ่ายปันผล {covered} จาก {known} ปีล่าสุด (ยอมให้ไม่พอได้ 1 ปี)"},
     "safety.fcf_payout.bad": {"en": "Free cash flow did not cover the dividend in {bad} of the last {known} years",
                               "th": "กระแสเงินสดอิสระไม่พอจ่ายปันผล {bad} จาก {known} ปีล่าสุด"},
     "safety.fcf_payout.unknown": {"en": "Free cash flow payout: unknown (fewer than 2 years of data)",
                                   "th": "สัดส่วนการจ่ายจากกระแสเงินสดอิสระ: ไม่ทราบ (ข้อมูลไม่ถึง 2 ปี)"},
+    "safety.fcf_payout.no_sector": {"en": "Free cash flow payout: unknown (sector unknown outside SET100; "
+                                          "it is not used for banks)",
+                                    "th": "สัดส่วนการจ่ายจากกระแสเงินสดอิสระ: ไม่ทราบ (ไม่ทราบกลุ่มอุตสาหกรรมของหุ้นนอก SET100 "
+                                          "ซึ่งไม่ใช้กับธนาคาร)"},
     "safety.fcf_payout.skipped": {"en": "Free cash flow payout not used for banks, finance and insurance: their cash "
                                         "flow includes lending and deposits",
                                   "th": "ไม่ใช้สัดส่วนการจ่ายจากกระแสเงินสดอิสระกับธนาคาร การเงิน และประกัน "
@@ -495,6 +505,8 @@ TEXT: dict[str, dict[str, str]] = {
     "safety.cut.good": {"en": "Last dividend cut in {year}, 5 or more years ago",
                         "th": "ลดปันผลครั้งล่าสุดปี {year} ผ่านมา 5 ปีขึ้นไปแล้ว"},
     "safety.cut.none": {"en": "No dividend cut in the last {years} years", "th": "ไม่เคยลดปันผลใน {years} ปีล่าสุด"},
+    "safety.cut.short": {"en": "No dividend cut, but only {years} years of dividends",
+                         "th": "ไม่เคยลดปันผล แต่มีประวัติปันผลแค่ {years} ปี"},
     "safety.cut.ok": {"en": "Cut its dividend in {year}", "th": "ลดปันผลในปี {year}"},
     "safety.cut.bad": {"en": "Cut its dividend recently, in {year}", "th": "เพิ่งลดปันผลเมื่อปี {year}"},
     "safety.cut.unknown": {"en": "Dividend cuts: unknown (fewer than 2 years of dividends)",

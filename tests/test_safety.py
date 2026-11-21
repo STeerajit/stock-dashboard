@@ -231,3 +231,42 @@ def test_reasons_in_thai():
     assert th.level == en.level
     assert all(a.reason != b.reason for a, b in zip(en.checks, th.checks))
     assert all(any("฀" <= ch <= "๿" for ch in c.reason) for c in th.checks)
+
+
+# ---------- review fixes ----------
+
+def test_per_year_has_no_float_noise():
+    """0.70 + 0.60 sums to 1.2999999999999998 in floats: that must not look like a cut from 1.30 (BEM 2017)."""
+    ev = pd.Series([1.30, 0.70, 0.60], index=pd.to_datetime(["2024-04-10", "2025-04-10", "2025-09-10"]))
+    years = safety.per_year(ev, AS_OF)
+    assert years[2025] == 1.30
+    assert safety.years_since_cut(years) == float("inf")
+
+
+def test_no_cut_with_a_short_history_is_ok_not_good():
+    c = check(safety.grade(data(div={y: 1.0 for y in range(2022, 2026)}), "Commerce", AS_OF), "cut")
+    assert c.status == "ok" and "4 years" in c.reason
+
+
+def test_no_cut_over_5_years_is_good():
+    c = check(safety.grade(data(div={y: 1.0 for y in range(2021, 2026)}), "Commerce", AS_OF), "cut")
+    assert c.status == "good"
+
+
+def test_fcf_reason_with_one_bad_year_of_two():
+    c = check(safety.grade(data(financials=fin(fcf=(np.nan, -1e9, 3e9))), "Commerce", AS_OF), "fcf_payout")
+    assert c.status == "good"
+    assert c.reason == "Free cash flow covered the dividend in 1 of the last 2 years (one bad year is allowed)"
+
+
+def test_fcf_reason_when_every_year_is_covered():
+    c = check(safety.grade(data(), "Commerce", AS_OF), "fcf_payout")
+    assert c.reason == "Free cash flow covered the dividend in each of the last 3 years"
+
+
+def test_unknown_sector_makes_fcf_unknown():
+    """A stock outside SET100 has no sector: it may be a bank, so the FCF check can't be trusted either way."""
+    g = safety.grade(data(financials=fin(fcf=(-1e9, -1e9, -1e9))), "Outside SET100", AS_OF)
+    c = check(g, "fcf_payout")
+    assert c.status == "unknown" and "sector" in c.reason.lower()
+    assert g.level == "safe"  # not graded

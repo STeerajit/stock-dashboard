@@ -36,6 +36,14 @@ def safety_level(symbol: str, sector: str) -> str | None:
     return t(f"safety.level.{safety.grade(d, sector, pd.Timestamp(date.today()), lang=current_lang()).level}")
 
 
+def dividend_events_or_none(symbol: str) -> pd.Series:
+    """The stock's dividends, or none if they can't be loaded: one stock failing must not break the calendar."""
+    try:
+        return cache.dividend_events(symbol)
+    except Exception:
+        return pd.Series(dtype=float)
+
+
 if saved.empty:
     st.info(t("port.empty"), title=t("port.empty_title"))
 else:
@@ -98,7 +106,7 @@ else:
             with t_income:
                 priced = pos[pos["value"].notna()]  # like the totals: held stocks with a price
                 shares = dict(zip(priced["symbol"], priced["shares"]))
-                events = {sym: cache.dividend_events(sym) for sym in shares}
+                events = {sym: dividend_events_or_none(sym) for sym in shares}
                 cal = income.monthly(events, shares, date.today().year)
                 months = income.by_month(cal)
                 st.caption(t("income.note", year=last_year))

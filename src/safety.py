@@ -12,6 +12,8 @@ Six checks, each "good", "ok", "bad", "unknown" (data missing: never counted as 
 | Special dividend last year | no | yes | - | A one-off spike: over 1.5x both the previous paid year and the next year; the last year: over 1.5x the previous paid year and the median of the 3 paid years before. Set by the owner (2026-11-22). |
 
 FCF payout is skipped for banks, finance and insurance: their cash flow mixes in lending and deposits.
+For stocks outside SET100 the sector is unknown (it may be a bank), so FCF payout is unknown.
+No cut with fewer than 5 years of dividends is "ok", not "good": too short to tell.
 Special years still count as paid in the streak, but are left out of the growth rate and of cut detection.
 
 Level (set by us): fewer than 3 known checks -> "not_enough_data"; 2+ bad -> "unsafe"; 1 bad -> "risky";
@@ -25,6 +27,7 @@ import pandas as pd
 from src import dividend_picks as dp
 from src.fundamentals import cagr
 from src.i18n import text
+from src.universe import OUTSIDE_SET100
 
 LEVELS = ("safe", "ok", "risky", "unsafe")
 NOT_ENOUGH_DATA = "not_enough_data"
@@ -43,8 +46,8 @@ Status = Literal["good", "ok", "bad", "unknown", "skipped"]
 # The reason text of a check is "safety.{key}.{variant}"; every variant each check can give (for the i18n test).
 REASONS = {
     "eps_payout": ("good", "ok", "bad", "loss", "no_dividend", "unknown"),
-    "fcf_payout": ("good", "bad", "unknown", "skipped"),
-    "cut": ("good", "none", "ok", "bad", "unknown"),
+    "fcf_payout": ("good", "good_one", "bad", "unknown", "no_sector", "skipped"),
+    "cut": ("good", "none", "short", "ok", "bad", "unknown"),
     "streak": ("good", "ok", "bad", "unknown"),
     "cagr": ("good", "ok", "bad", "unknown"),
     "special": ("good", "ok", "unknown"),
@@ -71,7 +74,7 @@ def per_year(dividends: pd.Series, as_of) -> pd.Series:
     A year without a dividend is 0. Empty without any dividend before this year."""
     as_of = pd.Timestamp(as_of)
     d = dividends[dividends.index <= as_of]
-    by_year = d.groupby(pd.DatetimeIndex(d.index).year).sum()
+    by_year = d.groupby(pd.DatetimeIndex(d.index).year).sum().round(6)  # 0.70 + 0.60 must equal 1.30
     by_year = by_year[by_year.index < as_of.year]
     if by_year.empty:
         return pd.Series(dtype=float)
@@ -174,18 +177,22 @@ def grade(d: dp.StockData, sector: str, as_of, lang: str = "en") -> Grade:
     years = per_year(d.dividends, as_of)
     if sector in FINANCIAL_SECTORS:
         put("fcf_payout", "skipped")
+    elif sector == OUTSIDE_SET100:
+        put("fcf_payout", "unknown", "no_sector")
     else:
         known, bad = _fcf_payout(dp.published_financials(d.financials, as_of), years)
         if known < FCF_MIN_KNOWN:
             put("fcf_payout", "unknown")
         else:
-            put("fcf_payout", "bad" if bad >= FCF_BAD_YEARS else "good", bad=bad, known=known)
+            put("fcf_payout", "bad" if bad >= FCF_BAD_YEARS else "good", "good_one" if bad == 1 else None,
+                bad=bad, known=known, covered=known - bad)
 
     since = years_since_cut(years)
     if pd.isna(since):
         put("cut", "unknown")
     elif since == float("inf"):
-        put("cut", "good", "none", years=len(years.tail(HISTORY_YEARS)))
+        n = len(years.tail(HISTORY_YEARS))
+        put("cut", "good" if n >= CUT_GOOD_YEARS else "ok", "none" if n >= CUT_GOOD_YEARS else "short", years=n)
     else:
         put("cut", cut_status(since), year=int(years.index[-1] - since))
 

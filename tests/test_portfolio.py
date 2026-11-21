@@ -370,9 +370,28 @@ def test_income_calendar_shows_gross_tax_net_and_net_yield(csv_path, fake_market
     assert not at.exception
     metrics = {m.label: m.value for m in at.metric}
     # fake_market: 1.00 per share every April, so 1,200 gross, 120 tax, 1,080 net
-    assert metrics["Gross dividend, next 12 months (THB)"] == "1,200"
+    assert metrics["Estimated yearly dividends, based on last year (THB)"] == "1,200"
     assert metrics["Withholding tax 10% (THB)"] == "120"
     assert metrics["Net dividend (THB)"] == "1,080"
     per_stock = next(d.value for d in at.dataframe if "net_yield_on_cost" in d.value).set_index("symbol")
     assert "MAJOR" not in per_stock.index  # watchlist row
     assert per_stock.loc["PTT", "net_yield_on_cost"] == pytest.approx(900 / 30_000)
+
+
+def test_income_calendar_survives_one_stock_failing_to_load(csv_path, fake_market, monkeypatch):
+    def events(symbol):
+        if symbol == "KBANK":
+            raise ConnectionError("fake network error")
+        return pd.Series(1.0, index=pd.to_datetime(["2025-04-10"]))
+
+    monkeypatch.setattr(cache, "dividend_events", events)
+    portfolio.save(table([("PTT", 1000, 30.0), ("KBANK", 200, 150.0)]))
+    at = open_income_tab(AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run())
+    assert not at.exception
+    assert {m.label: m.value for m in at.metric}["Estimated yearly dividends, based on last year (THB)"] == "1,000"
+
+
+def test_income_calendar_note_warns_about_new_year(csv_path, fake_market):
+    portfolio.save(table([("PTT", 1000, 30.0)]))
+    at = open_income_tab(AppTest.from_file(ROOT / "app_pages/portfolio.py", default_timeout=30).run())
+    assert any("New Year" in c.value for c in at.caption)
