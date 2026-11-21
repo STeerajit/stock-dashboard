@@ -207,6 +207,12 @@ def load_close(path: Path, symbol: str) -> pd.Series:
         return _raw_prices(con, symbol)["Close"]
 
 
+def load_dividends(path: Path, symbol: str) -> pd.Series:
+    """Cash dividend per share, one row per XD date, as traded."""
+    with connect(path, read_only=True) as con:
+        return _dividends(con, symbol)
+
+
 def load_dividends_per_year(path: Path, symbol: str) -> pd.Series:
     """Cash dividend per share summed by calendar year of the XD date (like get_dividends_per_year)."""
     with connect(path, read_only=True) as con:

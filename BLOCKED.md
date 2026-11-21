@@ -54,3 +54,16 @@ boxes in BACKLOG.md #12.
    Python 3.11 → **Advanced settings → Secrets**: `STOCKS_PUBLIC = "1"` → **Deploy**.
 3. Check: the screener shows 100 rows within 30 s, and `<url>/stock?symbol=KBANK` opens KBANK.
 4. Put the URL at the top of the README and in docs/article.md ("Live app"), then tick the boxes in BACKLOG #8.
+
+## Dividend Picks — buybacks left out of net payout yield (needs your decision)
+
+**Status (2026-11-21):** the Conservative Formula ranks by *net payout yield* (dividends + buybacks). Our only
+share count is thaifin's year-end market cap / close, and it is not reliable: PTT, whose share count has not
+changed, moves 28,563M → 28,638M → 27,882M shares (2022–2025), and PRM jumps 2,610M → 2,011M → 2,500M. Used as
+buybacks, that noise (up to ±25% a year) would outweigh the dividend yield itself.
+
+**What was done instead:** `USE_BUYBACKS = False` in `src/dividend_picks.py`, so the rank uses the dividend yield
+only. The buyback calculation and its tests stay, ready for better data.
+
+**What you need to decide:** keep dividend yield only (buybacks are rare among Thai SET100 companies), or name a
+source for real share counts (e.g. SET's company profile) to fetch.

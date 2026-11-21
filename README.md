@@ -133,6 +133,7 @@ src/today.py                   # rules that flag a stock on the Today page
 src/set_links.py               # links to the SET website + free float
 src/valuation.py               # fair value: DDM, DCF, sensitivity table
 src/scoring.py                 # Piotroski F-score, Magic Formula rank
+src/dividend_picks.py          # Dividend Picks: low volatility, dividend-trap filters, rank
 src/store.py                   # local DuckDB data store: safe incremental update, reads
 src/i18n.py                    # every user-facing string, English and Thai
 src/cache.py                   # Streamlit caching of all loaders
@@ -155,6 +156,7 @@ tests/test_today.py            # Today rules at their boundaries
 tests/test_growth.py           # 5-year CAGR and average ROE
 tests/test_valuation.py        # DDM / DCF hand-computed examples
 tests/test_scoring.py          # F-score checks, Magic Formula rank
+tests/test_dividend_picks.py   # Dividend Picks rules at their boundaries
 tests/test_store.py            # store: idempotent, incremental, safe; offline app
 tests/test_i18n.py             # translations complete; no hard-coded text in pages
 tests/test_set_links.py        # SET links and free float
