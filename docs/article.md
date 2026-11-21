@@ -138,6 +138,6 @@ change; the table states the date it was made for.
 ## Links
 
 - Code: https://github.com/STeerajit/stock-dashboard
-- Live app: added once the dashboard is deployed.
+- Live app: https://stock-dashboard-pgq439mqsgzlcqf4w3s48m.streamlit.app
 
 *For learning only. This is not investment advice.*

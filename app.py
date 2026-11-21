@@ -29,7 +29,8 @@ page = st.navigation(
         st.Page("app_pages/stock.py", title=t("nav.stock"), icon=":material/candlestick_chart:", url_path="stock",
                 help=t("nav.stock_help")),
         st.Page("app_pages/portfolio.py", title=t("nav.portfolio"), icon=":material/account_balance_wallet:",
-                url_path="portfolio", help=t("nav.portfolio_help")),
+                url_path="portfolio",
+                help=t("nav.portfolio_help_public" if portfolio.public_mode() else "nav.portfolio_help")),
     ]
 )
 
@@ -47,7 +48,7 @@ with st.sidebar:
     if as_of:
         st.caption(t("app.as_of", when=f"{as_of:%d %b %Y %H:%M}"))
     else:
-        st.caption(t("app.live"))
+        st.caption(t("app.live_public" if portfolio.public_mode() else "app.live"))
     # Not on the public demo: one visitor's click would make every visitor wait for the download.
     if not portfolio.public_mode() and st.button(t("app.update"), icon=":material/sync:", help=t("app.update_help")):
         with st.spinner(t("app.updating")):

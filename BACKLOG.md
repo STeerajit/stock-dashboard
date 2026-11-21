@@ -158,9 +158,11 @@ by running the app. Tests must not need the internet, so they stay fast and stab
 (the user must explicitly choose to make it public). Depends on #1 and #2.
 
 **Acceptance criteria**
-- [ ] The app is live at a public `*.streamlit.app` URL, and the README links to it at the top.
+- [x] The app is live at a public `*.streamlit.app` URL, and the README links to it at the top (https://stock-dashboard-pgq439mqsgzlcqf4w3s48m.streamlit.app, 2026-11-22).
 - [ ] Opening the live URL shows the screener with 50 rows within 30 seconds on a cold start.
-- [ ] `<live-url>/stock?symbol=KBANK` opens KBANK directly.
+  (2026-11-22: the first open showed "Market data unavailable" for 100% of stocks; a retry a minute later showed
+  every row. Check again on a later cold start.)
+- [x] `<live-url>/stock?symbol=KBANK` opens KBANK directly (checked 2026-11-22).
 - [x] The README has at least 2 screenshots (screener, stock chart tab) stored in `docs/`.
 - [x] No secrets in the repo (`git grep -i "api_key\|token"` returns nothing).
 

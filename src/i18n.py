@@ -27,11 +27,15 @@ TEXT: dict[str, dict[str, str]] = {
     "nav.portfolio": {"en": "Portfolio", "th": "พอร์ต"},
     "nav.portfolio_help": {"en": "The stocks you own and your watchlist, saved on this Mac.",
                            "th": "หุ้นที่คุณถือและรายการเฝ้าดู บันทึกไว้ใน Mac เครื่องนี้"},
+    "nav.portfolio_help_public": {"en": "The stocks you own and your watchlist, kept in this browser tab only.",
+                                  "th": "หุ้นที่คุณถือและรายการเฝ้าดู เก็บไว้ในแท็บเบราว์เซอร์นี้เท่านั้น"},
     "app.language": {"en": "Language", "th": "ภาษา"},
     "app.as_of": {"en": "Data as of **{when}** (local store). Stocks outside SET100 are fetched live.",
                   "th": "ข้อมูล ณ **{when}** (เก็บในเครื่อง) หุ้นนอก SET100 ดึงสดจากเน็ต"},
     "app.live": {"en": "Live data (no local store yet). Press Update data to save a copy for fast, offline use.",
                  "th": "ข้อมูลสด (ยังไม่มีข้อมูลเก็บในเครื่อง) กด อัปเดตข้อมูล เพื่อเก็บไว้ใช้เร็วขึ้นและใช้ได้ตอนไม่มีเน็ต"},
+    "app.live_public": {"en": "Live data, fetched when a page opens and kept for up to a day, so the first load is slow.",
+                        "th": "ข้อมูลสด ดึงเมื่อเปิดหน้า และเก็บไว้ไม่เกินหนึ่งวัน การเปิดครั้งแรกจึงช้า"},
     "app.update": {"en": "Update data", "th": "อัปเดตข้อมูล"},
     "app.update_help": {"en": "Download today's data for all SET100 stocks into data/market.duckdb (about 1–2 "
                               "minutes). Same as running scripts/update_data.py.",
@@ -127,6 +131,9 @@ TEXT: dict[str, dict[str, str]] = {
                            "Saved on this Mac only (data/portfolio.csv, never committed to git).",
                      "th": "หุ้นที่คุณถือ และรายการเฝ้าดู: ใส่ 0 หุ้นสำหรับหุ้นที่แค่อยากติดตาม "
                            "บันทึกไว้ใน Mac เครื่องนี้เท่านั้น (data/portfolio.csv ไม่เคยถูก commit เข้า git)"},
+    "port.caption_public": {"en": "The stocks you own, plus a watchlist: enter 0 shares for a stock you only want to "
+                                  "follow.",
+                            "th": "หุ้นที่คุณถือ และรายการเฝ้าดู: ใส่ 0 หุ้นสำหรับหุ้นที่แค่อยากติดตาม"},
     "port.public_title": {"en": "Demo", "th": "เดโม"},
     "port.public": {"en": "This is a public demo: your portfolio lives only in this browser tab and disappears when "
                           "you close it. Nothing is saved on the server.",

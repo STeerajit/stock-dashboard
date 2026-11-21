@@ -9,10 +9,9 @@ from src.i18n import current_lang, t
 from src.universe import describe
 
 st.title(t("port.title"))
-st.caption(t("port.caption"))
-
 # Public demo: holdings stay in this visitor's session, never in a file on the server (see portfolio.public_mode).
 public = portfolio.public_mode()
+st.caption(t("port.caption_public" if public else "port.caption"))
 if public:
     st.info(t("port.public"), title=t("port.public_title"), icon=":material/public:")
 saved = st.session_state.get("demo_holdings", portfolio.empty()) if public else portfolio.load()

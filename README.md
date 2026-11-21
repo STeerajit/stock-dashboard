@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/STeerajit/stock-dashboard/actions/workflows/ci.yml)
 
+**Live demo:** https://stock-dashboard-pgq439mqsgzlcqf4w3s48m.streamlit.app
+
 Personal dashboard for Thai stocks: a Today page that lists which of your stocks deserve a look and why, a screener to compare the 100 largest (SET100), Dividend picks (10 SET100 dividend stocks a day, picked by rules from research, with buy and sell signals and a 10-year backtest), a detail page for
 any Thai stock covering trading activity, chart, financials, valuation vs. peers and dividends, and a
 portfolio page to track your holdings and watchlist — plus an honestly-evaluated price prediction model.
