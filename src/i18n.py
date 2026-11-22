@@ -1,9 +1,13 @@
 """Every user-facing string, in English and Thai. Pages call `t("key", name=value)`.
 
-The language comes from the sidebar toggle (kept in the URL as ?lang=th). Pure code (src/today.py,
+The language comes from the sidebar toggle (kept in the URL as ?lang=th). Without ?lang= it is the
+environment variable STOCKS_LANG (th or en, set by start.bat), else English. Pure code (src/today.py,
 src/portfolio.py, ...) takes a `lang` argument and calls `text(key, lang, ...)` instead, so it stays
 testable without Streamlit. Placeholders use str.format: "{count} stocks".
 """
+
+import os
+from collections.abc import Mapping
 
 LANGS = {"en": "English", "th": "ไทย"}
 DEFAULT = "en"
@@ -817,12 +821,18 @@ def text(key: str, lang: str = DEFAULT, **values) -> str:
     return entry.get(lang, entry[DEFAULT]).format(**values)
 
 
+def default_lang(env: Mapping[str, str] | None = None) -> str:
+    """The language used without ?lang=: STOCKS_LANG (th or en) when set, else English."""
+    lang = (os.environ if env is None else env).get("STOCKS_LANG", DEFAULT)
+    return lang if lang in LANGS else DEFAULT
+
+
 def current_lang() -> str:
-    """The language chosen in the sidebar (kept in the URL as ?lang=th); English by default."""
+    """The language chosen in the sidebar (kept in the URL as ?lang=th); default_lang() without one."""
     import streamlit as st
 
-    lang = st.session_state.get("lang_choice") or st.query_params.get("lang", DEFAULT)
-    return lang if lang in LANGS else DEFAULT
+    lang = st.session_state.get("lang_choice") or st.query_params.get("lang", default_lang())
+    return lang if lang in LANGS else default_lang()
 
 
 def t(key: str, **values) -> str:

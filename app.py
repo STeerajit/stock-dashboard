@@ -6,14 +6,14 @@ import duckdb
 import streamlit as st
 
 from src import portfolio, store
-from src.i18n import DEFAULT, LANGS, t
+from src.i18n import LANGS, default_lang, t
 from src.universe import load_set100
 
 # Language: chosen in the sidebar and kept in the URL as ?lang=th, so a link or reload keeps it.
-# (A widget bound to the URL would put the label "ไทย" there instead of "th".)
+# (A widget bound to the URL would put the label "ไทย" there instead of "th".) Without ?lang=: STOCKS_LANG.
 if "lang_choice" not in st.session_state:
-    url_lang = st.query_params.get("lang", DEFAULT)
-    st.session_state["lang_choice"] = url_lang if url_lang in LANGS else DEFAULT
+    url_lang = st.query_params.get("lang", default_lang())
+    st.session_state["lang_choice"] = url_lang if url_lang in LANGS else default_lang()
 
 st.set_page_config(page_title=t("app.page_title"), page_icon=":material/candlestick_chart:", layout="wide")
 st.html(Path(__file__).parent / "src" / "style.css")  # card surfaces; delete this line to switch the CSS off
@@ -36,7 +36,7 @@ page = st.navigation(
 
 with st.sidebar:
     st.segmented_control(t("app.language"), list(LANGS), format_func=lambda code: LANGS[code], key="lang_choice", required=True)
-    if st.session_state["lang_choice"] == DEFAULT:
+    if st.session_state["lang_choice"] == default_lang():
         st.query_params.pop("lang", None)
     else:
         st.query_params["lang"] = st.session_state["lang_choice"]

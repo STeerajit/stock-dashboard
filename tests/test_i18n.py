@@ -9,7 +9,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from src.fundamentals import FIN_COLUMNS, SCORE_COLUMNS
-from src.i18n import LANGS, TEXT, text
+from src.i18n import DEFAULT, LANGS, TEXT, default_lang, text
 from src.portfolio import DEFAULT_CAPS
 from src.safety import LEVELS, NOT_ENOUGH_DATA, REASONS
 from src.scoring import piotroski
@@ -112,3 +112,30 @@ def test_switching_language_updates_the_page_and_the_url():
     at.sidebar.segmented_control[0].set_value("th").run()
     assert at.title[0].value == "วันนี้"
     assert at.query_params["lang"] == ["th"] or at.query_params["lang"] == "th"
+
+
+@pytest.mark.parametrize("env, lang", [({}, DEFAULT), ({"STOCKS_LANG": "th"}, "th"), ({"STOCKS_LANG": "en"}, "en"),
+                                       ({"STOCKS_LANG": "xx"}, DEFAULT), ({"STOCKS_LANG": ""}, DEFAULT)])
+def test_default_language_comes_from_stocks_lang(env, lang):
+    assert default_lang(env) == lang
+
+
+def test_app_starts_in_the_stocks_lang_language(monkeypatch):
+    monkeypatch.setenv("STOCKS_LANG", "th")
+    at = AppTest.from_file(ROOT / "app.py", default_timeout=30).run()
+    assert not at.exception
+    assert at.title[0].value == "วันนี้"
+    assert "lang" not in at.query_params  # the default language needs no ?lang=
+
+
+def test_the_url_language_beats_stocks_lang(monkeypatch):
+    monkeypatch.setenv("STOCKS_LANG", "th")
+    at = AppTest.from_file(ROOT / "app.py", default_timeout=30)
+    at.query_params["lang"] = "en"
+    at.run()
+    assert at.title[0].value == "Today"
+    # Switching to English must stay in the URL, or a reload would fall back to Thai.
+    at.sidebar.segmented_control[0].set_value("th").run()
+    at.sidebar.segmented_control[0].set_value("en").run()
+    assert at.title[0].value == "Today"
+    assert at.query_params["lang"] in (["en"], "en")
