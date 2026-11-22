@@ -6,7 +6,7 @@ Six checks, each "good", "ok", "bad", "unknown" (data missing: never counted as 
 |---|---|---|---|---|
 | EPS payout (TTM, as in Dividend picks) | <= 60% | <= 100% | > 100%, or a loss | 100%: SETHD rule 3; 60%: the top of the 40-60% the same paper recommends (Nikornpittaya & Wongpriew 2024, see docs/research/dividend-picks.md). Morningstar's 20-year study: high payout predicts cuts. |
 | FCF payout = DPS x Shares / FCF | not bad | - | FCF <= 0 or payout > 100% in 2 of the last 3 years (2 known) | Set by the owner (2026-11-22): thaifin's FCF includes acquisitions, so one bad year is not enough. |
-| Years since the last cut | >= 5 or none | 2-4 | 0-1 (a cut in the last 2 complete years) | Set by us; cuts are bad news (Michaely, Thaler & Womack 1995, not checked). |
+| Years since the last cut | >= 5 or none | 2-4 | 0-1 (a cut in the last 2 complete years) | Set by us; cuts are bad news (Michaely, Thaler & Womack 1995, not checked). A cut is DPS below 90% of the previous (non-special) year; exactly 10% down is not a cut. The 10% tolerance is the owner's decision (2026-11-22), not a research figure: Thai dividends follow a payout ratio, so they wobble year to year. |
 | Years paid in a row | >= 10 | 3-9 | < 3 | 3: SETHD's "paid for 3 years"; 10: set by us (like the 10 years of Dividend Achiever lists). |
 | 5-year DPS growth (CAGR) | >= 2% | 0-2% | < 0 | 2%: the middle of the Bank of Thailand's 1-3% inflation target (keeps up with prices). |
 | Special dividend last year | no | yes | - | A one-off spike: over 1.5x both the previous paid year and the next year; the last year: over 1.5x the previous paid year and the median of the 3 paid years before. Set by the owner (2026-11-22). |
@@ -37,6 +37,7 @@ PAYOUT_GOOD = 0.60
 PAYOUT_MAX = dp.MAX_PAYOUT  # 100%
 FCF_YEARS, FCF_BAD_YEARS, FCF_MIN_KNOWN = 3, 2, 2
 CUT_BAD_YEARS, CUT_GOOD_YEARS = 2, 5
+CUT_TOLERANCE = 0.10  # a cut is a drop of more than 10% (owner's decision, 2026-11-22)
 STREAK_OK, STREAK_GOOD = 3, 10
 CAGR_YEARS, CAGR_GOOD = 5, 0.02
 SPECIAL_FACTOR, SPECIAL_LOOKBACK, HISTORY_YEARS = 1.5, 3, 10
@@ -107,12 +108,13 @@ def _regular(per_year: pd.Series) -> pd.Series:
 
 
 def years_since_cut(per_year: pd.Series) -> float:
-    """Complete years since the last cut in the last 10 years (0 = last year was lower than the year before),
-    inf without a cut, NaN with fewer than 2 years. Special years are removed first."""
+    """Complete years since the last cut in the last 10 years (0 = last year was a cut), inf without a cut,
+    NaN with fewer than 2 years. A cut is DPS below 90% of the year before. Special years are removed first."""
     s = _regular(per_year.tail(HISTORY_YEARS))
     if len(s) < 2:
         return float("nan")
-    cuts = s.index[1:][s.to_numpy()[1:] < s.to_numpy()[:-1]]
+    v = s.to_numpy()
+    cuts = s.index[1:][v[1:] < ((1 - CUT_TOLERANCE) * v[:-1]).round(6)]  # round: 1.30 x 0.9 = 1.1700000000000002
     return float(per_year.index[-1] - cuts[-1]) if len(cuts) else float("inf")
 
 

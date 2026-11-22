@@ -211,6 +211,15 @@ def test_a_real_cut_is_found():
     assert safety.years_since_cut(safety.per_year(divs({2024: 1.0, 2025: 1.0}), AS_OF)) == float("inf")
 
 
+@pytest.mark.parametrize("last, is_cut", [(0.91, False), (0.90, False), (0.8999, True), (0.5, True)])
+def test_a_cut_is_a_drop_of_more_than_10_percent(last, is_cut):
+    """Thai dividends follow a payout ratio and wobble: a drop of exactly 10% (or less) is not a cut."""
+    years = safety.per_year(divs({2020: 1.0, 2021: 1.0, 2022: 1.0, 2023: 1.0, 2024: 1.0, 2025: last}), AS_OF)
+    assert safety.years_since_cut(years) == (0 if is_cut else float("inf"))
+    # 1.30 x 0.9 is 1.1700000000000002 in floats: 1.17 is exactly 10% down, so still not a cut.
+    assert safety.years_since_cut(safety.per_year(divs({2024: 1.30, 2025: 1.17}), AS_OF)) == float("inf")
+
+
 def test_a_skipped_year_breaks_the_streak():
     d = {y: 1.0 for y in range(2015, 2026) if y != 2021}
     assert safety.paid_streak(safety.per_year(divs(d), AS_OF)) == 4  # 2022-2025

@@ -47,6 +47,9 @@ special-dividend flag. (Net debt / EBITDA is left out: the data has no EBITDA.)
   steady grower or a recovery after a low year is never flagged. (Changed 2026-11-22: the first rule, 1.5× the
   median of the other 10 years, flagged 31 of 96 SET100 stocks, mostly steady growers.) It still counts as paid in the streak, but its amount is left out of the CAGR and of cut detection
   (so the year after a special dividend is not a cut).
+- [ ] A cut is a year whose DPS is below 90% of the previous (non-special) year; a drop of exactly 10% is not a
+  cut. (Changed 2026-11-22, owner's decision: Thai dividends follow a payout ratio and wobble year to year, so
+  any drop counted as a cut. The 10% is not a research figure.)
 - [ ] FCF payout = (DPS × Shares) / FCF. It is bad only if FCF ≤ 0 or payout > 100% in at least 2 of the last
   3 years, with at least 2 of those years known; otherwise unknown (thaifin's FCF includes acquisitions).
 - [ ] EPS payout uses the same TTM calculation as the Dividend picks screen (one shared helper).
