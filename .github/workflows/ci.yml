@@ -23,3 +23,40 @@ jobs:
 
       - name: Run checks (same script as locally)
         run: PYTHON=python scripts/check.sh
+
+  windows:  # the owner's investor runs the app on Windows with start.bat
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run tests (scripts/check.sh is bash, so pytest directly)
+        env:
+          PYTHONUTF8: "1"  # tests read text files without an encoding; Windows would use cp1252
+        run: python -m pytest -q
+
+      - name: Smoke-test start.bat (first run creates .venv, then the app must answer)
+        shell: pwsh
+        env:
+          STREAMLIT_SERVER_HEADLESS: "true"
+        run: |
+          $p = Start-Process cmd.exe -ArgumentList '/c', 'start.bat' -PassThru `
+            -RedirectStandardOutput start.log -RedirectStandardError start.err
+          $status = ''
+          $deadline = (Get-Date).AddSeconds(300)
+          while ($status -ne 'ok' -and (Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 5
+            try { $status = "$((Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 http://localhost:8501/_stcore/health).Content)".Trim() } catch {}
+          }
+          taskkill /PID $p.Id /T /F
+          Get-Content start.log, start.err
+          if ($status -ne 'ok') { throw "start.bat did not serve the app within 300 s" }
+          exit 0

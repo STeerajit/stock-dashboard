@@ -56,3 +56,11 @@ def test_start_bat_sets_up_once_then_runs_the_app_in_thai():
 def test_update_bat_pulls_and_reinstalls():
     text = (ROOT / "update.bat").read_text()
     assert "git pull" in text and "-m pip install -r requirements.txt" in text and "pause" in text
+
+
+def test_workflow_runs_tests_and_start_bat_on_windows():
+    text = WORKFLOW.read_text()
+    windows = text.split("\n  windows:", 1)[1]
+    assert "runs-on: windows-latest" in windows and 'python-version: "3.11"' in windows
+    assert "python -m pytest -q" in windows and "scripts/check.sh is bash" in windows
+    assert "start.bat" in windows and "/_stcore/health" in windows and "AddSeconds(300)" in windows
