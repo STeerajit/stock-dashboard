@@ -307,7 +307,7 @@ def test_public_mode_keeps_holdings_in_the_session_not_on_disk(csv_path, fake_ma
     assert not csv_path.exists()
     assert at.session_state["demo_holdings"]["symbol"].tolist() == ["PTT"]
     assert any("this browser tab" in i.value for i in at.info)
-    assert not any("this Mac" in c.value for c in at.caption)  # nothing is saved on the visitor's Mac
+    assert not any("this computer" in c.value for c in at.caption)  # nothing is saved on the visitor's computer
 
 
 def test_public_mode_flag():

@@ -32,3 +32,27 @@ def test_data_update_runs_on_weekdays_after_the_close_and_on_demand():
     assert 'cron: "30 11 * * 1-5"' in text  # 18:30 Bangkok
     assert "workflow_dispatch:" in text
     assert "python scripts/update_data.py" in text
+
+
+# ---------- Windows: double-click start.bat / update.bat ----------
+
+def test_bat_files_are_ascii_and_checked_out_with_windows_line_endings():
+    assert "*.bat text eol=crlf" in (ROOT / ".gitattributes").read_text().splitlines()
+    for name in ("start.bat", "update.bat"):
+        (ROOT / name).read_bytes().decode("ascii")  # no Thai: cmd.exe would garble it
+
+
+def test_start_bat_sets_up_once_then_runs_the_app_in_thai():
+    text = (ROOT / "start.bat").read_text()
+    assert 'cd /d "%~dp0"' in text
+    assert "py -3.11 -m venv .venv" in text and "python -m venv .venv" in text
+    assert "-m pip install -r requirements.txt" in text
+    assert "STOCKS_LANG=th" in text
+    assert r".venv\Scripts\python.exe" in text and "-m streamlit run app.py" in text
+    assert "--server.showEmailPrompt false" in text  # else the first run waits for an email in the console
+    assert "pause" in text
+
+
+def test_update_bat_pulls_and_reinstalls():
+    text = (ROOT / "update.bat").read_text()
+    assert "git pull" in text and "-m pip install -r requirements.txt" in text and "pause" in text

@@ -29,8 +29,8 @@ TEXT: dict[str, dict[str, str]] = {
                        "th": "เจาะลึกหุ้นทีละตัว: การซื้อขาย กราฟพร้อมแนวรับแนวต้าน งบการเงิน มูลค่าเทียบคู่แข่ง "
                              "ปันผล และโมเดลทำนาย"},
     "nav.portfolio": {"en": "Portfolio", "th": "พอร์ต"},
-    "nav.portfolio_help": {"en": "The stocks you own and your watchlist, saved on this Mac.",
-                           "th": "หุ้นที่คุณถือและรายการเฝ้าดู บันทึกไว้ใน Mac เครื่องนี้"},
+    "nav.portfolio_help": {"en": "The stocks you own and your watchlist, saved on this computer.",
+                           "th": "หุ้นที่คุณถือและรายการเฝ้าดู บันทึกไว้ในคอมพิวเตอร์เครื่องนี้"},
     "nav.portfolio_help_public": {"en": "The stocks you own and your watchlist, kept in this browser tab only.",
                                   "th": "หุ้นที่คุณถือและรายการเฝ้าดู เก็บไว้ในแท็บเบราว์เซอร์นี้เท่านั้น"},
     "app.language": {"en": "Language", "th": "ภาษา"},
@@ -133,9 +133,9 @@ TEXT: dict[str, dict[str, str]] = {
     # ---------- Portfolio ----------
     "port.title": {"en": "Portfolio", "th": "พอร์ต"},
     "port.caption": {"en": "The stocks you own, plus a watchlist: enter 0 shares for a stock you only want to follow. "
-                           "Saved on this Mac only (data/portfolio.csv, never committed to git).",
+                           "Saved on this computer only (data/portfolio.csv, never committed to git).",
                      "th": "หุ้นที่คุณถือ และรายการเฝ้าดู: ใส่ 0 หุ้นสำหรับหุ้นที่แค่อยากติดตาม "
-                           "บันทึกไว้ใน Mac เครื่องนี้เท่านั้น (data/portfolio.csv ไม่เคยถูก commit เข้า git)"},
+                           "บันทึกไว้ในคอมพิวเตอร์เครื่องนี้เท่านั้น (data/portfolio.csv ไม่เคยถูก commit เข้า git)"},
     "port.caption_public": {"en": "The stocks you own, plus a watchlist: enter 0 shares for a stock you only want to "
                                   "follow.",
                             "th": "หุ้นที่คุณถือ และรายการเฝ้าดู: ใส่ 0 หุ้นสำหรับหุ้นที่แค่อยากติดตาม"},
