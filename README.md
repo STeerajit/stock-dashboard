@@ -37,6 +37,11 @@ It keeps running after you close the terminal; its output goes to `stocks.log`. 
 `alias stocks='<path to repo>/scripts/stocks.sh'` to `~/.zshrc` to type just `stocks`.
 To run it in the foreground instead: `.venv/bin/streamlit run app.py`.
 
+On Windows, double-click `start.bat`. The first run creates `.venv` and installs the packages (needs Python
+3.11 from python.org; takes several minutes), later runs start at once. It opens the browser in Thai
+(`STOCKS_LANG=th`; without `?lang=` in the URL the app uses this variable, else English). Close its window
+to stop the app. `update.bat` (close the app first) runs `git pull` and reinstalls the packages.
+
 For speed and offline use, save a local copy of all SET100 data (about 1 minute; again whenever you want
 fresh numbers, e.g. each evening after the close):
 
@@ -176,11 +181,13 @@ data/set100.csv                # SET100 constituents (with an in_set50 flag)
 data/dividend_picks_backtest.json # saved Dividend Picks backtest results (read by the app)
 scripts/check.sh               # all checks (pytest + ty); CI runs the same script
 scripts/stocks.sh              # start/stop the app in the background (macOS)
+start.bat                      # Windows: set up .venv on the first run, then start the app in Thai
+update.bat                     # Windows: git pull + reinstall the packages
 scripts/update_data.py         # download today's SET100 data into data/market.duckdb
 scripts/audit_data.py          # report suspect data in the store + a list to check by hand on SET's website
 scripts/report_backtest.py     # results table (+ figures) for docs/article.md
 scripts/report_dividend_picks.py # 10-year Dividend Picks backtest -> data/dividend_picks_backtest.json
-.github/workflows/ci.yml       # GitHub Actions CI
+.github/workflows/ci.yml       # GitHub Actions CI (Linux: check.sh; Windows: pytest + start.bat smoke test)
 tests/conftest.py              # blocks network access; fake Yahoo fixture
 tests/fakes.py                 # offline fakes for yfinance
 tests/test_model.py            # features, target, leakage, backtest split
@@ -208,7 +215,7 @@ tests/test_i18n.py             # translations complete; no hard-coded text in pa
 tests/test_set_links.py        # SET links and free float
 tests/test_universe.py         # SET100 CSV matches SET's document
 tests/test_requirements.py     # pinned dependencies
-tests/test_ci.py               # CI workflow and check script
+tests/test_ci.py               # CI workflows, check script, start.bat/update.bat
 tests/test_docs.py             # README and in-app text stay in sync with the code
 ```
 
