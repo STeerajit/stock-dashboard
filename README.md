@@ -42,6 +42,10 @@ On Windows, double-click `start.bat`. The first run creates `.venv` and installs
 (`STOCKS_LANG=th`; without `?lang=` in the URL the app uses this variable, else English). Close its window
 to stop the app. `update.bat` (close the app first) runs `git pull` and reinstalls the packages.
 
+Thai guides for Windows users who don't use a terminal: [docs/guide/](docs/guide/). Each is a prompt to paste
+into a new Claude chat, which then walks the user through setup (`setup-assistant.md`) or explains every page
+(`app-assistant.md`); `line-message.md` is a short message to send with the links.
+
 For speed and offline use, save a local copy of all SET100 data (about 1 minute; again whenever you want
 fresh numbers, e.g. each evening after the close):
 
