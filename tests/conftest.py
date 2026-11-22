@@ -21,8 +21,18 @@ def _block_network(monkeypatch):
     def guard(*args, **kwargs):
         raise NetworkBlocked("Tests must not use the network — mock the data source instead.")
 
-    monkeypatch.setattr(socket.socket, "connect", guard)
-    monkeypatch.setattr(socket.socket, "connect_ex", guard)
+    def loopback_only(real):
+        # On Windows, asyncio builds its internal socketpair from two TCP sockets on 127.0.0.1,
+        # so local connections must pass. Everything else is still blocked.
+        def connect(self, addr=None, *args, **kwargs):
+            if isinstance(addr, tuple) and addr[0] in ("127.0.0.1", "::1"):
+                return real(self, addr, *args, **kwargs)
+            guard()
+
+        return connect
+
+    monkeypatch.setattr(socket.socket, "connect", loopback_only(socket.socket.connect))
+    monkeypatch.setattr(socket.socket, "connect_ex", loopback_only(socket.socket.connect_ex))
     monkeypatch.setattr(socket, "create_connection", guard)
     monkeypatch.setattr(socket, "getaddrinfo", guard)
     # yfinance downloads through curl_cffi. Its C library (libcurl) opens sockets itself,

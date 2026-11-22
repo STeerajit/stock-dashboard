@@ -63,4 +63,5 @@ def set100_expiry_warning(today: date, period_end: date | None = None, lang: str
     end = period_end or SET100_PERIOD_END
     if today <= end:
         return None
-    return text("common.list_expired", lang, end=f"{end:%-d %b %Y}")
+    # Not "%-d": Windows strftime rejects it.
+    return text("common.list_expired", lang, end=f"{end.day} {end:%b %Y}")
